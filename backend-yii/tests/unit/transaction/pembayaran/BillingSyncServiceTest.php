@@ -170,4 +170,89 @@ class BillingSyncServiceTest extends TestCase
         $this->expectException(ConflictHttpException::class);
         (new TindakanKunjunganService())->tambah($f['kunjungan'], ['tindakan_id' => $f['tindakan1'], 'qty' => 1], $f['dokter']);
     }
+
+    public function testBatalTindakanSaatSebagianDibayarMembuatStatusOtomatisLunas(): void
+    {
+        $f = $this->siapkan();
+        $tSvc = new TindakanKunjunganService();
+        $tSvc->tambah($f['kunjungan'], ['tindakan_id' => $f['tindakan1'], 'qty' => 1], $f['dokter']);
+        $t2 = $tSvc->tambah($f['kunjungan'], ['tindakan_id' => $f['tindakan2'], 'qty' => 1], $f['dokter']);
+
+        $invSvc = new InvoiceService();
+        $invoice = $invSvc->buat($f['kunjungan']);
+        (new PembayaranService())->bayar([
+            'invoice_id' => $invoice->id,
+            'metode' => 'tunai',
+            'jumlah' => 75000,
+        ], $f['kasir'], 'idem-sync-sebagian-1');
+
+        $tSvc->batal($t2->id, $f['dokter']);
+        $revisi = $invSvc->detail($invoice->id);
+
+        $this->assertSame(75000.0, (float) $revisi->total);
+        $this->assertSame(75000.0, (float) $revisi->total_bayar);
+        $this->assertSame(Invoice::STATUS_LUNAS, $revisi->status);
+    }
+
+    public function testTolakBatalTindakanBilaTotalBaruKurangDariTotalBayarDanRollback(): void
+    {
+        $f = $this->siapkan();
+        $tSvc = new TindakanKunjunganService();
+        $tSvc->tambah($f['kunjungan'], ['tindakan_id' => $f['tindakan1'], 'qty' => 1], $f['dokter']);
+        $t2 = $tSvc->tambah($f['kunjungan'], ['tindakan_id' => $f['tindakan2'], 'qty' => 1], $f['dokter']);
+
+        $invSvc = new InvoiceService();
+        $invoice = $invSvc->buat($f['kunjungan']);
+        (new PembayaranService())->bayar([
+            'invoice_id' => $invoice->id,
+            'metode' => 'tunai',
+            'jumlah' => 100000,
+        ], $f['kasir'], 'idem-sync-rollback-1');
+
+        try {
+            $tSvc->batal($t2->id, $f['dokter']);
+            $this->fail('Seharusnya menolak pembatalan karena total baru (75.000) < total_bayar (100.000).');
+        } catch (ConflictHttpException) {
+            // Diharapkan ditolak 409 dan transaksi di-rollback.
+        }
+
+        $t2->refresh();
+        $revisi = $invSvc->detail($invoice->id);
+        $this->assertSame('aktif', $t2->status);
+        $this->assertSame(150000.0, (float) $revisi->total);
+    }
+
+    public function testTolakResepLabDanBatalTindakanSetelahInvoiceLunas(): void
+    {
+        $f = $this->siapkan();
+        $tSvc = new TindakanKunjunganService();
+        $t1 = $tSvc->tambah($f['kunjungan'], ['tindakan_id' => $f['tindakan1'], 'qty' => 1], $f['dokter']);
+
+        $invoice = (new InvoiceService())->buat($f['kunjungan']);
+        (new PembayaranService())->bayar([
+            'invoice_id' => $invoice->id,
+            'metode' => 'tunai',
+            'jumlah' => 75000,
+        ], $f['kasir'], 'idem-sync-lock-all');
+
+        foreach ([
+            fn () => $tSvc->batal($t1->id, $f['dokter']),
+            fn () => (new ResepService())->buat([
+                'kunjungan_id' => $f['kunjungan'],
+                'items' => [['obat_id' => $f['obat'], 'dosis' => '500mg', 'frekuensi' => '3x1', 'jumlah' => 2]],
+            ], $f['dokter']),
+            fn () => (new OrderLabService())->buat([
+                'kunjungan_id' => $f['kunjungan'],
+                'pemeriksaan_lab_ids' => [$f['lab']],
+            ], $f['dokter']),
+        ] as $aksi) {
+            $tertolak = false;
+            try {
+                $aksi();
+            } catch (ConflictHttpException) {
+                $tertolak = true;
+            }
+            $this->assertTrue($tertolak, 'Perubahan biaya setelah invoice lunas harus ditolak 409.');
+        }
+    }
 }
