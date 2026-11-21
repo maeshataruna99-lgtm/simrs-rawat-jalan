@@ -1,6 +1,6 @@
 /**
  * Halaman form pemeriksaan dokter (/transaction/pemeriksaan/:kunjunganId) bertab:
- * anamnesis, tanda vital, pemeriksaan fisik, diagnosis ICD-10, tindakan, dan riwayat rekam medis pasien.
+ * anamnesis, tanda vital, pemeriksaan fisik, diagnosis ICD-10, tindakan, resep, dan riwayat rekam medis pasien.
  *
  * Dipakai di: routes/index.tsx.
  */
@@ -27,6 +27,7 @@ import * as pendaftaranApi from '@/modules/transaction/pendaftaran/pendaftaran.a
 import * as pemeriksaanApi from './pemeriksaan.api';
 import type { DiagnosisJenis, PemeriksaanData, PemeriksaanDetail } from './pemeriksaan.types';
 import { RiwayatMedisList } from './RiwayatMedisList';
+import { ResepPanel } from '@/modules/transaction/resep/ResepPanel';
 import { TindakanPanel } from '@/modules/transaction/tindakan/TindakanPanel';
 
 const MENU = 'pemeriksaan';
@@ -269,6 +270,7 @@ export default function PemeriksaanPage() {
           <TabsTrigger value="fisik">{t('transaction.pemeriksaan.tabFisik')}</TabsTrigger>
           <TabsTrigger value="diagnosis">{t('transaction.pemeriksaan.tabDiagnosis')}</TabsTrigger>
           <TabsTrigger value="tindakan">{t('transaction.tindakan.title')}</TabsTrigger>
+          <TabsTrigger value="resep">{t('transaction.resep.title')}</TabsTrigger>
           <TabsTrigger value="riwayat">{t('transaction.pemeriksaan.tabRiwayat')}</TabsTrigger>
         </TabsList>
 
@@ -409,6 +411,10 @@ export default function PemeriksaanPage() {
 
         <TabsContent value="tindakan">
           <TindakanPanel kunjunganId={kunjungan.id} editable={editable} />
+        </TabsContent>
+
+        <TabsContent value="resep">
+          <ResepPanel kunjunganId={kunjungan.id} editable={editable} />
         </TabsContent>
 
         <TabsContent value="riwayat">

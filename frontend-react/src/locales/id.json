@@ -402,6 +402,25 @@
       "statusBatal": "Batal",
       "added": "Tindakan ditambahkan.",
       "cancelled": "Tindakan dibatalkan."
+    },
+    "resep": {
+      "title": "Resep",
+      "newTitle": "Resep Baru",
+      "chooseObat": "Tambah obat ke resep...",
+      "stokInfo": "Stok {{stok}} {{satuan}} · {{harga}}",
+      "dosis": "Dosis",
+      "frekuensi": "Frekuensi",
+      "jumlah": "Jumlah",
+      "catatan": "Catatan resep",
+      "saveButton": "Simpan Resep",
+      "saved": "Resep berhasil dibuat.",
+      "status": {
+        "baru": "Baru",
+        "diproses": "Diproses",
+        "diserahkan": "Diserahkan",
+        "batal": "Batal"
+      },
+      "total": "Total resep"
     }
   },
   "uiKit": {

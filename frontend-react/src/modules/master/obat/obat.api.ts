@@ -1,7 +1,7 @@
 /**
  * Pemanggilan endpoint CRUD master obat, penyesuaian stok, dan riwayat mutasi di backend Yii (/master/obat).
  *
- * Dipakai di: ObatPage, ObatForm, StokAdjustDialog, StokMutasiDialog, PemeriksaanPage.
+ * Dipakai di: ObatPage, ObatForm, StokAdjustDialog, StokMutasiDialog, ResepPanel.
  */
 import type { PaginatedResult } from '@/hooks/use-crud';
 import { yiiApi, type ApiResponse } from '@/lib/api-client';
@@ -10,7 +10,7 @@ import type { ObatItem, ObatPayload, SesuaikanStokPayload, StokMutasiItem } from
 /**
  * Mengambil daftar obat berhalaman dari server.
  *
- * Dipakai di: ObatPage, PemeriksaanPage.
+ * Dipakai di: ObatPage, ResepPanel.
  */
 export async function listObat(params: {
   q?: string;

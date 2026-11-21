@@ -6,9 +6,11 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/lib/auth-store';
 import * as icd10Api from '@/modules/master/icd10/icd10.api';
+import * as obatApi from '@/modules/master/obat/obat.api';
 import * as masterTindakanApi from '@/modules/master/tindakan/tindakan.api';
 import type { UserProfile } from '@/modules/system/auth/auth.types';
 import * as pemeriksaanApi from '@/modules/transaction/pemeriksaan/pemeriksaan.api';
+import * as resepApi from '@/modules/transaction/resep/resep.api';
 import * as tindakanApi from '@/modules/transaction/tindakan/tindakan.api';
 import { renderAt } from './render';
 
@@ -17,6 +19,8 @@ vi.mock('@/modules/transaction/pendaftaran/pendaftaran.api');
 vi.mock('@/modules/master/icd10/icd10.api');
 vi.mock('@/modules/master/tindakan/tindakan.api');
 vi.mock('@/modules/transaction/tindakan/tindakan.api');
+vi.mock('@/modules/transaction/resep/resep.api');
+vi.mock('@/modules/master/obat/obat.api');
 
 const fullPerm = { read: true, create: true, update: true, delete: true };
 
@@ -93,6 +97,7 @@ beforeEach(() => {
         },
       ],
       tindakan: [],
+      resep: [],
     },
   ]);
   vi.mocked(pemeriksaanApi.cariPasienRiwayat).mockResolvedValue([
@@ -122,6 +127,21 @@ beforeEach(() => {
     subtotal: 150000,
     status: 'aktif',
     tindakan: { id: 3, kode: 'TND01', nama: 'Nebulizer' },
+  });
+  vi.mocked(resepApi.daftarResep).mockResolvedValue([]);
+  vi.mocked(obatApi.listObat).mockResolvedValue({
+    items: [
+      {
+        id: 9,
+        kode: 'OBT01',
+        nama: 'Paracetamol',
+        satuan: 'tablet',
+        harga: 500,
+        stok: 3,
+        is_active: true,
+      },
+    ],
+    meta: { page: 1, per_page: 20, total: 1 },
   });
   vi.mocked(icd10Api.listIcd10).mockResolvedValue({
     items: [{ id: 7, kode: 'A01.0', nama: 'Demam tifoid', is_active: true }],
@@ -214,6 +234,44 @@ describe('Pemeriksaan dokter (poin 4.6)', () => {
     expect(tindakanApi.tambahTindakan).toHaveBeenCalledWith(100, { tindakan_id: 3, qty: 2 });
     expect(await screen.findByTestId('tindakan-total')).toHaveTextContent('Rp 150.000');
     expect(screen.getByText('Nebulizer')).toBeInTheDocument();
+  });
+
+  it('panel resep menampilkan stok saat memilih obat dan menampilkan pesan stok kurang dari server', async () => {
+    const { AxiosError, AxiosHeaders } = await import('axios');
+    vi.mocked(resepApi.buatResep).mockRejectedValue(
+      new AxiosError('422', '422', undefined, undefined, {
+        status: 422,
+        statusText: 'Unprocessable',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+        data: {
+          success: false,
+          message: 'Validasi gagal',
+          errors: { 'items.0': ['Stok Paracetamol tidak cukup (tersedia 3 tablet).'] },
+        },
+      }),
+    );
+    renderAt('/transaction/pemeriksaan/100');
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Resep' }));
+    await userEvent.click(screen.getByRole('combobox', { name: 'Tambah obat ke resep...' }));
+    expect(await screen.findByText('Stok 3 tablet · Rp 500')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('OBT01 — Paracetamol'));
+
+    await userEvent.type(screen.getByLabelText('Dosis Paracetamol'), '500mg');
+    await userEvent.type(screen.getByLabelText('Frekuensi Paracetamol'), '3x1');
+    await userEvent.clear(screen.getByLabelText('Jumlah Paracetamol'));
+    await userEvent.type(screen.getByLabelText('Jumlah Paracetamol'), '5');
+    await userEvent.click(screen.getByRole('button', { name: 'Simpan Resep' }));
+
+    expect(resepApi.buatResep).toHaveBeenCalledWith({
+      kunjungan_id: 100,
+      catatan: '',
+      items: [{ obat_id: 9, dosis: '500mg', frekuensi: '3x1', jumlah: 5 }],
+    });
+    expect(
+      await screen.findByText('Stok Paracetamol tidak cukup (tersedia 3 tablet).'),
+    ).toBeInTheDocument();
   });
 
   it('halaman riwayat rekam medis menampilkan kunjungan pasien terpilih', async () => {

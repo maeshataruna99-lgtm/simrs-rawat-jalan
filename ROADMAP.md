@@ -100,7 +100,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 6.3 Proses resep dan penyerahan obat dengan pengurangan stok atomik
 - [x] 6.4 Riwayat penggunaan obat pasien
 - [x] 6.5 Test dua penyerahan bersamaan tidak membuat stok minus — D.2
-- [ ] 6.6 Panel resep di halaman pemeriksaan
+- [x] 6.6 Panel resep di halaman pemeriksaan
 - [ ] 6.7 Halaman antrean dan penyerahan farmasi
 
 ## 7. Pemeriksaan Penunjang — B.6, C.1, D.5
