@@ -109,9 +109,10 @@ Komponen aplikasi berawalan `App` (contoh `AppDataTable`, `AppSelect`) dan disim
 | 1.7 | `middleware/auth.ts` (JWT atau `X-Api-Key`), `middleware/validate.ts` (zod) | Token salah `401`, body tidak valid `422`, ada test |
 | 1.8 | CRUD modul dan menu | Menu bertingkat tersimpan, kode menu tidak bisa ganda |
 | 1.9 | `GET/PUT /system/role-access/{roleId}` | Perubahan izin langsung berlaku di `/auth/me` |
-| 1.10 | Halaman login, `auth-store.ts`, `PermissionGuard` | Halaman tanpa izin dialihkan ke halaman "akses ditolak" |
-| 1.11 | `AppLayout`, `AppSidebar` dari pohon menu | Sidebar berbeda untuk setiap role |
-| 1.12 | Halaman master modul, menu, hak akses (matriks centang) | Admin bisa mencabut izin dan efeknya terlihat setelah login ulang |
+| 1.10 | CRUD `/system/role` dan `/system/user`, `PUT /system/user/{id}/reset-password` | Username dan kode role tidak bisa ganda, password tidak pernah dikirim balik, role yang masih dipakai user tidak bisa dihapus, admin tidak bisa menonaktifkan atau menghapus akunnya sendiri |
+| 1.11 | Halaman login, `auth-store.ts`, `PermissionGuard` | Halaman tanpa izin dialihkan ke halaman "akses ditolak" |
+| 1.12 | `AppLayout`, `AppSidebar` dari pohon menu | Sidebar berbeda untuk setiap role |
+| 1.13 | Halaman master user, role, modul, menu, hak akses (matriks centang) | Admin bisa mengelola user dan mencabut izin, efeknya terlihat di sidebar user terkait |
 
 ## 2. Master Data — B.1
 
