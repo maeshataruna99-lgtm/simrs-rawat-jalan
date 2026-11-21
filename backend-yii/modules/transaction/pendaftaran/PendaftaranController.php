@@ -4,6 +4,7 @@ namespace app\modules\transaction\pendaftaran;
 
 use app\common\ApiResponse;
 use app\common\BaseApiController;
+use app\common\ValidationException;
 use Yii;
 
 /**
@@ -20,6 +21,7 @@ class PendaftaranController extends BaseApiController
     {
         return [
             'cari-pasien' => ['GET'],
+            'create' => ['POST'],
         ];
     }
 
@@ -31,5 +33,23 @@ class PendaftaranController extends BaseApiController
         $q = Yii::$app->request->get('q');
 
         return ApiResponse::success((new PendaftaranService())->cariPasien(is_string($q) ? $q : null));
+    }
+
+    /**
+     * POST /transaction/pendaftaran
+     */
+    public function actionCreate(): array
+    {
+        try {
+            $kunjungan = (new PendaftaranService())->daftar(Yii::$app->request->bodyParams);
+        } catch (ValidationException $e) {
+            Yii::$app->response->statusCode = 422;
+
+            return ApiResponse::error($e->getMessage(), $e->errors);
+        }
+
+        Yii::$app->response->statusCode = 201;
+
+        return ApiResponse::success($kunjungan->toArray(), 'Pendaftaran kunjungan berhasil disimpan.');
     }
 }
