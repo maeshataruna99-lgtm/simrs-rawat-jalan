@@ -348,4 +348,57 @@ describe('API Dashboard (poin 9.1)', () => {
       { metode: 'tunai', jumlah_transaksi: 1, total_bayar: 145000 },
     ]);
   });
+
+  it('menolak 422 bila parameter periode tidak valid atau jenis detail tidak dikenal (poin 9.2)', async () => {
+    const tok = makeToken(`role_allow_${SFX}`, ids.userId);
+
+    const badFormat = await request(app)
+      .get('/api/dashboard/summary?from=2026/08/10&to=2026-08-11')
+      .set('Authorization', `Bearer ${tok}`);
+    expect(badFormat.status).toBe(422);
+
+    const badCal = await request(app)
+      .get('/api/dashboard/summary?from=2026-02-30&to=2026-03-01')
+      .set('Authorization', `Bearer ${tok}`);
+    expect(badCal.status).toBe(422);
+
+    const reversed = await request(app)
+      .get(`/api/dashboard/summary?from=${TO}&to=${FROM}`)
+      .set('Authorization', `Bearer ${tok}`);
+    expect(reversed.status).toBe(422);
+
+    const tooLong = await request(app)
+      .get('/api/dashboard/summary?from=2025-01-01&to=2026-12-31')
+      .set('Authorization', `Bearer ${tok}`);
+    expect(tooLong.status).toBe(422);
+
+    const badJenis = await request(app)
+      .get(`/api/dashboard/detail/tidak-ada?from=${FROM}&to=${TO}`)
+      .set('Authorization', `Bearer ${tok}`);
+    expect(badJenis.status).toBe(422);
+  });
+
+  it('mengembalikan rincian berhalaman untuk kelima jenis detail (poin 9.2)', async () => {
+    const tok = makeToken(`role_allow_${SFX}`, ids.userId);
+
+    const kjPage1 = await request(app)
+      .get(`/api/dashboard/detail/kunjungan?from=${FROM}&to=${TO}&page=1&per_page=1`)
+      .set('Authorization', `Bearer ${tok}`);
+    expect(kjPage1.status).toBe(200);
+    expect(kjPage1.body.data).toHaveLength(1);
+    expect(kjPage1.body.meta).toEqual({ page: 1, per_page: 1, total: 2 });
+
+    for (const [jenis, expectedTotal] of [
+      ['tindakan', 1],
+      ['pendapatan', 2],
+      ['obat', 1],
+      ['pembayaran', 2],
+    ] as const) {
+      const res = await request(app)
+        .get(`/api/dashboard/detail/${jenis}?from=${FROM}&to=${TO}`)
+        .set('Authorization', `Bearer ${tok}`);
+      expect(res.status).toBe(200);
+      expect(res.body.meta.total).toBe(expectedTotal);
+    }
+  });
 });

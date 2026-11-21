@@ -128,7 +128,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 ## 9. Dashboard dan Laporan — B.8, C.2, D.6
 
 - [x] 9.1 API dashboard Node: kunjungan, kunjungan per poli, tindakan, pendapatan, penggunaan obat, status pembayaran
-- [ ] 9.2 Filter periode dan rincian data
+- [x] 9.2 Filter periode dan rincian data
 - [ ] 9.3 Index database dan bukti optimasi query (`EXPLAIN ANALYZE`) — D.6
 - [ ] 9.4 Halaman dashboard
 

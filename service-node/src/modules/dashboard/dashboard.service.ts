@@ -77,6 +77,13 @@ export interface PembayaranReport {
   }>;
 }
 
+export type DetailJenis = 'kunjungan' | 'tindakan' | 'pendapatan' | 'obat' | 'pembayaran';
+
+export interface DetailResult {
+  items: Array<Record<string, unknown>>;
+  meta: { page: number; per_page: number; total: number };
+}
+
 /**
  * Menghitung rentang periode bawaan (30 hari terakhir) bila parameter from/to tidak dikirim.
  *
@@ -366,5 +373,197 @@ export async function getStatusPembayaran(periode: PeriodeFilter): Promise<Pemba
       jumlah_transaksi: Number(r.jumlah_transaksi),
       total_bayar: Number(r.total_bayar),
     })),
+  };
+}
+
+/**
+ * Mengambil rincian data dashboard berhalaman sesuai jenis laporan dan periode.
+ *
+ * Dipakai di: dashboard.routes.ts (GET /api/dashboard/detail/:jenis).
+ */
+export async function getDetail(
+  jenis: DetailJenis,
+  periode: PeriodeFilter,
+  options: { page: number; per_page: number; poli_id?: number; status?: string },
+): Promise<DetailResult> {
+  const pool = readDb();
+  const offset = (options.page - 1) * options.per_page;
+
+  if (jenis === 'kunjungan') {
+    const params: unknown[] = [periode.from, periode.to];
+    let extra = '';
+    if (options.poli_id) {
+      params.push(options.poli_id);
+      extra += ` AND k.poli_id = $${params.length}`;
+    }
+    if (options.status) {
+      params.push(options.status);
+      extra += ` AND k.status = $${params.length}`;
+    }
+    const where = `WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date AND k.status <> 'batal'${extra}`;
+    const [countRes, rowsRes] = await Promise.all([
+      pool.query<{ total: string }>(
+        `SELECT COUNT(*)::text AS total FROM t_kunjungan k ${where}`,
+        params,
+      ),
+      pool.query(
+        `SELECT k.id, k.no_kunjungan, TO_CHAR(k.tgl_kunjungan, 'YYYY-MM-DD') AS tgl_kunjungan,
+                k.no_antrean, k.status, p.no_rm, p.nama AS pasien, pl.nama AS poli, d.nama AS dokter
+         FROM t_kunjungan k
+         JOIN m_pasien p ON p.id = k.pasien_id
+         JOIN m_poli pl ON pl.id = k.poli_id
+         JOIN m_dokter d ON d.id = k.dokter_id
+         ${where}
+         ORDER BY k.tgl_kunjungan DESC, k.id DESC
+         LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+        [...params, options.per_page, offset],
+      ),
+    ]);
+    return {
+      items: rowsRes.rows,
+      meta: {
+        page: options.page,
+        per_page: options.per_page,
+        total: Number(countRes.rows[0]?.total ?? 0),
+      },
+    };
+  }
+
+  if (jenis === 'tindakan') {
+    const where = `WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date AND k.status <> 'batal' AND t.status = 'aktif'`;
+    const [countRes, rowsRes] = await Promise.all([
+      pool.query<{ total: string }>(
+        `SELECT COUNT(*)::text AS total FROM t_tindakan t JOIN t_kunjungan k ON k.id = t.kunjungan_id ${where}`,
+        [periode.from, periode.to],
+      ),
+      pool.query(
+        `SELECT t.id, TO_CHAR(k.tgl_kunjungan, 'YYYY-MM-DD') AS tgl_kunjungan, k.no_kunjungan,
+                p.no_rm, p.nama AS pasien, pl.nama AS poli, mt.kode AS kode_tindakan,
+                mt.nama AS tindakan, t.qty, t.tarif::float8 AS tarif, t.subtotal::float8 AS subtotal
+         FROM t_tindakan t
+         JOIN t_kunjungan k ON k.id = t.kunjungan_id
+         JOIN m_tindakan mt ON mt.id = t.tindakan_id
+         JOIN m_pasien p ON p.id = k.pasien_id
+         JOIN m_poli pl ON pl.id = k.poli_id
+         ${where}
+         ORDER BY k.tgl_kunjungan DESC, t.id DESC
+         LIMIT $3 OFFSET $4`,
+        [periode.from, periode.to, options.per_page, offset],
+      ),
+    ]);
+    return {
+      items: rowsRes.rows,
+      meta: {
+        page: options.page,
+        per_page: options.per_page,
+        total: Number(countRes.rows[0]?.total ?? 0),
+      },
+    };
+  }
+
+  if (jenis === 'pendapatan') {
+    const where = `WHERE b.dibayar_at >= $1::date AND b.dibayar_at < ($2::date + INTERVAL '1 day')`;
+    const [countRes, rowsRes] = await Promise.all([
+      pool.query<{ total: string }>(`SELECT COUNT(*)::text AS total FROM t_pembayaran b ${where}`, [
+        periode.from,
+        periode.to,
+      ]),
+      pool.query(
+        `SELECT b.id, b.no_pembayaran, i.no_invoice, p.no_rm, p.nama AS pasien,
+                b.metode, b.no_referensi, b.jumlah::float8 AS jumlah, u.nama AS kasir,
+                TO_CHAR(b.dibayar_at, 'YYYY-MM-DD HH24:MI:SS') AS dibayar_at
+         FROM t_pembayaran b
+         JOIN t_invoice i ON i.id = b.invoice_id
+         JOIN t_kunjungan k ON k.id = i.kunjungan_id
+         JOIN m_pasien p ON p.id = k.pasien_id
+         JOIN m_user u ON u.id = b.kasir_id
+         ${where}
+         ORDER BY b.dibayar_at DESC, b.id DESC
+         LIMIT $3 OFFSET $4`,
+        [periode.from, periode.to, options.per_page, offset],
+      ),
+    ]);
+    return {
+      items: rowsRes.rows,
+      meta: {
+        page: options.page,
+        per_page: options.per_page,
+        total: Number(countRes.rows[0]?.total ?? 0),
+      },
+    };
+  }
+
+  if (jenis === 'obat') {
+    const where = `WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date AND k.status <> 'batal' AND r.status <> 'batal'`;
+    const [countRes, rowsRes] = await Promise.all([
+      pool.query<{ total: string }>(
+        `SELECT COUNT(*)::text AS total
+         FROM t_resep_detail rd
+         JOIN t_resep r ON r.id = rd.resep_id
+         JOIN t_kunjungan k ON k.id = r.kunjungan_id
+         ${where}`,
+        [periode.from, periode.to],
+      ),
+      pool.query(
+        `SELECT rd.id, TO_CHAR(k.tgl_kunjungan, 'YYYY-MM-DD') AS tgl_kunjungan, r.no_resep,
+                r.status AS status_resep, p.no_rm, p.nama AS pasien,
+                o.kode AS kode_obat, o.nama AS obat, o.satuan, rd.jumlah,
+                rd.harga::float8 AS harga, rd.subtotal::float8 AS subtotal
+         FROM t_resep_detail rd
+         JOIN t_resep r ON r.id = rd.resep_id
+         JOIN t_kunjungan k ON k.id = r.kunjungan_id
+         JOIN m_obat o ON o.id = rd.obat_id
+         JOIN m_pasien p ON p.id = k.pasien_id
+         ${where}
+         ORDER BY k.tgl_kunjungan DESC, rd.id DESC
+         LIMIT $3 OFFSET $4`,
+        [periode.from, periode.to, options.per_page, offset],
+      ),
+    ]);
+    return {
+      items: rowsRes.rows,
+      meta: {
+        page: options.page,
+        per_page: options.per_page,
+        total: Number(countRes.rows[0]?.total ?? 0),
+      },
+    };
+  }
+
+  // jenis === 'pembayaran' (daftar tagihan / status pembayaran invoice)
+  const params: unknown[] = [periode.from, periode.to];
+  let extra = '';
+  if (options.status) {
+    params.push(options.status);
+    extra += ` AND i.status = $${params.length}`;
+  }
+  const where = `WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date${extra}`;
+  const [countRes, rowsRes] = await Promise.all([
+    pool.query<{ total: string }>(
+      `SELECT COUNT(*)::text AS total FROM t_invoice i JOIN t_kunjungan k ON k.id = i.kunjungan_id ${where}`,
+      params,
+    ),
+    pool.query(
+      `SELECT i.id, i.no_invoice, TO_CHAR(k.tgl_kunjungan, 'YYYY-MM-DD') AS tgl_kunjungan,
+              p.no_rm, p.nama AS pasien, pl.nama AS poli,
+              i.total::float8 AS total, i.total_bayar::float8 AS total_bayar,
+              (i.total - i.total_bayar)::float8 AS sisa_tagihan, i.status
+       FROM t_invoice i
+       JOIN t_kunjungan k ON k.id = i.kunjungan_id
+       JOIN m_pasien p ON p.id = k.pasien_id
+       JOIN m_poli pl ON pl.id = k.poli_id
+       ${where}
+       ORDER BY k.tgl_kunjungan DESC, i.id DESC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, options.per_page, offset],
+    ),
+  ]);
+  return {
+    items: rowsRes.rows,
+    meta: {
+      page: options.page,
+      per_page: options.per_page,
+      total: Number(countRes.rows[0]?.total ?? 0),
+    },
   };
 }
