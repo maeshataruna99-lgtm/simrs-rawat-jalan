@@ -78,6 +78,11 @@ class Kunjungan extends ActiveRecord
         return $this->hasOne(JadwalDokter::class, ['id' => 'jadwal_id']);
     }
 
+    public function getStatusLogs(): ActiveQuery
+    {
+        return $this->hasMany(KunjunganStatusLog::class, ['kunjungan_id' => 'id'])->orderBy(['id' => SORT_ASC]);
+    }
+
     public function fields(): array
     {
         $fields = parent::fields();
@@ -102,6 +107,7 @@ class Kunjungan extends ActiveRecord
             'nama' => $this->dokter->nama,
             'spesialis' => $this->dokter->spesialis,
         ] : null;
+        $fields['status_logs'] = fn () => array_map(fn (KunjunganStatusLog $log) => $log->toArray(), $this->statusLogs);
 
         return $fields;
     }

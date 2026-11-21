@@ -10,5 +10,7 @@ class Module extends \yii\base\Module
 {
     public $controllerMap = [
         'pendaftaran' => pendaftaran\PendaftaranController::class,
+        'antrean' => antrean\AntreanController::class,
+        'riwayat-kunjungan' => antrean\RiwayatKunjunganController::class,
     ];
 }
