@@ -421,6 +421,16 @@
         "batal": "Batal"
       },
       "total": "Total resep"
+    },
+    "farmasi": {
+      "title": "Pelayanan Resep",
+      "subtitle": "Proses resep dari dokter lalu serahkan obat ke pasien; stok berkurang saat diserahkan",
+      "noResep": "No. Resep",
+      "activeStatus": "Baru dan diproses",
+      "prosesButton": "Proses",
+      "serahkanButton": "Serahkan",
+      "prosesSuccess": "Resep sedang diproses.",
+      "serahkanSuccess": "Obat berhasil diserahkan."
     }
   },
   "uiKit": {
