@@ -10,7 +10,7 @@ afterEach(() => {
   cleanup();
 });
 
-// jsdom belum menyediakan matchMedia; dipakai hook use-mobile milik sidebar shadcn.
+// jsdom belum menyediakan matchMedia dan ResizeObserver; dipakai komponen Radix/shadcn.
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
@@ -24,3 +24,9 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: () => false,
   }),
 });
+
+window.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
