@@ -9,6 +9,7 @@ import DokterPage from '@/modules/master/dokter/DokterPage';
 import Icd10Page from '@/modules/master/icd10/Icd10Page';
 import JadwalDokterPage from '@/modules/master/jadwal/JadwalDokterPage';
 import PemeriksaanLabPage from '@/modules/master/lab/PemeriksaanLabPage';
+import ObatPage from '@/modules/master/obat/ObatPage';
 import PasienPage from '@/modules/master/pasien/PasienPage';
 import PoliPage from '@/modules/master/poli/PoliPage';
 import TindakanPage from '@/modules/master/tindakan/TindakanPage';
@@ -111,6 +112,14 @@ export const routes: RouteObject[] = [
             element: (
               <PermissionGuard menu="master-tindakan">
                 <TindakanPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/master/obat',
+            element: (
+              <PermissionGuard menu="master-obat">
+                <ObatPage />
               </PermissionGuard>
             ),
           },
