@@ -50,10 +50,11 @@ return [
                 'GET,PUT,POST <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>/<action:[\w-]+>' => '<module>/<controller>/<action>',
                 // Aksi khusus tingkat controller, contoh GET /transaction/pendaftaran/cari-pasien.
                 'GET,PUT,POST <module:(master|transaction|system)>/<controller:[\w-]+>/<action:[a-zA-Z][\w-]*>' => '<module>/<controller>/<action>',
-                // Preflight CORS untuk URL dengan id diarahkan ke action yang ada agar filter CORS bisa menjawab.
-                'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/view',
-                'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>/<action:[\w-]+>' => '<module>/<controller>/<action>',
-                'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<action:[a-zA-Z][\w-]*>' => '<module>/<controller>/<action>',
+                // Preflight CORS diarahkan ke BaseApiController::actionOptions agar tidak terhalang VerbFilter/Auth.
+                'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>' => '<module>/<controller>/options',
+                'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/options',
+                'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>/<action:[\w-]+>' => '<module>/<controller>/options',
+                'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<action:[a-zA-Z][\w-]*>' => '<module>/<controller>/options',
             ],
         ],
         'log' => [

@@ -55,6 +55,16 @@ abstract class BaseApiController extends Controller
     }
 
     /**
+     * Menjawab request preflight CORS (OPTIONS) untuk seluruh endpoint controller.
+     *
+     * Dipakai di: config/web.php (aturan OPTIONS urlManager).
+     */
+    public function actionOptions(): array
+    {
+        return ApiResponse::success();
+    }
+
+    /**
      * Membalas 422 dengan pesan validasi per field dari model.
      *
      * Dipakai di: controller yang memvalidasi form sebelum memanggil service.

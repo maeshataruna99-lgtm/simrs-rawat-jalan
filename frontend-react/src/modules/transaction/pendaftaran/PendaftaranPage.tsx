@@ -75,12 +75,12 @@ export default function PendaftaranPage() {
 
   useEffect(() => {
     void poliApi
-      .listPoli({ is_active: true, per_page: 100 })
-      .then((res) => setPoliList(res.items))
+      .listPoli({ per_page: 100 })
+      .then((res) => setPoliList(res.items.filter((p) => p.is_active)))
       .catch(() => {});
     void jadwalApi
-      .listJadwalDokter({ is_active: true, per_page: 100 })
-      .then((res) => setJadwalList(res.items))
+      .listJadwalDokter({ per_page: 100 })
+      .then((res) => setJadwalList(res.items.filter((j) => j.is_active)))
       .catch(() => {});
   }, []);
 
