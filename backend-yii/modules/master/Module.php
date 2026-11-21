@@ -8,5 +8,7 @@ namespace app\modules\master;
  */
 class Module extends \yii\base\Module
 {
-    public $controllerMap = [];
+    public $controllerMap = [
+        'pasien' => pasien\PasienController::class,
+    ];
 }

@@ -54,7 +54,7 @@ Hak akses berbasis menu: role diberi izin baca/tambah/ubah/hapus per menu, menu 
 
 Setiap master: migrasi, model, service, controller, validasi, pencegahan duplikasi, pencarian/filter, unit test.
 
-- [ ] 2.1 Master pasien dan nomor rekam medis otomatis
+- [x] 2.1 Master pasien dan nomor rekam medis otomatis
 - [ ] 2.2 Master dokter dan tenaga medis
 - [ ] 2.3 Master poli / unit pelayanan
 - [ ] 2.4 Master jadwal praktik dokter (cegah jadwal bentrok)
