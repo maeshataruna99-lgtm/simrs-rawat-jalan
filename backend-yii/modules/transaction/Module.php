@@ -21,5 +21,6 @@ class Module extends \yii\base\Module
         'riwayat-obat' => resep\RiwayatObatController::class,
         'order-lab' => lab\OrderLabController::class,
         'hasil-lab' => lab\HasilLabController::class,
+        'invoice' => pembayaran\InvoiceController::class,
     ];
 }
