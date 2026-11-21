@@ -61,6 +61,8 @@ Sisa sekitar 10 jam dari 72 jam dipakai untuk cadangan dan bonus.
 | 0.9 | `.php-cs-fixer.dist.php`, script `composer lint` | Seluruh kode PHP lolos PSR-12 |
 | 0.10 | Tailwind CSS v3 + `tailwindcss-animate`, `components.json` shadcn (style `default`, base color `neutral`, CSS variables, ikon `lucide-react`), token warna terang/gelap di `src/styles/tailwind.css`, komponen `src/components/ui/`: button, input, label, textarea, select, checkbox, switch, card, badge, table, dialog, alert-dialog, sheet, dropdown-menu, popover, command, tabs, tooltip, separator, skeleton, sidebar, breadcrumb, pagination, sonner | Halaman contoh menampilkan semua komponen dengan tema yang sama di mode terang dan gelap |
 
+| 0.11 | PHPUnit, `phpunit.xml`, `tests/TestCase.php` (setiap test dibungkus transaksi lalu di-rollback), database `simrs_test` dibuat oleh `database/init/`, script `composer test` (migrasi database test lalu jalankan test) | `composer test` lolos dan memakai database `simrs_test` |
+
 **Standar UI**
 
 | Kebutuhan | Library |
