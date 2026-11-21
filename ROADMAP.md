@@ -107,7 +107,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 - [x] 7.1 Migrasi order laboratorium, hasil, dan outbox integrasi
 - [x] 7.2 Endpoint Yii untuk order dan hasil laboratorium
-- [ ] 7.3 REST API Node untuk integrasi laboratorium (daftar order, kirim hasil)
+- [x] 7.3 REST API Node untuk integrasi laboratorium (daftar order, kirim hasil)
 - [ ] 7.4 Outbox dan retry di Node ketika Yii tidak dapat diakses — D.5
 - [ ] 7.5 Test integrasi: hasil tidak hilang atau ganda saat Yii gagal
 - [ ] 7.6 Form order laboratorium oleh dokter

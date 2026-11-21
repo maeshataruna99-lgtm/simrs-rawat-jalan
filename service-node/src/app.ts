@@ -7,6 +7,7 @@
 import express from 'express';
 import { errorHandler, notFound } from './middleware/error-handler.js';
 import { healthRoutes } from './modules/health/health.routes.js';
+import { labRoutes } from './modules/lab/lab.routes.js';
 
 export function createApp() {
   const app = express();
@@ -15,6 +16,7 @@ export function createApp() {
   app.use(express.json({ limit: '1mb' }));
 
   app.use('/health', healthRoutes);
+  app.use('/api/lab', labRoutes);
 
   app.use(notFound);
   app.use(errorHandler);
