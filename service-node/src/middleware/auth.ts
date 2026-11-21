@@ -7,6 +7,7 @@ import { timingSafeEqual } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../lib/app-error.js';
+import { readDb } from '../lib/db.js';
 
 export type AuthMethod = 'jwt' | 'apiKey';
 
@@ -47,6 +48,48 @@ export function authenticate(...methods: AuthMethod[]) {
     }
 
     next(new AppError(401, 'Sesi tidak valid atau sudah berakhir, silakan login ulang.'));
+  };
+}
+
+export type PermissionAction = 'read' | 'create' | 'update' | 'delete';
+
+const ACTION_COLUMN: Record<PermissionAction, string> = {
+  read: 'can_read',
+  create: 'can_create',
+  update: 'can_update',
+  delete: 'can_delete',
+};
+
+/**
+ * Memastikan role pengguna pada JWT memiliki izin menu:aksi di m_role_access.
+ * Ditolak 403 bila tidak memiliki izin.
+ *
+ * Dipakai di: modules/dashboard/dashboard.routes.ts.
+ */
+export function requirePermission(menuCode: string, action: PermissionAction = 'read') {
+  const column = ACTION_COLUMN[action];
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
+    const roleKode = req.user?.role;
+    if (!roleKode) {
+      return next(new AppError(401, 'Sesi tidak valid atau sudah berakhir, silakan login ulang.'));
+    }
+    try {
+      const { rowCount } = await readDb().query(
+        `SELECT 1
+         FROM m_role_access ra
+         JOIN m_role r ON r.id = ra.role_id AND r.deleted_at IS NULL
+         JOIN m_menu m ON m.id = ra.menu_id AND m.deleted_at IS NULL
+         WHERE r.kode = $1 AND m.kode = $2 AND ra.${column} = true
+         LIMIT 1`,
+        [roleKode, menuCode],
+      );
+      if (!rowCount) {
+        return next(new AppError(403, 'Anda tidak memiliki akses ke fitur ini.'));
+      }
+      next();
+    } catch (err) {
+      next(err);
+    }
   };
 }
 
