@@ -95,7 +95,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 ## 6. Farmasi dan Resep — B.5, D.2
 
-- [ ] 6.1 Migrasi resep, detail resep, dan mutasi stok (constraint stok tidak minus)
+- [x] 6.1 Migrasi resep, detail resep, dan mutasi stok (constraint stok tidak minus)
 - [ ] 6.2 Pembuatan resep oleh dokter dengan validasi ketersediaan stok
 - [ ] 6.3 Proses resep dan penyerahan obat dengan pengurangan stok atomik
 - [ ] 6.4 Riwayat penggunaan obat pasien
