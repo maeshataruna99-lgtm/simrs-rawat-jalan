@@ -2,6 +2,7 @@
 
 Rencana pengerjaan studi kasus **Sistem Pelayanan Rawat Jalan Terintegrasi**.
 Setiap sub-poin dikerjakan dan di-commit terpisah. Checkbox dicentang pada commit yang sama dengan pekerjaannya.
+Rincian tabel, endpoint, dan kriteria selesai per sub-poin ada di [docs/roadmap-detail.md](docs/roadmap-detail.md).
 
 ## Tujuan Akhir
 
