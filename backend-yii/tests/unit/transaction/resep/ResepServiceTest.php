@@ -15,6 +15,8 @@ use app\modules\transaction\resep\FarmasiService;
 use app\modules\transaction\resep\Resep;
 use app\modules\transaction\resep\ResepService;
 use app\tests\TestCase;
+use Yii;
+use yii\db\IntegrityException;
 use yii\web\ConflictHttpException;
 use yii\web\ForbiddenHttpException;
 
@@ -134,6 +136,14 @@ class ResepServiceTest extends TestCase
 
         $this->expectException(ConflictHttpException::class);
         $farmasi->serahkan($resep1->id);
+    }
+
+    public function testCheckConstraintStokTidakMinusSebagaiPengamanTerakhir(): void
+    {
+        $d = $this->siapkan();
+
+        $this->expectException(IntegrityException::class);
+        Yii::$app->db->createCommand('UPDATE m_obat SET stok = stok - 11 WHERE id = :id', [':id' => $d['paracetamol']])->execute();
     }
 
     public function testRiwayatObatDanRiwayatMedisMemuatResep(): void
