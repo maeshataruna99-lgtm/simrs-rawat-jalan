@@ -5,7 +5,9 @@
  */
 import type { RouteObject } from 'react-router';
 import { AppLayout } from '@/components/layout/AppLayout';
+import DokterPage from '@/modules/master/dokter/DokterPage';
 import PasienPage from '@/modules/master/pasien/PasienPage';
+import PoliPage from '@/modules/master/poli/PoliPage';
 import LoginPage from '@/modules/system/auth/LoginPage';
 import MenuPage from '@/modules/system/menu/MenuPage';
 import ModulePage from '@/modules/system/module/ModulePage';
@@ -73,6 +75,22 @@ export const routes: RouteObject[] = [
             element: (
               <PermissionGuard menu="master-pasien">
                 <PasienPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/master/dokter',
+            element: (
+              <PermissionGuard menu="master-dokter">
+                <DokterPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/master/poli',
+            element: (
+              <PermissionGuard menu="master-poli">
+                <PoliPage />
               </PermissionGuard>
             ),
           },

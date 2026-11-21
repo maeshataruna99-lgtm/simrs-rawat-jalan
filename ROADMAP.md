@@ -64,7 +64,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 2.8 Master ICD-10 (seed data)
 - [x] 2.9 Komponen aplikasi bersama berbasis shadcn/ui: tabel data, filter, form, dialog konfirmasi, select pencarian
 - [x] 2.10 Halaman master pasien
-- [ ] 2.11 Halaman master dokter dan poli
+- [x] 2.11 Halaman master dokter dan poli
 - [ ] 2.12 Halaman master jadwal praktik
 - [ ] 2.13 Halaman master tindakan dan pemeriksaan laboratorium
 - [ ] 2.14 Halaman master obat dan stok
