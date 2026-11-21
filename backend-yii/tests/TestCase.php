@@ -2,6 +2,7 @@
 
 namespace app\tests;
 
+use app\modules\system\access\AccessService;
 use Yii;
 use yii\db\Transaction;
 
@@ -23,6 +24,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         new \yii\web\Application($config);
         // Biaya bcrypt minimum agar test cepat; produksi tetap memakai nilai bawaan Yii.
         Yii::$app->security->passwordHashCost = 4;
+        AccessService::clearCache();
 
         $this->transaction = Yii::$app->db->beginTransaction();
     }

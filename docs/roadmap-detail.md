@@ -104,7 +104,7 @@ Komponen aplikasi berawalan `App` (contoh `AppDataTable`, `AppSelect`) dan disim
 | 1.2 | Migrasi `m_module`, `m_menu`, `m_module_menu`, `m_role_access` | Foreign key dan unique terpasang |
 | 1.3 | `system/auth`: login, `JwtAuth` filter, hash password bcrypt | Login benar mendapat token, salah mendapat `401` |
 | 1.4 | Seeder 6 role, 1 user per role, modul, menu, hak akses default | Login dengan setiap akun dummy berhasil |
-| 1.5 | `common/AccessBehavior.php`: tiap action dipetakan ke kode menu + aksi | User tanpa izin mendapat `403`, test unit untuk izin ada/tidak ada |
+| 1.5 | `common/AccessFilter.php` + `AccessService`: controller mengisi `$menuCode`, action index/view/create/update/delete otomatis dipetakan ke read/create/update/delete, action lain lewat `$actionPermissions` | User tanpa izin mendapat `403`, test unit untuk izin ada/tidak ada |
 | 1.6 | `GET /system/auth/me` | Dokter hanya menerima menu pemeriksaan, kasir hanya billing |
 | 1.7 | `middleware/auth.ts` (JWT atau `X-Api-Key`), `middleware/validate.ts` (zod) | Token salah `401`, body tidak valid `422`, ada test |
 | 1.8 | CRUD modul dan menu | Menu bertingkat tersimpan, kode menu tidak bisa ganda |
