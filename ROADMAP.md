@@ -31,13 +31,20 @@ Referensi kode di setiap poin: `B.x` ruang lingkup, `C.x` backend services, `D.x
 
 ## 1. Autentikasi dan Hak Akses — B.9
 
-- [ ] 1.1 Migrasi tabel user dan RBAC
-- [ ] 1.2 Login dan penerbitan JWT di Yii
-- [ ] 1.3 Enam role (Administrator, Pendaftaran, Dokter, Farmasi, Laboratorium, Kasir) dan seed user dummy
-- [ ] 1.4 Pembatasan akses endpoint Yii per role
-- [ ] 1.5 Middleware Node untuk verifikasi JWT dan validasi request — C.3
-- [ ] 1.6 Halaman login, penyimpanan sesi, dan `RoleGuard` di React
-- [ ] 1.7 Layout dan sidebar menu sesuai role
+Hak akses berbasis menu: role diberi izin baca/tambah/ubah/hapus per menu, menu dikelompokkan dalam modul.
+
+- [ ] 1.1 Migrasi user dan role
+- [ ] 1.2 Migrasi modul, menu (bertingkat), relasi modul-menu, dan hak akses role per menu
+- [ ] 1.3 Login dan penerbitan JWT di Yii
+- [ ] 1.4 Seed enam role (Administrator, Pendaftaran, Dokter, Farmasi, Laboratorium, Kasir), user dummy, modul, menu, dan hak akses default
+- [ ] 1.5 Pengecekan hak akses per menu dan aksi di setiap endpoint Yii
+- [ ] 1.6 Endpoint profil user beserta pohon menu dan izin sesuai role
+- [ ] 1.7 Middleware Node untuk verifikasi JWT dan validasi request — C.3
+- [ ] 1.8 Endpoint master modul dan menu
+- [ ] 1.9 Endpoint master hak akses role (matriks menu × aksi)
+- [ ] 1.10 Halaman login, penyimpanan sesi, dan guard halaman berdasarkan izin di React
+- [ ] 1.11 Layout dan sidebar dinamis dari pohon menu user
+- [ ] 1.12 Halaman master modul, menu, dan hak akses role
 
 ## 2. Master Data — B.1
 
