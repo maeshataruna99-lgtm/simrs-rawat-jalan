@@ -23,10 +23,10 @@ Referensi kode di setiap poin: `B.x` ruang lingkup, `C.x` backend services, `D.x
 - [x] 0.2 Aturan kontribusi dan standar kode (`CONTRIBUTING.md`)
 - [x] 0.3 Konfigurasi editor dan git (`.editorconfig`, `.gitattributes`, `.gitignore`)
 - [x] 0.4 Commitlint dan husky untuk validasi pesan commit
-- [ ] 0.5 Docker Compose: PostgreSQL, Yii, Node, React
-- [ ] 0.6 Skeleton `backend-yii` (Yii2, modul `master`, `transaction`, `system`, format response API)
-- [ ] 0.7 Skeleton `service-node` (Express + TypeScript, ESLint, format response, error handler) — C.4
-- [ ] 0.8 Skeleton `frontend-react` (Vite + TypeScript, ESLint, router, API client, i18n satu bahasa `id`)
+- [x] 0.5 Docker Compose dengan PostgreSQL
+- [ ] 0.6 Skeleton `backend-yii` (Yii2, modul `master`, `transaction`, `system`, format response API, service Docker)
+- [ ] 0.7 Skeleton `service-node` (Express + TypeScript, ESLint, format response, error handler, service Docker) — C.4
+- [ ] 0.8 Skeleton `frontend-react` (Vite + TypeScript, ESLint, router, API client, i18n satu bahasa `id`, service Docker)
 - [ ] 0.9 Standar kode PHP (PHP-CS-Fixer PSR-12)
 
 ## 1. Autentikasi dan Hak Akses — B.9
