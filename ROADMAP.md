@@ -155,7 +155,7 @@ Dikerjakan hanya jika waktu tersisa, tidak mengubah fitur inti.
 - [x] Global search menu (Ctrl+K)
 - [x] Export PDF invoice dan laporan
 - [x] Export laporan ke Excel
-- [ ] Filter laporan lanjutan (per dokter, per penjamin)
+- [x] Filter laporan lanjutan (per dokter, per penjamin)
 - [ ] Penyempurnaan UI (tema, responsif, empty state)
 - [ ] CI GitHub Actions untuk lint dan test
 - [ ] Layar display antrean

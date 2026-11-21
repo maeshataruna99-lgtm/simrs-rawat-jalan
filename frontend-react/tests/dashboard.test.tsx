@@ -44,6 +44,10 @@ beforeEach(() => {
       invoice_per_status: { belum_dibayar: 0, dibayar_sebagian: 0, lunas: 3 },
     });
 
+  vi.mocked(dashboardApi.getFilterOptions).mockResolvedValue({
+    dokter: [{ id: 2, kode: 'DR001', nama: 'dr. Budi' }],
+    penjamin: ['umum', 'bpjs', 'asuransi'],
+  });
   vi.mocked(dashboardApi.getKunjunganPerPoli).mockResolvedValue([
     { poli_id: 1, kode: 'POLI-UMUM', nama: 'Poli Umum', jumlah_kunjungan: 8 },
   ]);

@@ -145,15 +145,15 @@ beforeAll(async () => {
   ids.obat = obat.rows[0].id;
 
   const k1 = await pool.query<{ id: number }>(
-    `INSERT INTO t_kunjungan (no_kunjungan, pasien_id, poli_id, dokter_id, jadwal_id, tgl_kunjungan, no_antrean, status)
-     VALUES ($1, $2, $3, $4, $5, $6, 1, 'selesai') RETURNING id`,
+    `INSERT INTO t_kunjungan (no_kunjungan, pasien_id, poli_id, dokter_id, jadwal_id, tgl_kunjungan, no_antrean, status, penjamin)
+     VALUES ($1, $2, $3, $4, $5, $6, 1, 'selesai', 'umum') RETURNING id`,
     [`KJ1_${SFX}`, ids.pasien1, ids.poliA, ids.dokter, ids.jadwalA, FROM],
   );
   ids.kunjungan1 = k1.rows[0].id;
 
   const k2 = await pool.query<{ id: number }>(
-    `INSERT INTO t_kunjungan (no_kunjungan, pasien_id, poli_id, dokter_id, jadwal_id, tgl_kunjungan, no_antrean, status)
-     VALUES ($1, $2, $3, $4, $5, $6, 1, 'selesai') RETURNING id`,
+    `INSERT INTO t_kunjungan (no_kunjungan, pasien_id, poli_id, dokter_id, jadwal_id, tgl_kunjungan, no_antrean, status, penjamin)
+     VALUES ($1, $2, $3, $4, $5, $6, 1, 'selesai', 'bpjs') RETURNING id`,
     [`KJ2_${SFX}`, ids.pasien2, ids.poliB, ids.dokter, ids.jadwalB, TO],
   );
   ids.kunjungan2 = k2.rows[0].id;
@@ -400,5 +400,22 @@ describe('API Dashboard (poin 9.1)', () => {
       expect(res.status).toBe(200);
       expect(res.body.meta.total).toBe(expectedTotal);
     }
+  });
+
+  it('menyaring ringkasan dan opsi filter berdasarkan dokter dan penjamin', async () => {
+    const tok = makeToken(`role_allow_${SFX}`, ids.userId);
+
+    const opts = await request(app)
+      .get('/api/dashboard/filters')
+      .set('Authorization', `Bearer ${tok}`);
+    expect(opts.status).toBe(200);
+    expect(opts.body.data.penjamin).toEqual(['umum', 'bpjs', 'asuransi']);
+
+    const bpjsOnly = await request(app)
+      .get(`/api/dashboard/summary?from=${FROM}&to=${TO}&dokter_id=${ids.dokter}&penjamin=bpjs`)
+      .set('Authorization', `Bearer ${tok}`);
+    expect(bpjsOnly.status).toBe(200);
+    expect(bpjsOnly.body.data.total_kunjungan).toBe(1);
+    expect(bpjsOnly.body.data.total_pendapatan).toBe(15000);
   });
 });

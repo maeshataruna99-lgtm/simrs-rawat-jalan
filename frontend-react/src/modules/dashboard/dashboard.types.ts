@@ -4,9 +4,18 @@
  * Dipakai di: dashboard.api.ts, DashboardCharts.tsx, DashboardPage.tsx.
  */
 
+export type PenjaminType = 'umum' | 'bpjs' | 'asuransi';
+
 export interface PeriodeFilter {
   from: string;
   to: string;
+  dokter_id?: number;
+  penjamin?: PenjaminType;
+}
+
+export interface DashboardFilterOptions {
+  dokter: Array<{ id: number; kode: string; nama: string }>;
+  penjamin: PenjaminType[];
 }
 
 export interface DashboardSummary {

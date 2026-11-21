@@ -150,6 +150,10 @@ class PendaftaranService
                 $ymd = str_replace('-', '', $tglKunjungan);
                 $noKunjungan = SequenceService::nextFormatted('KUNJUNGAN', $ymd, "RJ{$ymd}", 4);
 
+                $penjamin = in_array($data['penjamin'] ?? 'umum', ['umum', 'bpjs', 'asuransi'], true)
+                    ? (string) $data['penjamin']
+                    : 'umum';
+
                 $model = new Kunjungan([
                     'no_kunjungan' => $noKunjungan,
                     'pasien_id' => $pasien->id,
@@ -159,6 +163,7 @@ class PendaftaranService
                     'tgl_kunjungan' => $tglKunjungan,
                     'no_antrean' => $noAntrean,
                     'status' => Kunjungan::STATUS_MENUNGGU,
+                    'penjamin' => $penjamin,
                 ]);
 
                 if (!$model->save(false)) {

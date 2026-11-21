@@ -1,5 +1,5 @@
 /**
- * Route API dashboard read-only (/api/dashboard/...) dengan validasi periode (422) dan detail berhalaman.
+ * Route API dashboard read-only (/api/dashboard/...) dengan validasi periode (422), filter dokter/penjamin, dan detail berhalaman.
  * Seluruh endpoint memerlukan JWT valid dan izin `dashboard:read`.
  *
  * Dipakai di: src/app.ts.
@@ -11,6 +11,7 @@ import { authenticate, requirePermission } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
 import {
   getDetail,
+  getFilterOptions,
   getKunjunganPerPoli,
   getPendapatan,
   getPenggunaanObat,
@@ -36,6 +37,9 @@ const dateField = z
   .string()
   .refine(isValidCalendarDate, 'Format tanggal harus YYYY-MM-DD yang valid.')
   .optional();
+
+const penjaminField = z.enum(['umum', 'bpjs', 'asuransi']).optional();
+const dokterIdField = z.coerce.number().int().min(1).optional();
 
 function applyPeriodeRefinement<T extends { from?: string; to?: string }>(
   data: T,
@@ -66,6 +70,8 @@ const periodeQuerySchema = z
   .object({
     from: dateField,
     to: dateField,
+    dokter_id: dokterIdField,
+    penjamin: penjaminField,
   })
   .superRefine(applyPeriodeRefinement);
 
@@ -77,6 +83,8 @@ const detailQuerySchema = z
   .object({
     from: dateField,
     to: dateField,
+    dokter_id: dokterIdField,
+    penjamin: penjaminField,
     page: z.coerce.number().int().min(1).default(1),
     per_page: z.coerce.number().int().min(1).max(100).default(20),
     poli_id: z.coerce.number().int().min(1).optional(),
@@ -89,14 +97,22 @@ type DetailQuery = z.infer<typeof detailQuerySchema>;
 
 dashboardRoutes.use(authenticate('jwt'), requirePermission('dashboard', 'read'));
 
-function periodeDariValidated(req: Request) {
+function filterDariValidated(req: Request) {
   const q = (req.validated?.query ?? {}) as PeriodeQuery;
-  return resolvePeriode(q.from, q.to);
+  return resolvePeriode(q.from, q.to, { dokter_id: q.dokter_id, penjamin: q.penjamin });
 }
+
+dashboardRoutes.get('/filters', async (_req, res, next) => {
+  try {
+    res.json(success(await getFilterOptions()));
+  } catch (err) {
+    next(err);
+  }
+});
 
 dashboardRoutes.get('/summary', validate({ query: periodeQuerySchema }), async (req, res, next) => {
   try {
-    res.json(success(await getSummary(periodeDariValidated(req))));
+    res.json(success(await getSummary(filterDariValidated(req))));
   } catch (err) {
     next(err);
   }
@@ -107,7 +123,7 @@ dashboardRoutes.get(
   validate({ query: periodeQuerySchema }),
   async (req, res, next) => {
     try {
-      res.json(success(await getKunjunganPerPoli(periodeDariValidated(req))));
+      res.json(success(await getKunjunganPerPoli(filterDariValidated(req))));
     } catch (err) {
       next(err);
     }
@@ -119,7 +135,7 @@ dashboardRoutes.get(
   validate({ query: periodeQuerySchema }),
   async (req, res, next) => {
     try {
-      res.json(success(await getTindakanTerbanyak(periodeDariValidated(req))));
+      res.json(success(await getTindakanTerbanyak(filterDariValidated(req))));
     } catch (err) {
       next(err);
     }
@@ -131,7 +147,7 @@ dashboardRoutes.get(
   validate({ query: periodeQuerySchema }),
   async (req, res, next) => {
     try {
-      res.json(success(await getPendapatan(periodeDariValidated(req))));
+      res.json(success(await getPendapatan(filterDariValidated(req))));
     } catch (err) {
       next(err);
     }
@@ -140,7 +156,7 @@ dashboardRoutes.get(
 
 dashboardRoutes.get('/obat', validate({ query: periodeQuerySchema }), async (req, res, next) => {
   try {
-    res.json(success(await getPenggunaanObat(periodeDariValidated(req))));
+    res.json(success(await getPenggunaanObat(filterDariValidated(req))));
   } catch (err) {
     next(err);
   }
@@ -151,7 +167,7 @@ dashboardRoutes.get(
   validate({ query: periodeQuerySchema }),
   async (req, res, next) => {
     try {
-      res.json(success(await getStatusPembayaran(periodeDariValidated(req))));
+      res.json(success(await getStatusPembayaran(filterDariValidated(req))));
     } catch (err) {
       next(err);
     }
@@ -165,8 +181,11 @@ dashboardRoutes.get(
     try {
       const { jenis } = req.validated?.params as { jenis: DetailJenis };
       const q = req.validated?.query as DetailQuery;
-      const periode = resolvePeriode(q.from, q.to);
-      const hasil = await getDetail(jenis, periode, {
+      const filter = resolvePeriode(q.from, q.to, {
+        dokter_id: q.dokter_id,
+        penjamin: q.penjamin,
+      });
+      const hasil = await getDetail(jenis, filter, {
         page: q.page,
         per_page: q.per_page,
         poli_id: q.poli_id,

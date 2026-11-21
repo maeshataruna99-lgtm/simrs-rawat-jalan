@@ -24,6 +24,7 @@ import { DashboardCharts } from './DashboardCharts';
 import * as dashboardApi from './dashboard.api';
 import type {
   DashboardDetailRow,
+  DashboardFilterOptions,
   DashboardMeta,
   DashboardSummary,
   DetailJenis,
@@ -31,9 +32,13 @@ import type {
   ObatUsageItem,
   PembayaranReport,
   PendapatanReport,
+  PenjaminType,
   PeriodeFilter,
   TindakanTerbanyakItem,
 } from './dashboard.types';
+
+const selectClassName =
+  'flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
 
 function formatIsoDate(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -52,6 +57,12 @@ export default function DashboardPage() {
 
   const [fromInput, setFromInput] = useState(initial.from);
   const [toInput, setToInput] = useState(initial.to);
+  const [dokterInput, setDokterInput] = useState<string>('');
+  const [penjaminInput, setPenjaminInput] = useState<PenjaminType | ''>('');
+  const [filterOptions, setFilterOptions] = useState<DashboardFilterOptions>({
+    dokter: [],
+    penjamin: ['umum', 'bpjs', 'asuransi'],
+  });
   const [periode, setPeriode] = useState<PeriodeFilter>(initial);
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -108,6 +119,17 @@ export default function DashboardPage() {
   useEffect(() => {
     void (async () => {
       await Promise.resolve();
+      try {
+        setFilterOptions(await dashboardApi.getFilterOptions());
+      } catch {
+        // Opsi filter opsional: tetap gunakan daftar penjamin bawaan bila gagal memuat dokter.
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      await Promise.resolve();
       await loadStats();
     })();
   }, [loadStats]);
@@ -119,6 +141,13 @@ export default function DashboardPage() {
     })();
   }, [loadDetail]);
 
+  const buildFilter = (from: string, to: string): PeriodeFilter => ({
+    from,
+    to,
+    ...(dokterInput ? { dokter_id: Number(dokterInput) } : {}),
+    ...(penjaminInput ? { penjamin: penjaminInput } : {}),
+  });
+
   const handleApplyPeriode = (e: FormEvent) => {
     e.preventDefault();
     if (!fromInput || !toInput || fromInput > toInput) {
@@ -126,7 +155,7 @@ export default function DashboardPage() {
       return;
     }
     setPage(1);
-    setPeriode({ from: fromInput, to: toInput });
+    setPeriode(buildFilter(fromInput, toInput));
   };
 
   const applyPreset = (days: number | 'month') => {
@@ -143,7 +172,7 @@ export default function DashboardPage() {
     setFromInput(from);
     setToInput(to);
     setPage(1);
-    setPeriode({ from, to });
+    setPeriode(buildFilter(from, to));
   };
 
   const detailColumns: Record<DetailJenis, AppColumn<DashboardDetailRow>[]> = {
@@ -329,6 +358,42 @@ export default function DashboardPage() {
               onChange={(e) => setToInput(e.target.value)}
               className="w-40"
             />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="dash-dokter" className="text-xs">
+              {t('dashboard.filterDokter')}
+            </Label>
+            <select
+              id="dash-dokter"
+              className={selectClassName}
+              value={dokterInput}
+              onChange={(e) => setDokterInput(e.target.value)}
+            >
+              <option value="">{t('common.all')}</option>
+              {filterOptions.dokter.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.nama}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="dash-penjamin" className="text-xs">
+              {t('dashboard.filterPenjamin')}
+            </Label>
+            <select
+              id="dash-penjamin"
+              className={selectClassName}
+              value={penjaminInput}
+              onChange={(e) => setPenjaminInput(e.target.value as PenjaminType | '')}
+            >
+              <option value="">{t('common.all')}</option>
+              {filterOptions.penjamin.map((p) => (
+                <option key={p} value={p}>
+                  {t(`dashboard.penjaminLabel.${p}`)}
+                </option>
+              ))}
+            </select>
           </div>
           <Button type="submit">{t('dashboard.applyFilter')}</Button>
           <div className="flex gap-1">

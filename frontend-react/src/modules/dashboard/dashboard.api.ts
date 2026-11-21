@@ -6,6 +6,7 @@
 import { nodeApi, type ApiResponse } from '@/lib/api-client';
 import type {
   DashboardDetailRow,
+  DashboardFilterOptions,
   DashboardMeta,
   DashboardSummary,
   DetailJenis,
@@ -16,6 +17,16 @@ import type {
   PeriodeFilter,
   TindakanTerbanyakItem,
 } from './dashboard.types';
+
+/**
+ * Mengambil opsi filter lanjutan dashboard (dokter aktif dan kategori penjamin).
+ *
+ * Dipakai di: DashboardPage.tsx.
+ */
+export async function getFilterOptions(): Promise<DashboardFilterOptions> {
+  const { data } = await nodeApi.get<ApiResponse<DashboardFilterOptions>>('/api/dashboard/filters');
+  return data.data;
+}
 
 /**
  * Mengambil ringkasan utama dashboard (kunjungan, tindakan, pendapatan, status invoice).
@@ -106,6 +117,8 @@ export async function getDetail(
       params: {
         from: params.from,
         to: params.to,
+        ...(params.dokter_id ? { dokter_id: params.dokter_id } : {}),
+        ...(params.penjamin ? { penjamin: params.penjamin } : {}),
         page: params.page ?? 1,
         per_page: params.per_page ?? 10,
       },

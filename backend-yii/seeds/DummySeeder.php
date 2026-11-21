@@ -330,6 +330,7 @@ class DummySeeder
                 $isHariIniTerbuka = $offset === 0 && $slot === 1;
                 $statusKunjungan = $isHariIniTerbuka ? 'menunggu' : 'selesai';
 
+                $penjaminList = ['umum', 'bpjs', 'asuransi'];
                 Yii::$app->db->createCommand()->insert('t_kunjungan', [
                     'no_kunjungan' => $noKunjungan,
                     'pasien_id' => $pasienId,
@@ -339,6 +340,7 @@ class DummySeeder
                     'tgl_kunjungan' => $tgl,
                     'no_antrean' => $slot,
                     'status' => $statusKunjungan,
+                    'penjamin' => $penjaminList[$idx % count($penjaminList)],
                 ])->execute();
                 $kunjunganId = (int) Yii::$app->db->getLastInsertID('t_kunjungan_id_seq');
 

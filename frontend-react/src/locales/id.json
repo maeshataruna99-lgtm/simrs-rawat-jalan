@@ -584,6 +584,13 @@
     "subtitle": "Ringkasan kunjungan, tindakan medis, penggunaan obat, dan pendapatan rawat jalan.",
     "fromDate": "Dari Tanggal",
     "toDate": "Sampai Tanggal",
+    "filterDokter": "Dokter",
+    "filterPenjamin": "Penjamin",
+    "penjaminLabel": {
+      "umum": "Umum / Pribadi",
+      "bpjs": "BPJS Kesehatan",
+      "asuransi": "Asuransi"
+    },
     "applyFilter": "Terapkan",
     "invalidPeriode": "Tanggal akhir harus sama atau setelah tanggal awal.",
     "presetToday": "Hari Ini",
