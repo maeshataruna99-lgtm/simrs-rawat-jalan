@@ -1,20 +1,21 @@
 /**
- * Uji layout setelah login: sidebar sesuai role, menu aktif, breadcrumb, dan logout.
+ * Uji layout setelah login: pemilih modul di top bar, sidebar hanya menampilkan menu modul terpilih,
+ * menu aktif, breadcrumb, dan logout.
  */
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useAuthStore } from '@/lib/auth-store';
-import { renderAt } from './render';
 import { findMenuByPath } from '@/lib/menu';
 import type { UserProfile } from '@/modules/system/auth/auth.types';
+import { renderAt } from './render';
 
-const kasir: UserProfile = {
-  id: 6,
-  username: 'kasir',
-  nama: 'Sari Kasir',
+const pendaftaranUser: UserProfile = {
+  id: 2,
+  username: 'pendaftaran',
+  nama: 'Rina Pendaftaran',
   dokter_id: null,
-  role: { id: 9, kode: 'kasir', nama: 'Kasir' },
+  role: { id: 2, kode: 'pendaftaran', nama: 'Petugas Pendaftaran' },
   modules: [
     {
       kode: 'dashboard',
@@ -23,9 +24,30 @@ const kasir: UserProfile = {
       menus: [
         {
           kode: 'dashboard',
-          nama: 'Dashboard',
+          nama: 'Ringkasan Dashboard',
           path: '/dashboard',
           icon: 'layout-dashboard',
+          children: [],
+        },
+      ],
+    },
+    {
+      kode: 'pendaftaran',
+      nama: 'Pendaftaran',
+      icon: 'clipboard-list',
+      menus: [
+        {
+          kode: 'pendaftaran',
+          nama: 'Pendaftaran Kunjungan',
+          path: '/transaction/pendaftaran',
+          icon: 'user-plus',
+          children: [],
+        },
+        {
+          kode: 'antrean',
+          nama: 'Antrean Poli',
+          path: '/transaction/antrean',
+          icon: 'list-ordered',
           children: [],
         },
       ],
@@ -51,25 +73,50 @@ const kasir: UserProfile = {
 beforeEach(() => {
   localStorage.clear();
   localStorage.setItem('simrs_token', 'tok');
-  useAuthStore.setState({ status: 'authenticated', user: kasir });
+  useAuthStore.setState({ status: 'authenticated', user: pendaftaranUser });
 });
 
 describe('AppLayout', () => {
-  it('sidebar hanya berisi modul dan menu milik role', () => {
+  it('top bar menampilkan pilihan modul milik role dan memilih modul mengganti isi menu di sidebar', async () => {
     renderAt('/');
 
-    const sidebar = screen.getByText('Billing').closest('[data-sidebar="content"]') as HTMLElement;
+    const moduleNav = screen.getByRole('navigation', { name: 'Pemilihan modul' });
+    expect(within(moduleNav).getByRole('button', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(within(moduleNav).getByRole('button', { name: 'Pendaftaran' })).toBeInTheDocument();
+    expect(within(moduleNav).queryByText('Master Data')).not.toBeInTheDocument();
+
+    const sidebar = document.querySelector('[data-sidebar="content"]') as HTMLElement;
+    expect(within(sidebar).getByRole('link', { name: /Ringkasan Dashboard/ })).toBeInTheDocument();
     expect(
-      within(sidebar).getByRole('link', { name: /Tagihan dan Pembayaran/ }),
+      within(sidebar).queryByRole('link', { name: /Pendaftaran Kunjungan/ }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(within(moduleNav).getByRole('button', { name: 'Pendaftaran' }));
+
+    expect(
+      within(sidebar).getByRole('link', { name: /Pendaftaran Kunjungan/ }),
     ).toBeInTheDocument();
-    expect(within(sidebar).queryByText('Master Data')).not.toBeInTheDocument();
+    expect(within(sidebar).getByRole('link', { name: /Antrean Poli/ })).toBeInTheDocument();
+    expect(
+      within(sidebar).queryByRole('link', { name: /Ringkasan Dashboard/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(sidebar).queryByRole('link', { name: /Tagihan dan Pembayaran/ }),
+    ).not.toBeInTheDocument();
   });
 
-  it('menu aktif dan breadcrumb mengikuti path halaman', () => {
+  it('membuka path halaman otomatis mengaktifkan modulnya di top bar, sidebar, dan breadcrumb', () => {
     renderAt('/transaction/billing');
+
+    const moduleNav = screen.getByRole('navigation', { name: 'Pemilihan modul' });
+    expect(within(moduleNav).getByRole('button', { name: 'Billing' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
 
     const link = screen.getAllByRole('link', { name: /Tagihan dan Pembayaran/ })[0];
     expect(link).toHaveAttribute('aria-current', 'page');
+
     const breadcrumb = screen.getByRole('navigation', { name: /breadcrumb/i });
     expect(within(breadcrumb).getByText('Billing')).toBeInTheDocument();
     expect(within(breadcrumb).getByText('Tagihan dan Pembayaran')).toBeInTheDocument();
@@ -87,13 +134,13 @@ describe('AppLayout', () => {
 
 describe('findMenuByPath', () => {
   it('path turunan tetap cocok dengan menu induknya', () => {
-    const found = findMenuByPath(kasir.modules, '/transaction/billing/12');
+    const found = findMenuByPath(pendaftaranUser.modules, '/transaction/billing/12');
 
     expect(found?.module.kode).toBe('billing');
     expect(found?.trail.map((menu) => menu.kode)).toEqual(['billing']);
   });
 
   it('path yang tidak ada di menu menghasilkan null', () => {
-    expect(findMenuByPath(kasir.modules, '/master/pasien')).toBeNull();
+    expect(findMenuByPath(pendaftaranUser.modules, '/master/pasien')).toBeNull();
   });
 });

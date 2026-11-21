@@ -5,7 +5,8 @@
     "shortTagline": "Rawat jalan terintegrasi"
   },
   "layout": {
-    "home": "Beranda"
+    "home": "Beranda",
+    "moduleSwitcher": "Pemilihan modul"
   },
   "home": {
     "greeting": "Selamat datang, {{nama}}",

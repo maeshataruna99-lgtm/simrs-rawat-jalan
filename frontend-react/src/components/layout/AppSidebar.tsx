@@ -1,6 +1,5 @@
 /**
- * Sidebar aplikasi: dibangun dari pohon menu profil user (/system/auth/me),
- * sehingga setiap role hanya melihat menu yang boleh dibukanya.
+ * Sidebar aplikasi: hanya menampilkan daftar menu dari modul yang sedang dipilih pada top bar.
  *
  * Dipakai di: components/layout/AppLayout.tsx.
  */
@@ -25,12 +24,16 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/lib/auth-store';
 import { isPathActive } from '@/lib/menu';
-import type { MenuItem } from '@/modules/system/auth/auth.types';
+import type { MenuItem, MenuModuleGroup } from '@/modules/system/auth/auth.types';
 
 const ACTIVE_CLASS =
   'data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground';
 
-export function AppSidebar() {
+interface Props {
+  activeModule: MenuModuleGroup | null;
+}
+
+export function AppSidebar({ activeModule }: Props) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const user = useAuthStore((s) => s.user);
@@ -59,18 +62,21 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {user?.modules.map((module) => (
-          <SidebarGroup key={module.kode}>
-            <SidebarGroupLabel>{module.nama}</SidebarGroupLabel>
+        {activeModule && (
+          <SidebarGroup key={activeModule.kode}>
+            <SidebarGroupLabel className="gap-2">
+              <AppIcon icon={activeModule.icon} className="h-3.5 w-3.5" />
+              <span>{activeModule.nama}</span>
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {module.menus.map((menu) => (
+                {activeModule.menus.map((menu) => (
                   <MenuEntry key={menu.kode} menu={menu} pathname={pathname} />
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        ))}
+        )}
       </SidebarContent>
 
       <SidebarFooter>
