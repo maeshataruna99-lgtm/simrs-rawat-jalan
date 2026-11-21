@@ -7,10 +7,10 @@ import { AxiosError, AxiosHeaders } from 'axios';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/lib/auth-store';
+import { renderAt } from './render';
 import { tokenStorage } from '@/lib/token-storage';
 import * as authApi from '@/modules/system/auth/auth.api';
 import type { UserProfile } from '@/modules/system/auth/auth.types';
-import { routes } from '@/routes';
 import { PermissionGuard } from '@/routes/PermissionGuard';
 
 vi.mock('@/modules/system/auth/auth.api');
@@ -35,10 +35,6 @@ function apiError(status: number, data: object) {
   });
 }
 
-function renderAt(path: string) {
-  render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />);
-}
-
 beforeEach(() => {
   vi.resetAllMocks();
   localStorage.clear();
@@ -54,7 +50,9 @@ describe('login', () => {
     await userEvent.type(screen.getByLabelText('Password'), 'simrs123');
     await userEvent.click(screen.getByRole('button', { name: 'Masuk' }));
 
-    expect(await screen.findByText('Selamat datang, Sari Kasir (Kasir)')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Selamat datang, Sari Kasir' }),
+    ).toBeInTheDocument();
     expect(tokenStorage.get()).toBe('tok-123');
     expect(authApi.login).toHaveBeenCalledWith('kasir', 'simrs123');
   });

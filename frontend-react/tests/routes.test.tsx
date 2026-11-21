@@ -1,15 +1,10 @@
 /**
- * Uji router: halaman publik, pengalihan ke login, dan halaman tidak ditemukan.
+ * Uji router: pengalihan ke login dan halaman tidak ditemukan di dalam layout.
  */
-import { render, screen } from '@testing-library/react';
-import { createMemoryRouter, RouterProvider } from 'react-router';
+import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useAuthStore } from '@/lib/auth-store';
-import { routes } from '@/routes';
-
-function renderAt(path: string) {
-  render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />);
-}
+import { renderAt } from './render';
 
 describe('routes', () => {
   beforeEach(() => {
@@ -23,7 +18,21 @@ describe('routes', () => {
   });
 
   it('URL tidak terdaftar menampilkan halaman tidak ditemukan', () => {
+    useAuthStore.setState({
+      status: 'authenticated',
+      user: {
+        id: 1,
+        username: 'admin',
+        nama: 'Administrator',
+        dokter_id: null,
+        role: { id: 1, kode: 'admin', nama: 'Administrator' },
+        modules: [],
+        permissions: {},
+      },
+    });
+
     renderAt('/tidak-ada');
+
     expect(screen.getByRole('heading', { name: 'Halaman tidak ditemukan' })).toBeInTheDocument();
   });
 });

@@ -47,7 +47,7 @@ Hak akses berbasis menu: role diberi izin baca/tambah/ubah/hapus per menu, menu 
 - [x] 1.9 Endpoint master hak akses role (matriks menu × aksi)
 - [x] 1.10 Endpoint master role dan user (tambah, ubah, nonaktifkan, reset password)
 - [x] 1.11 Halaman login, penyimpanan sesi, dan guard halaman berdasarkan izin di React
-- [ ] 1.12 Layout dan sidebar dinamis dari pohon menu user
+- [x] 1.12 Layout dan sidebar dinamis dari pohon menu user
 - [ ] 1.13 Halaman master user, role, modul, menu, dan hak akses role
 
 ## 2. Master Data — B.1

@@ -1,7 +1,15 @@
 {
   "app": {
     "name": "SIMRS Rawat Jalan",
-    "tagline": "Sistem pelayanan rawat jalan terintegrasi"
+    "tagline": "Sistem pelayanan rawat jalan terintegrasi",
+    "shortTagline": "Rawat jalan terintegrasi"
+  },
+  "layout": {
+    "home": "Beranda"
+  },
+  "home": {
+    "greeting": "Selamat datang, {{nama}}",
+    "role": "Anda masuk sebagai {{role}}. Pilih menu untuk mulai bekerja."
   },
   "common": {
     "backHome": "Kembali ke beranda",
@@ -13,6 +21,7 @@
   },
   "error": {
     "notFound": "Halaman tidak ditemukan",
+    "notFoundHint": "Alamat halaman salah atau halaman ini belum tersedia.",
     "forbidden": "Akses ditolak",
     "forbiddenHint": "Role Anda tidak memiliki izin untuk membuka halaman ini. Hubungi administrator bila Anda memerlukan akses."
   },
@@ -24,7 +33,6 @@
     "usernameRequired": "Username wajib diisi.",
     "passwordRequired": "Password wajib diisi.",
     "serverUnavailable": "Server tidak dapat dihubungi. Coba beberapa saat lagi.",
-    "welcome": "Selamat datang, {{nama}} ({{role}})",
     "logout": "Keluar"
   },
   "theme": {
