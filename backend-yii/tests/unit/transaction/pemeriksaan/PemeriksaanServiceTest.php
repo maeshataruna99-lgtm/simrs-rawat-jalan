@@ -15,6 +15,7 @@ use app\modules\transaction\pendaftaran\PendaftaranService;
 use app\tests\TestCase;
 use yii\web\ConflictHttpException;
 use yii\web\ForbiddenHttpException;
+use yii\web\NotFoundHttpException;
 
 /**
  * Uji worklist dan penyimpanan pemeriksaan dokter (poin 4.2 dan seterusnya).
@@ -147,5 +148,28 @@ class PemeriksaanServiceTest extends TestCase
         $detail = $service->detail($kunjunganId, null);
         $this->assertCount(1, $detail['diagnosis']);
         $this->assertSame($icd[2], $detail['diagnosis'][0]['icd10_id']);
+    }
+
+    public function testRiwayatMedisBerisiPemeriksaanDanDiagnosisPerKunjungan(): void
+    {
+        $data = $this->siapkanKunjungan();
+        $kunjunganId = $data['kunjungan'][0];
+        $pasienId = Kunjungan::findOne($kunjunganId)->pasien_id;
+        $icd = (new Icd10Service())->create(['kode' => 'TJ06', 'nama' => 'Uji ISPA'])->id;
+        $service = new PemeriksaanService();
+
+        $this->assertSame([null], array_column($service->riwayatMedis($pasienId), 'pemeriksaan'));
+
+        $service->simpan($kunjunganId, ['keluhan_utama' => 'Batuk', 'suhu' => 37.5], $data['dokter1']);
+        $service->simpanDiagnosis($kunjunganId, [['icd10_id' => $icd, 'jenis' => 'utama']], $data['dokter1']);
+
+        $riwayat = $service->riwayatMedis($pasienId);
+        $this->assertCount(1, $riwayat);
+        $this->assertSame('Batuk', $riwayat[0]['pemeriksaan']['keluhan_utama']);
+        $this->assertSame('TJ06', $riwayat[0]['diagnosis'][0]['icd10']['kode']);
+        $this->assertSame('Poli Umum', $riwayat[0]['kunjungan']['poli']['nama']);
+
+        $this->expectException(NotFoundHttpException::class);
+        $service->riwayatMedis(999999);
     }
 }

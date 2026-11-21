@@ -14,5 +14,6 @@ class Module extends \yii\base\Module
         'riwayat-kunjungan' => antrean\RiwayatKunjunganController::class,
         'pemeriksaan' => pemeriksaan\PemeriksaanController::class,
         'diagnosis' => pemeriksaan\DiagnosisController::class,
+        'riwayat-medis' => pemeriksaan\RiwayatMedisController::class,
     ];
 }

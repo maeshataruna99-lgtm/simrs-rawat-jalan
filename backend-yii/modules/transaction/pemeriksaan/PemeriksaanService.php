@@ -4,6 +4,7 @@ namespace app\modules\transaction\pemeriksaan;
 
 use app\common\ValidationException;
 use app\modules\master\icd10\Icd10;
+use app\modules\master\pasien\Pasien;
 use app\modules\transaction\antrean\AntreanService;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use Yii;
@@ -14,7 +15,7 @@ use yii\web\NotFoundHttpException;
 /**
  * Service pemeriksaan dokter: worklist pasien, anamnesis, tanda vital, pemeriksaan fisik, dan diagnosis ICD-10.
  *
- * Dipakai di: PemeriksaanController, DiagnosisController.
+ * Dipakai di: PemeriksaanController, DiagnosisController, RiwayatMedisController.
  */
 class PemeriksaanService
 {
@@ -151,6 +152,43 @@ class PemeriksaanService
         });
 
         return $this->daftarDiagnosis($kunjunganId);
+    }
+
+    /**
+     * Riwayat rekam medis pasien: setiap kunjungan yang tidak batal beserta pemeriksaan dan diagnosisnya, terbaru dulu.
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * @throws NotFoundHttpException Bila pasien tidak ditemukan.
+     *
+     * Dipakai di: RiwayatMedisController::actionView().
+     */
+    public function riwayatMedis(int $pasienId): array
+    {
+        if (!Pasien::findActive()->andWhere(['id' => $pasienId])->exists()) {
+            throw new NotFoundHttpException('Pasien tidak ditemukan.');
+        }
+
+        $kunjungan = Kunjungan::find()->with(['poli', 'dokter'])
+            ->where(['pasien_id' => $pasienId])
+            ->andWhere(['<>', 'status', Kunjungan::STATUS_BATAL])
+            ->orderBy(['tgl_kunjungan' => SORT_DESC, 'id' => SORT_DESC])
+            ->all();
+        $ids = array_map(fn (Kunjungan $k) => $k->id, $kunjungan);
+
+        $pemeriksaan = Pemeriksaan::find()->where(['kunjungan_id' => $ids])->indexBy('kunjungan_id')->all();
+        $diagnosis = [];
+        $rows = Diagnosis::find()->with('icd10')->where(['kunjungan_id' => $ids])
+            ->orderBy(['jenis' => SORT_DESC, 'id' => SORT_ASC])->all();
+        foreach ($rows as $d) {
+            $diagnosis[$d->kunjungan_id][] = $d->toArray();
+        }
+
+        return array_map(fn (Kunjungan $k) => [
+            'kunjungan' => $k->toArray(['id', 'no_kunjungan', 'tgl_kunjungan', 'status', 'poli', 'dokter']),
+            'pemeriksaan' => isset($pemeriksaan[$k->id]) ? $pemeriksaan[$k->id]->toArray() : null,
+            'diagnosis' => $diagnosis[$k->id] ?? [],
+        ], $kunjungan);
     }
 
     /**
