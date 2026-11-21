@@ -1,11 +1,16 @@
 /**
- * Pemanggilan endpoint pendaftaran kunjungan, antrean poli, dan riwayat kunjungan di backend Yii.
+ * Pemanggilan endpoint pendaftaran kunjungan, antrean poli, layar display antrean, dan riwayat kunjungan di backend Yii.
  *
- * Dipakai di: PendaftaranPage, AntreanPage, PemeriksaanPage.
+ * Dipakai di: PendaftaranPage, AntreanPage, DisplayAntreanPage, PemeriksaanPage.
  */
 import { yiiApi, type ApiResponse } from '@/lib/api-client';
 import type { PasienItem } from '@/modules/master/pasien/pasien.types';
-import type { DaftarKunjunganPayload, KunjunganItem, KunjunganStatus } from './pendaftaran.types';
+import type {
+  DaftarKunjunganPayload,
+  DisplayAntreanResponse,
+  KunjunganItem,
+  KunjunganStatus,
+} from './pendaftaran.types';
 
 /**
  * Mencari pasien aktif berdasarkan nomor RM, NIK, atau nama untuk loket pendaftaran.
@@ -80,6 +85,27 @@ export async function ubahStatusAntrean(
 export async function riwayatKunjunganPasien(pasienId: number): Promise<KunjunganItem[]> {
   const { data } = await yiiApi.get<ApiResponse<KunjunganItem[]>>(
     `/transaction/riwayat-kunjungan/${pasienId}`,
+  );
+  return data.data;
+}
+
+/**
+ * Mengambil ringkasan antrean publik per poli untuk layar display ruang tunggu (tanpa autentikasi).
+ *
+ * Dipakai di: DisplayAntreanPage.
+ */
+export async function getDisplayAntrean(params?: {
+  tanggal?: string;
+  poli_id?: number | '';
+}): Promise<DisplayAntreanResponse> {
+  const { data } = await yiiApi.get<ApiResponse<DisplayAntreanResponse>>(
+    '/transaction/antrean/display',
+    {
+      params: {
+        tanggal: params?.tanggal || undefined,
+        poli_id: params?.poli_id || undefined,
+      },
+    },
   );
   return data.data;
 }

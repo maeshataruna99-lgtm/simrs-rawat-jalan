@@ -21,6 +21,7 @@ import RoleAccessPage from '@/modules/system/role-access/RoleAccessPage';
 import RolePage from '@/modules/system/role/RolePage';
 import UserPage from '@/modules/system/user/UserPage';
 import AntreanPage from '@/modules/transaction/antrean/AntreanPage';
+import DisplayAntreanPage from '@/modules/transaction/antrean/DisplayAntreanPage';
 import PemeriksaanPage from '@/modules/transaction/pemeriksaan/PemeriksaanPage';
 import FarmasiPage from '@/modules/transaction/resep/FarmasiPage';
 import RiwayatMedisPage from '@/modules/transaction/pemeriksaan/RiwayatMedisPage';
@@ -38,6 +39,7 @@ import { RequireAuth } from './RequireAuth';
 
 export const routes: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
+  { path: '/display-antrean', element: <DisplayAntreanPage /> },
   { path: '/ui-kit', element: <UiKitPage /> },
   {
     element: <RequireAuth />,

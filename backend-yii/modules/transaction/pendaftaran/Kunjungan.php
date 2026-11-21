@@ -55,6 +55,8 @@ class Kunjungan extends ActiveRecord
             [['tgl_kunjungan'], 'date', 'format' => 'php:Y-m-d', 'message' => 'Format tanggal kunjungan harus YYYY-MM-DD.'],
             [['status'], 'in', 'range' => self::STATUS_LIST],
             [['status'], 'default', 'value' => self::STATUS_MENUNGGU],
+            [['penjamin'], 'in', 'range' => ['umum', 'bpjs', 'asuransi']],
+            [['penjamin'], 'default', 'value' => 'umum'],
         ];
     }
 

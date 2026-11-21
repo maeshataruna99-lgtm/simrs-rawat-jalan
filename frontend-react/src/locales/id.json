@@ -347,7 +347,23 @@
       "callButton": "Panggil / Periksa",
       "finishButton": "Selesai",
       "cancelButton": "Batalkan",
+      "openDisplay": "Layar Display",
       "statusUpdated": "Status antrean berhasil diperbarui.",
+      "display": {
+        "title": "Layar Antrean Rawat Jalan",
+        "subtitle": "Informasi antrean poli secara berkala setiap 10 detik",
+        "nowServing": "Sedang Diperiksa",
+        "noActiveCall": "Belum ada panggilan aktif",
+        "nextQueue": "Antrean Berikutnya",
+        "noWaiting": "Tidak ada pasien menunggu",
+        "waitingCount": "Menunggu",
+        "doneCount": "Selesai",
+        "fullscreen": "Layar Penuh",
+        "exitFullscreen": "Keluar Layar Penuh",
+        "refresh": "Muat Ulang",
+        "lastUpdated": "Diperbarui",
+        "emptyPoli": "Belum ada poli aktif untuk ditampilkan."
+      },
       "status": {
         "menunggu": "Menunggu",
         "diperiksa": "Diperiksa",

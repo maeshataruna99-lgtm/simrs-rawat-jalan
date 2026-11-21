@@ -12,6 +12,7 @@ use Yii;
  */
 class AntreanController extends BaseApiController
 {
+    protected array $publicActions = ['display'];
     protected ?string $menuCode = 'antrean';
     protected array $actionPermissions = [
         'status' => 'update',
@@ -21,8 +22,20 @@ class AntreanController extends BaseApiController
     {
         return [
             'index' => ['GET'],
+            'display' => ['GET'],
             'status' => ['PUT', 'POST'],
         ];
+    }
+
+    /**
+     * GET /transaction/antrean/display?tanggal=&poli_id=
+     * Endpoint publik khusus layar display ruang tunggu (tanpa data identitas sensitif pasien).
+     */
+    public function actionDisplay(): array
+    {
+        $payload = (new AntreanService())->display(Yii::$app->request->queryParams);
+
+        return ApiResponse::success($payload);
     }
 
     /**

@@ -5,8 +5,10 @@
  *
  * Dipakai di: routes/index.tsx.
  */
+import { Monitor } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { AppDataTable, type AppColumn } from '@/components/AppDataTable';
 import { AppFilterBar } from '@/components/AppFilterBar';
@@ -151,9 +153,17 @@ export default function AntreanPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold">{t('transaction.antrean.title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('transaction.antrean.subtitle')}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-semibold">{t('transaction.antrean.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('transaction.antrean.subtitle')}</p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/display-antrean" target="_blank" rel="noopener noreferrer">
+            <Monitor className="mr-1.5 size-4" />
+            {t('transaction.antrean.openDisplay')}
+          </Link>
+        </Button>
       </div>
 
       <AppFilterBar

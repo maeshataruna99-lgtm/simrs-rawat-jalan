@@ -51,3 +51,29 @@ export interface DaftarKunjunganPayload {
   jadwal_id: number;
   tgl_kunjungan: string;
 }
+
+export interface DisplayAntreanEntry {
+  id: number;
+  no_antrean: number;
+  kode_antrean: string;
+  inisial_pasien: string;
+  dokter_nama: string;
+  status: KunjunganStatus;
+}
+
+export interface DisplayAntreanPoli {
+  poli_id: number;
+  poli_kode: string;
+  poli_nama: string;
+  sedang_diperiksa: DisplayAntreanEntry[];
+  menunggu: DisplayAntreanEntry[];
+  total_menunggu: number;
+  total_selesai: number;
+}
+
+export interface DisplayAntreanResponse {
+  tanggal: string;
+  updated_at: string;
+  poli_list: { id: number; kode: string; nama: string }[];
+  poli: DisplayAntreanPoli[];
+}

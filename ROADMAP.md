@@ -158,5 +158,5 @@ Dikerjakan hanya jika waktu tersisa, tidak mengubah fitur inti.
 - [x] Filter laporan lanjutan (per dokter, per penjamin)
 - [x] Penyempurnaan UI (tema, responsif, empty state)
 - [x] CI GitHub Actions untuk lint dan test
-- [ ] Layar display antrean
+- [x] Layar display antrean
 - [ ] Bahasa Inggris (`en`) untuk i18n

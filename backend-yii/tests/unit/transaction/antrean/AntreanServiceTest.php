@@ -78,4 +78,72 @@ class AntreanServiceTest extends TestCase
             }
         }
     }
+
+    public function testDisplayAntreanMengelompokkanPerPoliDanMenyamarkanNamaPasien(): void
+    {
+        $pasien1 = (new PasienService())->create([
+            'nik' => '3201010101900011',
+            'nama' => 'Budi Santoso',
+            'tgl_lahir' => '1990-01-01',
+            'jenis_kelamin' => 'L',
+        ]);
+        $pasien2 = (new PasienService())->create([
+            'nik' => '3201010101900012',
+            'nama' => 'Siti Aminah',
+            'tgl_lahir' => '1992-03-04',
+            'jenis_kelamin' => 'P',
+        ]);
+        $dokter = (new DokterService())->create([
+            'kode' => 'DR-DISP',
+            'nama' => 'dr. Lestari',
+            'sip' => 'SIP/DISP',
+            'jenis_tenaga' => 'dokter',
+        ]);
+        $poli = (new PoliService())->create([
+            'kode' => 'UMU',
+            'nama' => 'Poli Umum',
+            'tarif_pendaftaran' => 25000,
+        ]);
+        $jadwal = (new JadwalDokterService())->create([
+            'dokter_id' => $dokter->id,
+            'poli_id' => $poli->id,
+            'hari' => 1,
+            'jam_mulai' => '08:00',
+            'jam_selesai' => '12:00',
+            'kuota' => 10,
+        ]);
+
+        $tgl = self::seninDepan();
+        $k1 = (new PendaftaranService())->daftar([
+            'pasien_id' => $pasien1->id,
+            'jadwal_id' => $jadwal->id,
+            'tgl_kunjungan' => $tgl,
+        ]);
+        $k2 = (new PendaftaranService())->daftar([
+            'pasien_id' => $pasien2->id,
+            'jadwal_id' => $jadwal->id,
+            'tgl_kunjungan' => $tgl,
+        ]);
+
+        $service = new AntreanService();
+        $service->ubahStatus($k1->id, 'diperiksa');
+
+        $display = $service->display(['tanggal' => $tgl, 'poli_id' => $poli->id]);
+        $this->assertSame($tgl, $display['tanggal']);
+        $this->assertCount(1, $display['poli']);
+
+        $group = $display['poli'][0];
+        $this->assertSame('UMU', $group['poli_kode']);
+        $this->assertCount(1, $group['sedang_diperiksa']);
+        $this->assertSame('UMU-001', $group['sedang_diperiksa'][0]['kode_antrean']);
+        $this->assertSame('B*** S***', $group['sedang_diperiksa'][0]['inisial_pasien']);
+        $this->assertArrayNotHasKey('nik', $group['sedang_diperiksa'][0]);
+
+        $this->assertCount(1, $group['menunggu']);
+        $this->assertSame('UMU-002', $group['menunggu'][0]['kode_antrean']);
+        $this->assertSame('S*** A***', $group['menunggu'][0]['inisial_pasien']);
+        $this->assertSame(1, $group['total_menunggu']);
+        $this->assertSame(0, $group['total_selesai']);
+        $this->assertSame($k2->id, $group['menunggu'][0]['id']);
+    }
 }
