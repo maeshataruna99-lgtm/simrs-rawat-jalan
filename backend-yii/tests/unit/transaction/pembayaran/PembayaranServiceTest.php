@@ -101,4 +101,39 @@ class PembayaranServiceTest extends TestCase
         $this->expectException(ConflictHttpException::class);
         $svc->bayar(['invoice_id' => $f['invoice'], 'metode' => 'tunai', 'jumlah' => 1000], $f['kasir'], 'key-uji-83-lunas-2');
     }
+
+    public function testTolakPembayaranTanpaIdempotencyKey(): void
+    {
+        $f = $this->siapkan();
+
+        $this->expectException(ValidationException::class);
+        (new PembayaranService())->bayar(['invoice_id' => $f['invoice'], 'metode' => 'tunai', 'jumlah' => 50000], $f['kasir'], '   ');
+    }
+
+    public function testIdempotencyKeySamaMengembalikanPembayaranLamaTanpaGanda(): void
+    {
+        $f = $this->siapkan();
+        $svc = new PembayaranService();
+        $payload = ['invoice_id' => $f['invoice'], 'metode' => 'tunai', 'jumlah' => 50000];
+
+        $pertama = $svc->bayar($payload, $f['kasir'], 'idem-uji-84-sama');
+        $kedua = $svc->bayar($payload, $f['kasir'], 'idem-uji-84-sama');
+
+        $this->assertFalse($pertama['duplikat']);
+        $this->assertTrue($kedua['duplikat']);
+        $this->assertSame($pertama['pembayaran']->id, $kedua['pembayaran']->id);
+        $this->assertSame($pertama['pembayaran']->no_pembayaran, $kedua['pembayaran']->no_pembayaran);
+        $this->assertSame(50000.0, (float) $kedua['invoice']->total_bayar);
+        $this->assertSame(1, (int) Pembayaran::find()->where(['invoice_id' => $f['invoice']])->count());
+    }
+
+    public function testTolakIdempotencyKeySamaUntukInvoiceBerbeda(): void
+    {
+        $f = $this->siapkan();
+        $svc = new PembayaranService();
+        $svc->bayar(['invoice_id' => $f['invoice'], 'metode' => 'tunai', 'jumlah' => 25000], $f['kasir'], 'idem-uji-84-beda');
+
+        $this->expectException(ConflictHttpException::class);
+        $svc->bayar(['invoice_id' => $f['invoice'] + 99999, 'metode' => 'tunai', 'jumlah' => 25000], $f['kasir'], 'idem-uji-84-beda');
+    }
 }

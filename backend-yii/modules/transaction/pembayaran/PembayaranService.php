@@ -6,17 +6,19 @@ use app\common\SequenceService;
 use app\common\ValidationException;
 use Yii;
 use yii\db\Expression;
+use yii\db\IntegrityException;
 use yii\web\ConflictHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
  * Service pemrosesan pembayaran tunai/non-tunai bertahap terhadap invoice rawat jalan.
- * Baris invoice dikunci FOR UPDATE agar total bayar tidak pernah melebihi sisa tagihan.
+ * Pengaman D.3: Idempotency-Key wajib & unik di t_pembayaran; baris invoice dikunci FOR UPDATE.
  */
 class PembayaranService
 {
     /**
      * Mencatat pembayaran (penuh atau bertahap) untuk satu invoice dalam satu transaksi.
+     * Bila Idempotency-Key sudah pernah diproses untuk invoice yang sama, pembayaran lama dikembalikan (duplikat=true).
      *
      * @param array<string, mixed> $data invoice_id, metode (tunai|non_tunai), jumlah, no_referensi (opsional).
      * @return array{pembayaran: Pembayaran, invoice: Invoice, duplikat: bool}
@@ -27,16 +29,18 @@ class PembayaranService
      *
      * Dipakai di: PembayaranController::actionCreate.
      */
-    public function bayar(array $data, int $kasirId, ?string $idempotencyKey = null): array
+    public function bayar(array $data, int $kasirId, ?string $idempotencyKey): array
     {
+        $key = $this->validasiIdempotencyKey($idempotencyKey);
         $validated = $this->validasiInput($data);
-        $key = $idempotencyKey !== null && trim($idempotencyKey) !== ''
-            ? mb_substr(trim($idempotencyKey), 0, 100)
-            : $this->generateUuidV4();
+
+        if (($lama = Pembayaran::findOne(['idempotency_key' => $key])) !== null) {
+            return $this->hasilIdempoten($lama, $validated['invoice_id']);
+        }
 
         $tx = Yii::$app->db->beginTransaction();
         try {
-            // Kunci baris invoice agar dua pembayaran paralel tidak melebihi sisa tagihan.
+            // Kunci baris invoice agar pembayaran paralel terurut dan tidak melebihi sisa tagihan.
             $row = Yii::$app->db->createCommand(
                 'SELECT id, total, total_bayar, status FROM t_invoice WHERE id = :id FOR UPDATE',
                 [':id' => $validated['invoice_id']]
@@ -45,6 +49,14 @@ class PembayaranService
             if (!$row) {
                 throw new NotFoundHttpException('Invoice tidak ditemukan.');
             }
+
+            // Cek ulang setelah memegang row lock: request paralel dengan key sama yang menunggu lock langsung mendapat hasil pemenang.
+            if (($lama = Pembayaran::findOne(['idempotency_key' => $key])) !== null) {
+                $tx->rollBack();
+
+                return $this->hasilIdempoten($lama, $validated['invoice_id']);
+            }
+
             if ($row['status'] === Invoice::STATUS_LUNAS) {
                 throw new ConflictHttpException('Invoice sudah lunas.');
             }
@@ -91,8 +103,20 @@ class PembayaranService
                 'invoice' => (new InvoiceService())->detail($validated['invoice_id']),
                 'duplikat' => false,
             ];
+        } catch (IntegrityException $e) {
+            if ($tx->getIsActive()) {
+                $tx->rollBack();
+            }
+            // Pengaman terakhir bila dua transaksi berbeda lolos bersamaan dengan idempotency_key sama.
+            $lama = Pembayaran::findOne(['idempotency_key' => $key]);
+            if ($lama !== null) {
+                return $this->hasilIdempoten($lama, $validated['invoice_id']);
+            }
+            throw $e;
         } catch (\Throwable $e) {
-            $tx->rollBack();
+            if ($tx->getIsActive()) {
+                $tx->rollBack();
+            }
             throw $e;
         }
     }
@@ -175,6 +199,43 @@ class PembayaranService
     }
 
     /**
+     * Memastikan header Idempotency-Key diisi dan panjangnya sesuai batas kolom.
+     *
+     * @throws ValidationException
+     */
+    private function validasiIdempotencyKey(?string $idempotencyKey): string
+    {
+        $key = $idempotencyKey === null ? '' : trim($idempotencyKey);
+        if ($key === '' || mb_strlen($key) > 100) {
+            throw new ValidationException([
+                'idempotency_key' => ['Header Idempotency-Key wajib diisi (maksimal 100 karakter).'],
+            ]);
+        }
+
+        return $key;
+    }
+
+    /**
+     * Mengembalikan pembayaran lama saat Idempotency-Key cocok; menolak 409 bila key dipakai untuk invoice lain.
+     *
+     * @return array{pembayaran: Pembayaran, invoice: Invoice, duplikat: bool}
+     *
+     * @throws ConflictHttpException
+     */
+    private function hasilIdempoten(Pembayaran $lama, int $invoiceId): array
+    {
+        if ((int) $lama->invoice_id !== $invoiceId) {
+            throw new ConflictHttpException('Idempotency-Key sudah digunakan untuk invoice lain.');
+        }
+
+        return [
+            'pembayaran' => $this->detail($lama->id),
+            'invoice' => (new InvoiceService())->detail($lama->invoice_id),
+            'duplikat' => true,
+        ];
+    }
+
+    /**
      * Memvalidasi field input pembayaran sebelum masuk transaksi.
      *
      * @param array<string, mixed> $data
@@ -214,15 +275,5 @@ class PembayaranService
             'jumlah' => round((float) $rawJumlah, 2),
             'no_referensi' => $noRef === '' ? null : $noRef,
         ];
-    }
-
-    /** Membuat UUID v4 acak bila idempotency key belum disediakan. */
-    private function generateUuidV4(): string
-    {
-        $bytes = random_bytes(16);
-        $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
-        $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
-
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
     }
 }
