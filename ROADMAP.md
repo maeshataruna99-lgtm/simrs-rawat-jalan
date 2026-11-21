@@ -105,7 +105,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 ## 7. Pemeriksaan Penunjang — B.6, C.1, D.5
 
-- [ ] 7.1 Migrasi order laboratorium, hasil, dan outbox integrasi
+- [x] 7.1 Migrasi order laboratorium, hasil, dan outbox integrasi
 - [ ] 7.2 Endpoint Yii untuk order dan hasil laboratorium
 - [ ] 7.3 REST API Node untuk integrasi laboratorium (daftar order, kirim hasil)
 - [ ] 7.4 Outbox dan retry di Node ketika Yii tidak dapat diakses — D.5
