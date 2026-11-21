@@ -16,5 +16,6 @@ class Module extends \yii\base\Module
         'tindakan' => tindakan\TindakanController::class,
         'obat' => obat\ObatController::class,
         'pemeriksaan-lab' => lab\PemeriksaanLabController::class,
+        'icd10' => icd10\Icd10Controller::class,
     ];
 }
