@@ -17,5 +17,6 @@ class Module extends \yii\base\Module
         'riwayat-medis' => pemeriksaan\RiwayatMedisController::class,
         'tindakan' => tindakan\TindakanController::class,
         'resep' => resep\ResepController::class,
+        'farmasi' => resep\FarmasiController::class,
     ];
 }

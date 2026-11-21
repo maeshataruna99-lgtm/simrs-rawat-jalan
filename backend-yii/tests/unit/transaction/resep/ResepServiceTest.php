@@ -5,12 +5,16 @@ namespace app\tests\unit\transaction\resep;
 use app\common\ValidationException;
 use app\modules\master\dokter\DokterService;
 use app\modules\master\jadwal\JadwalDokterService;
+use app\modules\master\obat\Obat;
 use app\modules\master\obat\ObatService;
 use app\modules\master\pasien\PasienService;
 use app\modules\master\poli\PoliService;
 use app\modules\transaction\pendaftaran\PendaftaranService;
+use app\modules\transaction\resep\FarmasiService;
+use app\modules\transaction\resep\Resep;
 use app\modules\transaction\resep\ResepService;
 use app\tests\TestCase;
+use yii\web\ConflictHttpException;
 use yii\web\ForbiddenHttpException;
 
 /**
@@ -87,5 +91,47 @@ class ResepServiceTest extends TestCase
         $daftar = $service->daftarPerKunjungan($d['kunjungan'], $d['dokter']);
         $this->assertSame(500.0, $daftar[0]['details'][0]['harga']);
         $this->assertSame(10, $daftar[0]['details'][0]['obat']['stok']);
+    }
+
+    public function testProsesDanSerahkanMengurangiStokAtomikDanMencatatMutasi(): void
+    {
+        $d = $this->siapkan();
+        $item = fn (int $obatId, int $jumlah) => ['obat_id' => $obatId, 'dosis' => '1 tab', 'frekuensi' => '3x1', 'jumlah' => $jumlah];
+        $resep1 = (new ResepService())->buat(['kunjungan_id' => $d['kunjungan'], 'items' => [$item($d['paracetamol'], 4), $item($d['amoxicillin'], 3)]], $d['dokter']);
+        $resep2 = (new ResepService())->buat(['kunjungan_id' => $d['kunjungan'], 'items' => [$item($d['paracetamol'], 2), $item($d['amoxicillin'], 1)]], $d['dokter']);
+        $farmasi = new FarmasiService();
+
+        $this->assertSame([$resep1->id, $resep2->id], array_column($farmasi->antrean([]), 'id'));
+
+        try {
+            $farmasi->serahkan($resep1->id);
+            $this->fail('Resep yang belum diproses seharusnya tidak bisa diserahkan');
+        } catch (ConflictHttpException) {
+        }
+        $this->assertSame(10, (int) Obat::findOne($d['paracetamol'])->stok);
+
+        $farmasi->proses($resep1->id);
+        $diserahkan = $farmasi->serahkan($resep1->id)->toArray();
+        $this->assertSame('diserahkan', $diserahkan['status']);
+        $this->assertNotNull($diserahkan['diserahkan_at']);
+        $this->assertSame(6, (int) Obat::findOne($d['paracetamol'])->stok);
+        $this->assertSame(0, (int) Obat::findOne($d['amoxicillin'])->stok);
+        $mutasi = (new ObatService())->listMutasi($d['paracetamol']);
+        $this->assertSame('keluar', $mutasi[0]['jenis']);
+        $this->assertSame(-4, (int) $mutasi[0]['qty']);
+
+        // Stok amoxicillin habis: penyerahan resep kedua gagal seluruhnya, paracetamol tidak ikut berkurang.
+        $farmasi->proses($resep2->id);
+        try {
+            $farmasi->serahkan($resep2->id);
+            $this->fail('Stok tidak cukup seharusnya ditolak');
+        } catch (ConflictHttpException $e) {
+            $this->assertStringContainsString('Amoxicillin', $e->getMessage());
+        }
+        $this->assertSame(6, (int) Obat::findOne($d['paracetamol'])->stok);
+        $this->assertSame('diproses', Resep::findOne($resep2->id)->status);
+
+        $this->expectException(ConflictHttpException::class);
+        $farmasi->serahkan($resep1->id);
     }
 }
