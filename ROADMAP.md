@@ -89,7 +89,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 ## 5. Tindakan Medis — B.4
 
-- [ ] 5.1 Migrasi transaksi tindakan (snapshot tarif saat tindakan diberikan)
+- [x] 5.1 Migrasi transaksi tindakan (snapshot tarif saat tindakan diberikan)
 - [ ] 5.2 Input lebih dari satu tindakan per kunjungan sebagai komponen tagihan
 - [ ] 5.3 Panel tindakan di halaman pemeriksaan
 
