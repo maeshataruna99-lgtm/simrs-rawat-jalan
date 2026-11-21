@@ -40,6 +40,14 @@ return [
             'showScriptName' => false,
             'rules' => [
                 'GET health' => 'health/index',
+                // Pola REST untuk semua controller CRUD di modul master, transaction, dan system.
+                'GET <module:(master|transaction|system)>/<controller:[\w-]+>' => '<module>/<controller>/index',
+                'GET <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/view',
+                'POST <module:(master|transaction|system)>/<controller:[\w-]+>' => '<module>/<controller>/create',
+                'PUT,PATCH <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/update',
+                'DELETE <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/delete',
+                // Preflight CORS untuk URL dengan id diarahkan ke action yang ada agar filter CORS bisa menjawab.
+                'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/view',
             ],
         ],
         'log' => [

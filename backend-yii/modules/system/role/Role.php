@@ -2,8 +2,7 @@
 
 namespace app\modules\system\role;
 
-use yii\db\ActiveQuery;
-use yii\db\ActiveRecord;
+use app\common\ActiveRecord;
 
 /**
  * Model tabel m_role.
@@ -19,15 +18,5 @@ class Role extends ActiveRecord
     public static function tableName(): string
     {
         return 'm_role';
-    }
-
-    /**
-     * Query role yang belum dihapus.
-     *
-     * Dipakai di: User::getRole(), service master role (poin 1.8).
-     */
-    public static function findActive(): ActiveQuery
-    {
-        return static::find()->andWhere(['deleted_at' => null]);
     }
 }

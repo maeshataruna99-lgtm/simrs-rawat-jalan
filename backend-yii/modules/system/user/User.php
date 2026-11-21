@@ -2,11 +2,11 @@
 
 namespace app\modules\system\user;
 
+use app\common\ActiveRecord;
 use app\common\JwtService;
 use app\modules\system\role\Role;
 use Yii;
 use yii\db\ActiveQuery;
-use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
 /**
@@ -31,13 +31,14 @@ class User extends ActiveRecord implements IdentityInterface
     }
 
     /**
-     * Query user yang belum dihapus.
-     *
-     * Dipakai di: AuthService::login(), findIdentity(), findIdentityByAccessToken().
+     * Password hash tidak pernah ikut dikirim ke frontend.
      */
-    public static function findActive(): ActiveQuery
+    public function fields(): array
     {
-        return static::find()->andWhere(['m_user.deleted_at' => null]);
+        $fields = parent::fields();
+        unset($fields['password_hash']);
+
+        return $fields;
     }
 
     public function getRole(): ActiveQuery
