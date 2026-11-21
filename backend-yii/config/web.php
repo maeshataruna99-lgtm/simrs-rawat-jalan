@@ -46,8 +46,8 @@ return [
                 'POST <module:(master|transaction|system)>/<controller:[\w-]+>' => '<module>/<controller>/create',
                 'PUT,PATCH <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/update',
                 'DELETE <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/delete',
-                // Aksi khusus pada satu data, contoh PUT /system/user/5/reset-password.
-                'PUT,POST <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>/<action:[\w-]+>' => '<module>/<controller>/<action>',
+                // Aksi khusus pada satu data, contoh PUT /system/user/5/reset-password atau GET /master/obat/1/mutasi.
+                'GET,PUT,POST <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>/<action:[\w-]+>' => '<module>/<controller>/<action>',
                 // Preflight CORS untuk URL dengan id diarahkan ke action yang ada agar filter CORS bisa menjawab.
                 'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/view',
                 'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>/<action:[\w-]+>' => '<module>/<controller>/<action>',

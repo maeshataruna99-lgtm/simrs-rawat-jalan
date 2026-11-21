@@ -14,5 +14,6 @@ class Module extends \yii\base\Module
         'poli' => poli\PoliController::class,
         'jadwal-dokter' => jadwal\JadwalDokterController::class,
         'tindakan' => tindakan\TindakanController::class,
+        'obat' => obat\ObatController::class,
     ];
 }
