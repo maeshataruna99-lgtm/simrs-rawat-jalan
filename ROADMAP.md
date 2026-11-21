@@ -82,7 +82,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 - [x] 4.1 Migrasi pemeriksaan, tanda vital, dan diagnosis
 - [x] 4.2 Worklist pasien menunggu pemeriksaan
-- [ ] 4.3 Simpan anamnesis, keluhan, tanda vital, dan pemeriksaan fisik
+- [x] 4.3 Simpan anamnesis, keluhan, tanda vital, dan pemeriksaan fisik
 - [ ] 4.4 Diagnosis utama dan sekunder (ICD-10)
 - [ ] 4.5 Riwayat rekam medis pasien
 - [ ] 4.6 Halaman worklist dokter dan form pemeriksaan

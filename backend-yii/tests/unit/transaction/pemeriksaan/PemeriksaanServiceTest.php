@@ -2,14 +2,18 @@
 
 namespace app\tests\unit\transaction\pemeriksaan;
 
+use app\common\ValidationException;
 use app\modules\master\dokter\DokterService;
 use app\modules\master\jadwal\JadwalDokterService;
 use app\modules\master\pasien\PasienService;
 use app\modules\master\poli\PoliService;
 use app\modules\transaction\antrean\AntreanService;
 use app\modules\transaction\pemeriksaan\PemeriksaanService;
+use app\modules\transaction\pendaftaran\Kunjungan;
 use app\modules\transaction\pendaftaran\PendaftaranService;
 use app\tests\TestCase;
+use yii\web\ConflictHttpException;
+use yii\web\ForbiddenHttpException;
 
 /**
  * Uji worklist dan penyimpanan pemeriksaan dokter (poin 4.2 dan seterusnya).
@@ -68,5 +72,43 @@ class PemeriksaanServiceTest extends TestCase
 
         $this->assertCount(2, $service->worklist(null, self::seninDepan()));
         $this->assertCount(0, $service->worklist($data['dokter1'], self::seninDepan(1)));
+    }
+
+    public function testSimpanPemeriksaanValidasiTtvDanStatusMenjadiDiperiksa(): void
+    {
+        $data = $this->siapkanKunjungan();
+        $kunjunganId = $data['kunjungan'][0];
+        $service = new PemeriksaanService();
+
+        try {
+            $service->simpan($kunjunganId, ['keluhan_utama' => 'Demam', 'suhu' => 50, 'spo2' => 120], $data['dokter1']);
+            $this->fail('Tanda vital di luar range seharusnya ditolak');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('suhu', $e->errors);
+            $this->assertArrayHasKey('spo2', $e->errors);
+        }
+        $this->assertSame('menunggu', Kunjungan::findOne($kunjunganId)->status);
+
+        try {
+            $service->simpan($kunjunganId, ['keluhan_utama' => 'Demam'], $data['dokter2']);
+            $this->fail('Dokter lain seharusnya tidak boleh mengisi pemeriksaan');
+        } catch (ForbiddenHttpException) {
+        }
+
+        $form = ['keluhan_utama' => 'Demam 3 hari', 'td_sistolik' => 120, 'td_diastolik' => 80, 'suhu' => 38.5, 'nadi' => ''];
+        $hasil = $service->simpan($kunjunganId, $form, $data['dokter1']);
+        $this->assertSame(38.5, $hasil->toArray()['suhu']);
+        $this->assertNull($hasil->nadi);
+        $this->assertSame('diperiksa', Kunjungan::findOne($kunjunganId)->status);
+
+        // Simpan ulang memperbarui baris yang sama, bukan membuat baru.
+        $service->simpan($kunjunganId, ['keluhan_utama' => 'Demam 4 hari'], null);
+        $detail = $service->detail($kunjunganId, $data['dokter1']);
+        $this->assertSame('Demam 4 hari', $detail['pemeriksaan']['keluhan_utama']);
+        $this->assertSame(120, $detail['pemeriksaan']['td_sistolik']);
+
+        (new AntreanService())->ubahStatus($kunjunganId, 'selesai');
+        $this->expectException(ConflictHttpException::class);
+        $service->simpan($kunjunganId, ['keluhan_utama' => 'Ubah'], $data['dokter1']);
     }
 }
