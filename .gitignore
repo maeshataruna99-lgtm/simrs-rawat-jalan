@@ -1,0 +1,30 @@
+# Dependensi
+node_modules/
+vendor/
+
+# Hasil build
+dist/
+build/
+coverage/
+
+# Yii runtime
+backend-yii/runtime/*
+!backend-yii/runtime/.gitkeep
+backend-yii/web/assets/*
+!backend-yii/web/assets/.gitkeep
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Log dan cache
+*.log
+.php-cs-fixer.cache
+.eslintcache
+
+# Editor dan OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

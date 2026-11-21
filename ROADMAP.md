@@ -21,7 +21,7 @@ Referensi kode di setiap poin: `B.x` ruang lingkup, `C.x` backend services, `D.x
 
 - [x] 0.1 Roadmap pengerjaan
 - [x] 0.2 Aturan kontribusi dan standar kode (`CONTRIBUTING.md`)
-- [ ] 0.3 Konfigurasi editor dan git (`.editorconfig`, `.gitattributes`, `.gitignore`)
+- [x] 0.3 Konfigurasi editor dan git (`.editorconfig`, `.gitattributes`, `.gitignore`)
 - [ ] 0.4 Commitlint dan husky untuk validasi pesan commit
 - [ ] 0.5 Docker Compose: PostgreSQL, Yii, Node, React
 - [ ] 0.6 Skeleton `backend-yii` (Yii2, modul `master`, `transaction`, `system`, format response API)
