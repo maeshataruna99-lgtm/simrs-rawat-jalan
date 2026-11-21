@@ -25,6 +25,8 @@ import FarmasiPage from '@/modules/transaction/resep/FarmasiPage';
 import RiwayatMedisPage from '@/modules/transaction/pemeriksaan/RiwayatMedisPage';
 import LaboratoriumPage from '@/modules/transaction/lab/LaboratoriumPage';
 import BillingPage from '@/modules/transaction/pembayaran/BillingPage';
+import BuktiBayarPrintPage from '@/modules/transaction/pembayaran/BuktiBayarPrintPage';
+import InvoicePrintPage from '@/modules/transaction/pembayaran/InvoicePrintPage';
 import WorklistPage from '@/modules/transaction/pemeriksaan/WorklistPage';
 import PendaftaranPage from '@/modules/transaction/pendaftaran/PendaftaranPage';
 import HomePage from '@/pages/HomePage';
@@ -208,6 +210,22 @@ export const routes: RouteObject[] = [
             element: (
               <PermissionGuard menu="billing">
                 <BillingPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/transaction/billing/invoice/:id/cetak',
+            element: (
+              <PermissionGuard menu="billing">
+                <InvoicePrintPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/transaction/billing/pembayaran/:id/cetak',
+            element: (
+              <PermissionGuard menu="billing">
+                <BuktiBayarPrintPage />
               </PermissionGuard>
             ),
           },

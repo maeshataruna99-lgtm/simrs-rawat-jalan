@@ -4,8 +4,10 @@
  *
  * Dipakai di: routes/index.tsx.
  */
+import { Printer } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { AppDataTable, type AppColumn } from '@/components/AppDataTable';
 import { AppPaginator } from '@/components/AppPaginator';
@@ -387,6 +389,12 @@ export default function BillingPage() {
                 <Button variant="outline" size="sm" onClick={() => void bukaDetail(row)}>
                   {t('common.detail')}
                 </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link to={`/transaction/billing/invoice/${row.id}/cetak`}>
+                    <Printer className="mr-1 size-3.5" />
+                    {t('transaction.billing.print.printButton')}
+                  </Link>
+                </Button>
                 {canCreate && row.status !== 'lunas' && (
                   <Button size="sm" onClick={() => bukaBayar(row)}>
                     {t('transaction.billing.payAction')}
@@ -469,6 +477,14 @@ export default function BillingPage() {
             rowKey={(row) => row.id}
             loading={loadingBayar}
             emptyText={t('transaction.billing.emptyRiwayat')}
+            extraActions={(row) => (
+              <Button asChild variant="outline" size="sm">
+                <Link to={`/transaction/billing/pembayaran/${row.id}/cetak`}>
+                  <Printer className="mr-1 size-3.5" />
+                  {t('transaction.billing.print.printReceipt')}
+                </Link>
+              </Button>
+            )}
           />
           <AppPaginator
             page={metaBayar.page}

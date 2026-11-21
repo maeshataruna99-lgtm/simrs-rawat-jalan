@@ -44,7 +44,7 @@ export async function listInvoice(params: {
 /**
  * Mengambil detail satu invoice lengkap dengan item dan riwayat pembayarannya.
  *
- * Dipakai di: BillingPage.tsx, InvoiceDetailDialog.tsx.
+ * Dipakai di: BillingPage.tsx, InvoiceDetailDialog.tsx, InvoicePrintPage.tsx.
  */
 export async function getInvoice(id: number): Promise<Invoice> {
   const { data } = await yiiApi.get<ApiResponse<Invoice>>(`/transaction/invoice/${id}`);
@@ -114,7 +114,7 @@ export async function listPembayaran(params: {
 /**
  * Mengambil satu transaksi pembayaran beserta ringkasan invoicenya.
  *
- * Dipakai di: halaman cetak bukti bayar.
+ * Dipakai di: BuktiBayarPrintPage.tsx.
  */
 export async function getPembayaran(id: number): Promise<PembayaranRingkas> {
   const { data } = await yiiApi.get<ApiResponse<PembayaranRingkas>>(

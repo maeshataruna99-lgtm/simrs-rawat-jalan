@@ -123,7 +123,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 8.5 Revisi tagihan dan audit log ketika diagnosis atau tindakan berubah — D.4
 - [x] 8.6 Test pembayaran ganda dan revisi tagihan
 - [x] 8.7 Halaman billing, pembayaran, dan riwayat pembayaran
-- [ ] 8.8 Invoice dan bukti pembayaran yang dapat dicetak
+- [x] 8.8 Invoice dan bukti pembayaran yang dapat dicetak
 
 ## 9. Dashboard dan Laporan — B.8, C.2, D.6
 

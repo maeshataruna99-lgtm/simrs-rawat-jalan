@@ -520,6 +520,24 @@
       "metodeLabel": {
         "tunai": "Tunai",
         "non_tunai": "Non-Tunai"
+      },
+      "print": {
+        "back": "Kembali ke Billing",
+        "printNow": "Cetak",
+        "printButton": "Cetak",
+        "printInvoice": "Cetak Invoice",
+        "printReceipt": "Bukti Bayar",
+        "invoiceHeading": "Invoice Rawat Jalan",
+        "receiptHeading": "Bukti Pembayaran",
+        "noRm": "No. RM",
+        "nik": "NIK",
+        "tanggal": "Tanggal",
+        "waktuBayar": "Waktu Bayar",
+        "nominalDiterima": "Jumlah Diterima",
+        "pasienTtd": "Pasien / Keluarga",
+        "penyetorTtd": "Penyetor",
+        "kasirTtd": "Petugas Kasir",
+        "petugasKasir": "Kasir"
       }
     }
   },

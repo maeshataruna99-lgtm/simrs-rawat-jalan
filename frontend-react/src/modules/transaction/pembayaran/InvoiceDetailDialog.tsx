@@ -3,8 +3,10 @@
  *
  * Dipakai di: BillingPage.tsx.
  */
+import { Printer } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -195,6 +197,7 @@ export function InvoiceDetailDialog({ open, invoice, canPay, onOpenChange, onPay
                       <TableHead className="text-right">
                         {t('transaction.billing.jumlahBayar')}
                       </TableHead>
+                      <TableHead className="text-right">{t('common.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -210,6 +213,14 @@ export function InvoiceDetailDialog({ open, invoice, canPay, onOpenChange, onPay
                         <TableCell>{p.kasir?.nama ?? '-'}</TableCell>
                         <TableCell className="text-right font-medium">
                           {formatRupiah(p.jumlah)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button asChild variant="outline" size="sm">
+                            <Link to={`/transaction/billing/pembayaran/${p.id}/cetak`}>
+                              <Printer className="mr-1 size-3.5" />
+                              {t('transaction.billing.print.printReceipt')}
+                            </Link>
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -250,6 +261,12 @@ export function InvoiceDetailDialog({ open, invoice, canPay, onOpenChange, onPay
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               {t('common.close')}
+            </Button>
+            <Button asChild variant="outline">
+              <Link to={`/transaction/billing/invoice/${invoice.id}/cetak`}>
+                <Printer className="mr-1.5 size-4" />
+                {t('transaction.billing.print.printInvoice')}
+              </Link>
             </Button>
             {canPay && invoice.status !== 'lunas' && (
               <Button onClick={() => onPay(invoice)}>{t('transaction.billing.payAction')}</Button>

@@ -48,7 +48,7 @@ export function AppSidebar({ activeModule, onSelectModule }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="print:hidden">
       <SidebarHeader className="gap-2">
         <SidebarMenu>
           <SidebarMenuItem>
