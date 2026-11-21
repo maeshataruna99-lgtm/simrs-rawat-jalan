@@ -59,6 +59,20 @@ Sisa sekitar 10 jam dari 72 jam dipakai untuk cadangan dan bonus.
 | 0.7 | `service-node/` Express + TypeScript, `lib/response.ts`, `middleware/error-handler.ts`, ESLint, Vitest, service `node` di compose | `GET /health` berjalan, error tak terduga dibungkus format seragam, `npm run lint` lolos |
 | 0.8 | `frontend-react/` Vite + TypeScript, React Router, `lib/api-client.ts` (axios + interceptor token), `react-i18next` dengan `locales/id.json`, ESLint, service `react` di compose | Halaman kosong tampil di `localhost:5173`, teks diambil dari `t()`, lint lolos |
 | 0.9 | `.php-cs-fixer.dist.php`, script `composer lint` | Seluruh kode PHP lolos PSR-12 |
+| 0.10 | Tailwind CSS v3 + `tailwindcss-animate`, `components.json` shadcn (style `default`, base color `neutral`, CSS variables, ikon `lucide-react`), token warna terang/gelap di `src/styles/tailwind.css`, komponen `src/components/ui/`: button, input, label, textarea, select, checkbox, switch, card, badge, table, dialog, alert-dialog, sheet, dropdown-menu, popover, command, tabs, tooltip, separator, skeleton, sidebar, breadcrumb, pagination, sonner | Halaman contoh menampilkan semua komponen dengan tema yang sama di mode terang dan gelap |
+
+**Standar UI**
+
+| Kebutuhan | Library |
+|---|---|
+| Komponen dasar | shadcn/ui (Radix UI) di `src/components/ui/`, tidak diubah kecuali tema |
+| Tabel data | `@tanstack/react-table` dibungkus `AppDataTable` |
+| Form dan validasi | `react-hook-form` + `zod` |
+| Notifikasi | `sonner` |
+| Grafik dashboard | komponen chart shadcn (Recharts) |
+| Ikon | `lucide-react` |
+
+Komponen aplikasi berawalan `App` (contoh `AppDataTable`, `AppSelect`) dan disimpan di `src/components/`. Halaman hanya merakit komponen `App*` dan `ui/*`, tidak membuat gaya sendiri.
 
 ## 1. Autentikasi dan Hak Akses — B.9
 
@@ -122,7 +136,7 @@ Setiap master di Yii terdiri dari `Controller`, `Service`, model ActiveRecord, `
 | 2.6 | Master obat; stok tidak bisa diubah lewat CRUD, hanya lewat mutasi | Perubahan stok manual tercatat di `t_stok_mutasi` sebagai penyesuaian |
 | 2.7 | Master pemeriksaan lab | Tarif dan nilai rujukan tersimpan |
 | 2.8 | Seeder ICD-10 (subset diagnosis umum rawat jalan) | Endpoint pencarian ICD-10 dengan `q` |
-| 2.9 | `AppDataTable`, `AppFilterBar`, `AppFormDialog`, `AppConfirmDialog`, `useCrud` hook | Dipakai ulang oleh semua halaman master |
+| 2.9 | `AppDataTable` (sorting, paging server-side, kolom aksi sesuai izin), `AppPaginator`, `AppFilterBar`, `AppFormDialog`, `AppConfirmDialog`, `AppSelect` (combobox dengan pencarian ke API), `AppCurrencyInput`, hook `useCrud` | Dipakai ulang oleh semua halaman master, ada test komponen untuk `AppDataTable` dan `AppSelect` |
 | 2.10 | Halaman master pasien | Tambah, ubah, hapus, cari, error validasi tampil di form |
 | 2.11 | Halaman master dokter dan poli | Sama seperti 2.10 |
 | 2.12 | Halaman jadwal praktik | Pilih dokter dan poli, pesan bentrok tampil |
