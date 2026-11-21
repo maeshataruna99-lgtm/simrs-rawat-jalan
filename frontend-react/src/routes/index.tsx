@@ -19,6 +19,8 @@ import ModulePage from '@/modules/system/module/ModulePage';
 import RoleAccessPage from '@/modules/system/role-access/RoleAccessPage';
 import RolePage from '@/modules/system/role/RolePage';
 import UserPage from '@/modules/system/user/UserPage';
+import AntreanPage from '@/modules/transaction/antrean/AntreanPage';
+import PendaftaranPage from '@/modules/transaction/pendaftaran/PendaftaranPage';
 import HomePage from '@/pages/HomePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import UiKitPage from '@/pages/UiKitPage';
@@ -136,6 +138,22 @@ export const routes: RouteObject[] = [
             element: (
               <PermissionGuard menu="master-icd10">
                 <Icd10Page />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/transaction/pendaftaran',
+            element: (
+              <PermissionGuard menu="pendaftaran">
+                <PendaftaranPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/transaction/antrean',
+            element: (
+              <PermissionGuard menu="antrean">
+                <AntreanPage />
               </PermissionGuard>
             ),
           },

@@ -76,7 +76,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 3.3 Pendaftaran kunjungan sesuai jadwal praktik dan nomor antrean otomatis (row lock pada counter)
 - [x] 3.4 Status antrean dan riwayat kunjungan pasien
 - [x] 3.5 Test pendaftaran bersamaan tidak menghasilkan kunjungan atau antrean ganda — D.1
-- [ ] 3.6 Halaman pendaftaran dan antrean
+- [x] 3.6 Halaman pendaftaran dan antrean
 
 ## 4. Pemeriksaan dan Rekam Medis Elektronik — B.3
 

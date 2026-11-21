@@ -306,6 +306,47 @@
       "deleteConfirm": "Obat {{nama}} akan dihapus dari daftar aktif."
     }
   },
+  "transaction": {
+    "pendaftaran": {
+      "title": "Pendaftaran Kunjungan Rawat Jalan",
+      "subtitle": "Cari pasien, pilih poli dan jadwal dokter pada tanggal kunjungan, lalu terbitkan nomor antrean",
+      "searchPatientTitle": "1. Cari dan Pilih Pasien",
+      "searchPatientSubtitle": "Cari berdasarkan No. RM, NIK, atau nama pasien",
+      "searchPlaceholder": "Ketik No. RM, NIK, atau nama pasien...",
+      "newPatientButton": "Pasien Baru",
+      "formTitle": "2. Jadwal dan Unit Pelayanan",
+      "choosePatientHint": "Pilih pasien dari daftar di samping terlebih dahulu.",
+      "tglKunjungan": "Tanggal Kunjungan",
+      "poli": "Poli",
+      "allPoli": "Semua poli",
+      "jadwalDokter": "Jadwal Dokter",
+      "noSchedule": "Tidak ada jadwal dokter pada tanggal/poli ini",
+      "pasienRequired": "Pasien wajib dipilih terlebih dahulu.",
+      "jadwalRequired": "Jadwal praktik dokter wajib dipilih.",
+      "submitButton": "Daftarkan Kunjungan",
+      "successToast": "Pendaftaran berhasil, nomor antrean diterbitkan.",
+      "ticketTitle": "Tiket Antrean Kunjungan",
+      "queueNumber": "No. Antrean",
+      "historyTitle": "Riwayat Kunjungan Pasien",
+      "colNoKunjungan": "No. Kunjungan"
+    },
+    "antrean": {
+      "title": "Antrean Poli",
+      "subtitle": "Pantau dan perbarui status antrean kunjungan rawat jalan per poli dan tanggal",
+      "searchPlaceholder": "Cari No. Kunjungan, No. RM, atau nama pasien...",
+      "allStatus": "Semua status",
+      "callButton": "Panggil / Periksa",
+      "finishButton": "Selesai",
+      "cancelButton": "Batalkan",
+      "statusUpdated": "Status antrean berhasil diperbarui.",
+      "status": {
+        "menunggu": "Menunggu",
+        "diperiksa": "Diperiksa",
+        "selesai": "Selesai",
+        "batal": "Batal"
+      }
+    }
+  },
   "uiKit": {
     "title": "UI Kit",
     "subtitle": "Komponen dasar dan tema aplikasi",
