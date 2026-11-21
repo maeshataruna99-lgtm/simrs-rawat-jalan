@@ -21,6 +21,8 @@
     "filter": "Filter",
     "detail": "Detail",
     "actions": "Aksi",
+    "all": "Semua",
+    "chooseOption": "Pilih data...",
     "loading": "Memuat data...",
     "emptyData": "Belum ada data.",
     "searchPlaceholder": "Cari data...",
