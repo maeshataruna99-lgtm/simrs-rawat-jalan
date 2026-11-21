@@ -17,6 +17,7 @@ export interface CreateUserPayload {
   username: string;
   nama: string;
   role_id: number;
+  dokter_id: number | null;
   password: string;
   is_active: boolean;
 }
@@ -25,5 +26,6 @@ export interface UpdateUserPayload {
   username?: string;
   nama?: string;
   role_id?: number;
+  dokter_id?: number | null;
   is_active?: boolean;
 }

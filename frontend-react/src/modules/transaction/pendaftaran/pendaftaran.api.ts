@@ -1,7 +1,7 @@
 /**
  * Pemanggilan endpoint pendaftaran kunjungan, antrean poli, dan riwayat kunjungan di backend Yii.
  *
- * Dipakai di: PendaftaranPage, AntreanPage.
+ * Dipakai di: PendaftaranPage, AntreanPage, PemeriksaanPage.
  */
 import { yiiApi, type ApiResponse } from '@/lib/api-client';
 import type { PasienItem } from '@/modules/master/pasien/pasien.types';
@@ -59,7 +59,7 @@ export async function listAntrean(params: {
 /**
  * Mengubah status antrean kunjungan (menunggu -> diperiksa -> selesai / batal).
  *
- * Dipakai di: AntreanPage.
+ * Dipakai di: AntreanPage, PemeriksaanPage.
  */
 export async function ubahStatusAntrean(
   id: number,

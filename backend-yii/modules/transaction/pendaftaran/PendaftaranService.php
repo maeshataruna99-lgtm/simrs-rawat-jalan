@@ -23,7 +23,7 @@ class PendaftaranService
      *
      * @return array<int, array<string, mixed>>
      *
-     * Dipakai di: PendaftaranController::actionCariPasien().
+     * Dipakai di: PendaftaranController::actionCariPasien(), RiwayatMedisController::actionCariPasien().
      */
     public function cariPasien(?string $q, int $limit = 20): array
     {

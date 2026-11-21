@@ -85,7 +85,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 4.3 Simpan anamnesis, keluhan, tanda vital, dan pemeriksaan fisik
 - [x] 4.4 Diagnosis utama dan sekunder (ICD-10)
 - [x] 4.5 Riwayat rekam medis pasien
-- [ ] 4.6 Halaman worklist dokter dan form pemeriksaan
+- [x] 4.6 Halaman worklist dokter dan form pemeriksaan
 
 ## 5. Tindakan Medis — B.4
 

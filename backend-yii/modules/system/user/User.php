@@ -4,6 +4,7 @@ namespace app\modules\system\user;
 
 use app\common\ActiveRecord;
 use app\common\JwtService;
+use app\modules\master\dokter\Dokter;
 use app\modules\system\role\Role;
 use Yii;
 use yii\db\ActiveQuery;
@@ -47,6 +48,7 @@ class User extends ActiveRecord implements IdentityInterface
             [['role_id'], 'integer'],
             [['role_id'], 'exist', 'targetClass' => Role::class, 'targetAttribute' => 'id', 'filter' => ['deleted_at' => null], 'message' => 'Role tidak ditemukan.'],
             [['dokter_id'], 'integer'],
+            [['dokter_id'], 'exist', 'targetClass' => Dokter::class, 'targetAttribute' => 'id', 'filter' => ['deleted_at' => null], 'message' => 'Dokter tidak ditemukan.'],
             [['dokter_id'], 'default', 'value' => null],
             [['is_active'], 'boolean'],
             [['is_active'], 'default', 'value' => true],

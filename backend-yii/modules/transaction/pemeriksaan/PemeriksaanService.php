@@ -136,7 +136,7 @@ class PemeriksaanService
         if (count(array_unique($ids)) !== count($ids)) {
             throw new ValidationException(['diagnosis' => ['Kode ICD-10 tidak boleh dipilih lebih dari sekali.']]);
         }
-        if ((int) Icd10::findActive()->andWhere(['id' => $ids])->count() !== count($ids)) {
+        if ((int) Icd10::findActive()->andWhere(['id' => $ids, 'is_active' => true])->count() !== count($ids)) {
             throw new ValidationException(['diagnosis' => ['Kode ICD-10 tidak ditemukan.']]);
         }
 

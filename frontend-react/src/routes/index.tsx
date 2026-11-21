@@ -20,6 +20,9 @@ import RoleAccessPage from '@/modules/system/role-access/RoleAccessPage';
 import RolePage from '@/modules/system/role/RolePage';
 import UserPage from '@/modules/system/user/UserPage';
 import AntreanPage from '@/modules/transaction/antrean/AntreanPage';
+import PemeriksaanPage from '@/modules/transaction/pemeriksaan/PemeriksaanPage';
+import RiwayatMedisPage from '@/modules/transaction/pemeriksaan/RiwayatMedisPage';
+import WorklistPage from '@/modules/transaction/pemeriksaan/WorklistPage';
 import PendaftaranPage from '@/modules/transaction/pendaftaran/PendaftaranPage';
 import HomePage from '@/pages/HomePage';
 import NotFoundPage from '@/pages/NotFoundPage';
@@ -154,6 +157,30 @@ export const routes: RouteObject[] = [
             element: (
               <PermissionGuard menu="antrean">
                 <AntreanPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/transaction/pemeriksaan',
+            element: (
+              <PermissionGuard menu="pemeriksaan">
+                <WorklistPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/transaction/pemeriksaan/:kunjunganId',
+            element: (
+              <PermissionGuard menu="pemeriksaan">
+                <PemeriksaanPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/transaction/riwayat-medis',
+            element: (
+              <PermissionGuard menu="riwayat-medis">
+                <RiwayatMedisPage />
               </PermissionGuard>
             ),
           },

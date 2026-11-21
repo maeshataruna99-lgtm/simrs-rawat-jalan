@@ -18,7 +18,13 @@ export async function listIcd10(params: {
   page?: number;
   per_page?: number;
 }): Promise<PaginatedResult<Icd10Item>> {
-  const { data } = await yiiApi.get<ApiResponse<Icd10Item[]>>('/master/icd10', { params });
+  const { data } = await yiiApi.get<ApiResponse<Icd10Item[]>>('/master/icd10', {
+    // Validator boolean Yii menolak string "true", jadi kirim 1/0.
+    params: {
+      ...params,
+      is_active: params.is_active === undefined ? undefined : Number(params.is_active),
+    },
+  });
   return {
     items: data.data,
     meta: data.meta ?? { page: 1, per_page: params.per_page ?? 20, total: data.data.length },

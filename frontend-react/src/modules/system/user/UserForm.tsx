@@ -4,7 +4,7 @@
  * Dipakai di: UserPage.
  */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -15,6 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { errorMessage, fieldErrors } from '@/lib/api-client';
+import * as dokterApi from '@/modules/master/dokter/dokter.api';
+import type { DokterItem } from '@/modules/master/dokter/dokter.types';
 import type { RoleItem } from '@/modules/system/role/role.types';
 import * as userApi from './user.api';
 import type { UserItem } from './user.types';
@@ -30,6 +32,7 @@ const baseSchema = z.object({
     .regex(/^[a-z0-9._-]+$/, 'system.user.usernamePattern'),
   nama: z.string().trim().min(1, 'system.user.namaRequired'),
   role_id: z.number().int().min(1, 'system.user.roleRequired'),
+  dokter_id: z.number().int(),
   password: z.string().optional(),
   is_active: z.boolean(),
 });
@@ -53,6 +56,15 @@ interface Props {
 export function UserForm({ open, onOpenChange, editing, roles, onSaved }: Props) {
   const { t } = useTranslation();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [dokters, setDokters] = useState<DokterItem[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    dokterApi
+      .listDokter({ jenis_tenaga: 'dokter', per_page: 100 })
+      .then((res) => setDokters(res.items))
+      .catch(() => setDokters([]));
+  }, [open]);
 
   const schema = baseSchema.superRefine((val, ctx) => {
     if (!editing && (!val.password || val.password.length < 8)) {
@@ -77,6 +89,7 @@ export function UserForm({ open, onOpenChange, editing, roles, onSaved }: Props)
           username: editing.username,
           nama: editing.nama,
           role_id: editing.role_id,
+          dokter_id: editing.dokter_id ?? 0,
           password: '',
           is_active: editing.is_active,
         }
@@ -84,6 +97,7 @@ export function UserForm({ open, onOpenChange, editing, roles, onSaved }: Props)
           username: '',
           nama: '',
           role_id: roles[0]?.id ?? 0,
+          dokter_id: 0,
           password: '',
           is_active: true,
         },
@@ -102,6 +116,7 @@ export function UserForm({ open, onOpenChange, editing, roles, onSaved }: Props)
           username: values.username,
           nama: values.nama,
           role_id: values.role_id,
+          dokter_id: values.dokter_id || null,
           is_active: values.is_active,
         });
       } else {
@@ -109,6 +124,7 @@ export function UserForm({ open, onOpenChange, editing, roles, onSaved }: Props)
           username: values.username,
           nama: values.nama,
           role_id: values.role_id,
+          dokter_id: values.dokter_id || null,
           password: values.password ?? '',
           is_active: values.is_active,
         });
@@ -174,6 +190,27 @@ export function UserForm({ open, onOpenChange, editing, roles, onSaved }: Props)
           {errors.role_id && (
             <p className="text-sm text-destructive">
               {t(errors.role_id.message ?? '', { defaultValue: errors.role_id.message })}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="user-dokter">{t('system.user.dokter')}</Label>
+          <select
+            id="user-dokter"
+            className={selectClassName}
+            {...register('dokter_id', { valueAsNumber: true })}
+          >
+            <option value={0}>{t('system.user.noDokter')}</option>
+            {dokters.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.kode} — {d.nama}
+              </option>
+            ))}
+          </select>
+          {errors.dokter_id && (
+            <p className="text-sm text-destructive">
+              {t(errors.dokter_id.message ?? '', { defaultValue: errors.dokter_id.message })}
             </p>
           )}
         </div>

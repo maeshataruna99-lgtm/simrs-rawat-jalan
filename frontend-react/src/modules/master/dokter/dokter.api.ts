@@ -1,7 +1,7 @@
 /**
  * Pemanggilan endpoint CRUD master dokter dan tenaga medis di backend Yii (/master/dokter).
  *
- * Dipakai di: DokterPage, DokterForm, JadwalDokterPage, JadwalDokterForm.
+ * Dipakai di: DokterPage, DokterForm, JadwalDokterPage, JadwalDokterForm, UserForm.
  */
 import type { PaginatedResult } from '@/hooks/use-crud';
 import { yiiApi, type ApiResponse } from '@/lib/api-client';
@@ -10,7 +10,7 @@ import type { DokterItem, DokterPayload, JenisTenaga } from './dokter.types';
 /**
  * Mengambil daftar dokter dan tenaga medis berhalaman dari server.
  *
- * Dipakai di: DokterPage, JadwalDokterPage, JadwalDokterForm.
+ * Dipakai di: DokterPage, JadwalDokterPage, JadwalDokterForm, UserForm.
  */
 export async function listDokter(params: {
   q?: string;

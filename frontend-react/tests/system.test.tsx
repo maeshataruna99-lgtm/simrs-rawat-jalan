@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { AxiosError, AxiosHeaders } from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/lib/auth-store';
+import * as dokterApi from '@/modules/master/dokter/dokter.api';
 import type { UserProfile } from '@/modules/system/auth/auth.types';
 import * as menuApi from '@/modules/system/menu/menu.api';
 import * as moduleApi from '@/modules/system/module/module.api';
@@ -15,6 +16,7 @@ import * as userApi from '@/modules/system/user/user.api';
 import { renderAt } from './render';
 
 vi.mock('@/modules/system/user/user.api');
+vi.mock('@/modules/master/dokter/dokter.api');
 vi.mock('@/modules/system/role/role.api');
 vi.mock('@/modules/system/module/module.api');
 vi.mock('@/modules/system/menu/menu.api');
@@ -85,6 +87,20 @@ beforeEach(() => {
     items: roles,
     meta: { page: 1, per_page: 20, total: roles.length },
   });
+  vi.mocked(dokterApi.listDokter).mockResolvedValue({
+    items: [
+      {
+        id: 4,
+        kode: 'DR004',
+        nama: 'dr. Andi',
+        sip: 'SIP/004',
+        spesialis: null,
+        jenis_tenaga: 'dokter',
+        is_active: true,
+      },
+    ],
+    meta: { page: 1, per_page: 100, total: 1 },
+  });
   vi.mocked(userApi.listUsers).mockResolvedValue({
     items: users,
     meta: { page: 1, per_page: 20, total: users.length },
@@ -149,12 +165,15 @@ describe('UserPage (/system/user)', () => {
     await userEvent.type(within(dialog).getByLabelText('Nama'), 'Petugas Satu');
     await userEvent.selectOptions(within(dialog).getByLabelText('Role'), '2');
     await userEvent.type(within(dialog).getByLabelText('Password'), 'rahasia123');
+    await within(dialog).findByRole('option', { name: 'DR004 — dr. Andi' });
+    await userEvent.selectOptions(within(dialog).getByLabelText('Tautan dokter'), '4');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Simpan' }));
 
     expect(userApi.createUser).toHaveBeenCalledWith({
       username: 'petugas1',
       nama: 'Petugas Satu',
       role_id: 2,
+      dokter_id: 4,
       password: 'rahasia123',
       is_active: true,
     });

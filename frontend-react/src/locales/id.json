@@ -90,7 +90,9 @@
       "resetPasswordSuccess": "Password berhasil diubah.",
       "toggleActiveLabel": "Status aktif {{username}}",
       "deleteTitle": "Hapus pengguna?",
-      "deleteConfirm": "Akun {{username}} akan dihapus dari daftar aktif."
+      "deleteConfirm": "Akun {{username}} akan dihapus dari daftar aktif.",
+      "dokter": "Tautan dokter",
+      "noDokter": "Tidak tertaut ke dokter"
     },
     "role": {
       "title": "Master Role",
@@ -345,6 +347,48 @@
         "selesai": "Selesai",
         "batal": "Batal"
       }
+    },
+    "pemeriksaan": {
+      "worklistTitle": "Worklist Pemeriksaan",
+      "worklistSubtitle": "Pasien hari ini yang menunggu atau sedang diperiksa",
+      "examineButton": "Periksa",
+      "tabAnamnesis": "Anamnesis",
+      "tabTtv": "Tanda Vital",
+      "tabFisik": "Pemeriksaan Fisik",
+      "tabDiagnosis": "Diagnosis",
+      "tabRiwayat": "Riwayat",
+      "keluhanUtama": "Keluhan utama",
+      "anamnesis": "Anamnesis",
+      "fisik": "Pemeriksaan fisik",
+      "td_sistolik": "Sistolik",
+      "td_diastolik": "Diastolik",
+      "nadi": "Nadi",
+      "suhu": "Suhu",
+      "respirasi": "Respirasi",
+      "spo2": "SpO2",
+      "berat_badan": "Berat badan",
+      "tinggi_badan": "Tinggi badan",
+      "keluhanRequired": "Keluhan utama wajib diisi.",
+      "rangeError": "Nilai harus antara {{min}} dan {{max}}.",
+      "saveButton": "Simpan Pemeriksaan",
+      "saved": "Hasil pemeriksaan berhasil disimpan.",
+      "diagnosisHint": "Pilih kode ICD-10. Wajib tepat satu diagnosis utama, sekunder boleh lebih dari satu.",
+      "addDiagnosis": "Tambah diagnosis ICD-10...",
+      "saveDiagnosisButton": "Simpan Diagnosis",
+      "diagnosisSaved": "Diagnosis berhasil disimpan.",
+      "finishButton": "Selesaikan Pemeriksaan",
+      "finished": "Pemeriksaan selesai.",
+      "jenis": {
+        "utama": "Utama",
+        "sekunder": "Sekunder"
+      }
+    },
+    "riwayatMedis": {
+      "title": "Riwayat Rekam Medis",
+      "subtitle": "Cari pasien untuk melihat pemeriksaan dan diagnosis setiap kunjungan",
+      "choosePatient": "Pilih pasien...",
+      "current": "Kunjungan ini",
+      "notExamined": "Belum ada hasil pemeriksaan."
     }
   },
   "uiKit": {
