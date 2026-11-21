@@ -80,11 +80,11 @@ components:
     LabResultPayload:
       type: object
       required:
-        - order_detail_id
+        - detail_id
         - hasil
         - idempotency_key
       properties:
-        order_detail_id:
+        detail_id:
           type: integer
           minimum: 1
           example: 12

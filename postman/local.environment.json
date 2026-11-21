@@ -1,0 +1,31 @@
+{
+  "id": "simrs-local-env",
+  "name": "SIMRS Rawat Jalan - Local",
+  "values": [
+    {
+      "key": "yii_url",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "node_url",
+      "value": "http://localhost:3000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "seed_password",
+      "value": "simrs123",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "lab_api_key",
+      "value": "ganti-dengan-api-key-lab",
+      "type": "secret",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
