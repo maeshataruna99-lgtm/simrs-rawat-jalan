@@ -116,7 +116,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 ## 8. Billing dan Pembayaran — B.7, D.3, D.4
 
-- [ ] 8.1 Migrasi invoice, item invoice, pembayaran (idempotency key unik), dan audit log
+- [x] 8.1 Migrasi invoice, item invoice, pembayaran (idempotency key unik), dan audit log
 - [ ] 8.2 Pembentukan invoice dari pendaftaran, tindakan, laboratorium, dan obat
 - [ ] 8.3 Pembayaran tunai/non-tunai (simulasi), bertahap, dengan status belum dibayar/sebagian/lunas
 - [ ] 8.4 Pencegahan pembayaran ganda dengan idempotency key — D.3
