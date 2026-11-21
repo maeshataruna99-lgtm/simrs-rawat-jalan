@@ -1,6 +1,6 @@
 /**
- * Kerangka halaman setelah login: sidebar kontekstual per modul, top bar pemilih modul, dan area konten.
- * Saat pengguna memilih modul di top bar, sidebar hanya menampilkan menu milik modul tersebut.
+ * Kerangka halaman setelah login: sidebar dengan pemilih modul tersembunyi (hider) di bawah header
+ * SIMRS Rawat Jalan, header breadcrumb, dan area konten.
  *
  * Dipakai di: routes/index.tsx sebagai induk semua halaman modul.
  */
@@ -34,9 +34,9 @@ export function AppLayout() {
 
   return (
     <SidebarProvider>
-      <AppSidebar activeModule={activeModule} />
+      <AppSidebar activeModule={activeModule} onSelectModule={handleSelectModule} />
       <SidebarInset className="min-w-0">
-        <AppHeader activeModule={activeModule} onSelectModule={handleSelectModule} />
+        <AppHeader activeModule={activeModule} />
         <div className="flex-1 p-4 md:p-6">
           <Outlet />
         </div>

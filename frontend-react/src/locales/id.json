@@ -6,7 +6,9 @@
   },
   "layout": {
     "home": "Beranda",
-    "moduleSwitcher": "Pemilihan modul"
+    "activeModule": "Modul Aktif",
+    "moduleSwitcher": "Pemilihan modul",
+    "moduleList": "Daftar modul"
   },
   "home": {
     "greeting": "Selamat datang, {{nama}}",

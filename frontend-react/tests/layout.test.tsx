@@ -1,6 +1,6 @@
 /**
- * Uji layout setelah login: pemilih modul di top bar, sidebar hanya menampilkan menu modul terpilih,
- * menu aktif, breadcrumb, dan logout.
+ * Uji layout setelah login: tombol hider pemilih modul di bawah header SIMRS Rawat Jalan,
+ * sidebar hanya menampilkan menu modul terpilih, menu aktif, breadcrumb, dan logout.
  */
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -77,13 +77,8 @@ beforeEach(() => {
 });
 
 describe('AppLayout', () => {
-  it('top bar menampilkan pilihan modul milik role dan memilih modul mengganti isi menu di sidebar', async () => {
+  it('klik tombol pemilih modul di bawah header SIMRS menampilkan daftar modul dan mengganti isi sidebar', async () => {
     renderAt('/');
-
-    const moduleNav = screen.getByRole('navigation', { name: 'Pemilihan modul' });
-    expect(within(moduleNav).getByRole('button', { name: 'Dashboard' })).toBeInTheDocument();
-    expect(within(moduleNav).getByRole('button', { name: 'Pendaftaran' })).toBeInTheDocument();
-    expect(within(moduleNav).queryByText('Master Data')).not.toBeInTheDocument();
 
     const sidebar = document.querySelector('[data-sidebar="content"]') as HTMLElement;
     expect(within(sidebar).getByRole('link', { name: /Ringkasan Dashboard/ })).toBeInTheDocument();
@@ -91,8 +86,19 @@ describe('AppLayout', () => {
       within(sidebar).queryByRole('link', { name: /Pendaftaran Kunjungan/ }),
     ).not.toBeInTheDocument();
 
-    await userEvent.click(within(moduleNav).getByRole('button', { name: 'Pendaftaran' }));
+    expect(screen.queryByRole('region', { name: 'Daftar modul' })).not.toBeInTheDocument();
 
+    const switcherButton = screen.getByRole('button', { name: 'Pemilihan modul' });
+    await userEvent.click(switcherButton);
+
+    const moduleRegion = screen.getByRole('region', { name: 'Daftar modul' });
+    expect(within(moduleRegion).getByRole('button', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(within(moduleRegion).getByRole('button', { name: 'Pendaftaran' })).toBeInTheDocument();
+    expect(within(moduleRegion).queryByText('Master Data')).not.toBeInTheDocument();
+
+    await userEvent.click(within(moduleRegion).getByRole('button', { name: 'Pendaftaran' }));
+
+    expect(screen.queryByRole('region', { name: 'Daftar modul' })).not.toBeInTheDocument();
     expect(
       within(sidebar).getByRole('link', { name: /Pendaftaran Kunjungan/ }),
     ).toBeInTheDocument();
@@ -100,19 +106,10 @@ describe('AppLayout', () => {
     expect(
       within(sidebar).queryByRole('link', { name: /Ringkasan Dashboard/ }),
     ).not.toBeInTheDocument();
-    expect(
-      within(sidebar).queryByRole('link', { name: /Tagihan dan Pembayaran/ }),
-    ).not.toBeInTheDocument();
   });
 
-  it('membuka path halaman otomatis mengaktifkan modulnya di top bar, sidebar, dan breadcrumb', () => {
+  it('membuka path halaman otomatis mengaktifkan modulnya di sidebar dan breadcrumb', () => {
     renderAt('/transaction/billing');
-
-    const moduleNav = screen.getByRole('navigation', { name: 'Pemilihan modul' });
-    expect(within(moduleNav).getByRole('button', { name: 'Billing' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
 
     const link = screen.getAllByRole('link', { name: /Tagihan dan Pembayaran/ })[0];
     expect(link).toHaveAttribute('aria-current', 'page');
