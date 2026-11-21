@@ -22,5 +22,6 @@ class Module extends \yii\base\Module
         'order-lab' => lab\OrderLabController::class,
         'hasil-lab' => lab\HasilLabController::class,
         'invoice' => pembayaran\InvoiceController::class,
+        'pembayaran' => pembayaran\PembayaranController::class,
     ];
 }

@@ -96,7 +96,7 @@ class InvoiceService
     public function detail(int $id): Invoice
     {
         $invoice = Invoice::find()
-            ->with(['kunjungan.pasien', 'kunjungan.poli', 'kunjungan.dokter', 'items'])
+            ->with(['kunjungan.pasien', 'kunjungan.poli', 'kunjungan.dokter', 'items', 'pembayarans.kasir'])
             ->where(['t_invoice.id' => $id])
             ->one();
 
@@ -123,7 +123,7 @@ class InvoiceService
         $query = Invoice::find()
             ->alias('i')
             ->joinWith(['kunjungan k', 'kunjungan.pasien p', 'kunjungan.poli pl', 'kunjungan.dokter d'])
-            ->with(['items']);
+            ->with(['items', 'pembayarans.kasir']);
 
         if (!empty($params['status'])) {
             $statuses = array_filter(array_map('trim', explode(',', (string) $params['status'])));

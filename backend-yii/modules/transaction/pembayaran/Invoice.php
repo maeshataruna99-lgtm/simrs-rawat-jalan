@@ -17,6 +17,7 @@ use yii\db\ActiveQuery;
  * @property string $status
  * @property Kunjungan $kunjungan
  * @property InvoiceItem[] $items
+ * @property Pembayaran[] $pembayarans
  */
 class Invoice extends ActiveRecord
 {
@@ -50,6 +51,17 @@ class Invoice extends ActiveRecord
             ->orderBy(['is_void' => SORT_ASC, 'id' => SORT_ASC]);
     }
 
+    /**
+     * Relasi seluruh pembayaran yang pernah dicatat untuk invoice ini.
+     *
+     * Dipakai di: InvoiceService, Invoice::fields.
+     */
+    public function getPembayarans(): ActiveQuery
+    {
+        return $this->hasMany(Pembayaran::class, ['invoice_id' => 'id'])
+            ->orderBy(['id' => SORT_ASC]);
+    }
+
     public function fields(): array
     {
         $fields = parent::fields();
@@ -57,6 +69,7 @@ class Invoice extends ActiveRecord
         $fields['total_bayar'] = fn () => (float) $this->total_bayar;
         $fields['sisa_tagihan'] = fn () => round((float) $this->total - (float) $this->total_bayar, 2);
         $fields['items'] = fn () => array_map(fn (InvoiceItem $item) => $item->toArray(), $this->items);
+        $fields['pembayaran'] = fn () => array_map(fn (Pembayaran $p) => $p->toArray(), $this->pembayarans);
         $fields['kunjungan'] = fn () => $this->kunjungan ? [
             'id' => $this->kunjungan->id,
             'no_kunjungan' => $this->kunjungan->no_kunjungan,
