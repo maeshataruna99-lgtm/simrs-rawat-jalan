@@ -111,7 +111,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 7.4 Outbox dan retry di Node ketika Yii tidak dapat diakses — D.5
 - [x] 7.5 Test integrasi: hasil tidak hilang atau ganda saat Yii gagal
 - [x] 7.6 Form order laboratorium oleh dokter
-- [ ] 7.7 Halaman worklist dan input hasil laboratorium
+- [x] 7.7 Halaman worklist dan input hasil laboratorium
 - [ ] 7.8 Hasil laboratorium di riwayat kunjungan
 
 ## 8. Billing dan Pembayaran — B.7, D.3, D.4

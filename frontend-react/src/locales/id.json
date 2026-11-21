@@ -450,7 +450,13 @@
         "normal": "Normal",
         "tinggi": "Tinggi",
         "rendah": "Rendah"
-      }
+      },
+      "worklistTitle": "Pemeriksaan Laboratorium",
+      "worklistSubtitle": "Kerjakan order dari dokter dan input hasil; flag dihitung dari nilai rujukan",
+      "activeStatus": "Diminta dan diproses",
+      "nilaiRujukan": "Nilai rujukan",
+      "hasil": "Hasil",
+      "resultSaved": "Hasil laboratorium tersimpan."
     }
   },
   "uiKit": {

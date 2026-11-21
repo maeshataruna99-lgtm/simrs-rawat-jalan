@@ -23,6 +23,7 @@ import AntreanPage from '@/modules/transaction/antrean/AntreanPage';
 import PemeriksaanPage from '@/modules/transaction/pemeriksaan/PemeriksaanPage';
 import FarmasiPage from '@/modules/transaction/resep/FarmasiPage';
 import RiwayatMedisPage from '@/modules/transaction/pemeriksaan/RiwayatMedisPage';
+import LaboratoriumPage from '@/modules/transaction/lab/LaboratoriumPage';
 import WorklistPage from '@/modules/transaction/pemeriksaan/WorklistPage';
 import PendaftaranPage from '@/modules/transaction/pendaftaran/PendaftaranPage';
 import HomePage from '@/pages/HomePage';
@@ -190,6 +191,14 @@ export const routes: RouteObject[] = [
             element: (
               <PermissionGuard menu="farmasi">
                 <FarmasiPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/transaction/laboratorium',
+            element: (
+              <PermissionGuard menu="laboratorium">
+                <LaboratoriumPage />
               </PermissionGuard>
             ),
           },
