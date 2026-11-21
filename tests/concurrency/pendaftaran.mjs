@@ -33,7 +33,10 @@ async function main() {
   }
   const token = loginRes.body.data.token;
 
-  const tglKunjungan = '2026-11-23'; // Senin (hari = 1)
+  // Senin berikutnya (hari = 1) agar tanggal kunjungan tidak pernah lampau.
+  const senin = new Date();
+  senin.setDate(senin.getDate() + ((8 - senin.getDay()) % 7 || 7));
+  const tglKunjungan = senin.toLocaleDateString('sv-SE');
   const suffix = Date.now().toString().slice(-6);
 
   const dokterRes = await api(
@@ -149,9 +152,7 @@ async function main() {
     );
   }
 
-  const queueNumbers = multiPatientResults
-    .map((r) => r.body.data.no_antrean)
-    .sort((a, b) => a - b);
+  const queueNumbers = multiPatientResults.map((r) => r.body.data.no_antrean).sort((a, b) => a - b);
   const uniqueQueueNumbers = new Set(queueNumbers);
 
   console.log(`[D.1 Nomor Antrean Paralel] no_antrean = [${queueNumbers.join(', ')}]`);
@@ -159,7 +160,9 @@ async function main() {
     throw new Error(`Ditemukan nomor antrean ganda: ${queueNumbers.join(', ')}`);
   }
 
-  console.log('Uji konkurensi D.1 LULUS: hanya 1 kunjungan aktif per pasien dan nomor antrean tidak ganda.');
+  console.log(
+    'Uji konkurensi D.1 LULUS: hanya 1 kunjungan aktif per pasien dan nomor antrean tidak ganda.',
+  );
 }
 
 main().catch((err) => {

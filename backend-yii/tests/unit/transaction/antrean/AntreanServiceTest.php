@@ -46,11 +46,11 @@ class AntreanServiceTest extends TestCase
         $kunjungan = (new PendaftaranService())->daftar([
             'pasien_id' => $pasien->id,
             'jadwal_id' => $jadwal->id,
-            'tgl_kunjungan' => '2026-11-23',
+            'tgl_kunjungan' => self::seninDepan(),
         ]);
 
         $antreanService = new AntreanService();
-        $list = $antreanService->list(['poli_id' => $poli->id, 'tanggal' => '2026-11-23']);
+        $list = $antreanService->list(['poli_id' => $poli->id, 'tanggal' => self::seninDepan()]);
         $this->assertCount(1, $list);
         $this->assertSame('menunggu', $list[0]['status']);
 

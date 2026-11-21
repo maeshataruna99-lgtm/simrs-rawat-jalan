@@ -29,6 +29,16 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $this->transaction = Yii::$app->db->beginTransaction();
     }
 
+    /**
+     * Tanggal Senin berikutnya (Y-m-d) ditambah sejumlah hari, agar test kunjungan tidak memakai tanggal lampau.
+     *
+     * Dipakai di: PendaftaranServiceTest, AntreanServiceTest.
+     */
+    protected static function seninDepan(int $tambahHari = 0): string
+    {
+        return (new \DateTimeImmutable('next monday'))->modify("+{$tambahHari} day")->format('Y-m-d');
+    }
+
     protected function tearDown(): void
     {
         $this->transaction?->rollBack();

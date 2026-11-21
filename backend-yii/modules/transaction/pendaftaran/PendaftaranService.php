@@ -71,6 +71,8 @@ class PendaftaranService
         $dateObj = DateTimeImmutable::createFromFormat('!Y-m-d', $tglKunjungan);
         if (!$dateObj || $dateObj->format('Y-m-d') !== $tglKunjungan) {
             $errors['tgl_kunjungan'] = ['Format tanggal kunjungan harus YYYY-MM-DD.'];
+        } elseif ($tglKunjungan < date('Y-m-d')) {
+            $errors['tgl_kunjungan'] = ['Tanggal kunjungan tidak boleh sebelum hari ini.'];
         }
         if ($errors !== []) {
             throw new ValidationException($errors);

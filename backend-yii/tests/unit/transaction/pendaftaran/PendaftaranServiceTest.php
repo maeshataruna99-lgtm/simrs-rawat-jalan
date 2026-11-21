@@ -83,7 +83,7 @@ class PendaftaranServiceTest extends TestCase
             'tarif_pendaftaran' => 25000,
         ]);
 
-        // 2026-11-23 adalah hari Senin (hari = 1), kuota = 2.
+        // Tanggal kunjungan selalu hari Senin (hari = 1), kuota = 2.
         $jadwal = (new JadwalDokterService())->create([
             'dokter_id' => $dokter->id,
             'poli_id' => $poli->id,
@@ -98,12 +98,12 @@ class PendaftaranServiceTest extends TestCase
         $k1 = $service->daftar([
             'pasien_id' => $p1->id,
             'jadwal_id' => $jadwal->id,
-            'tgl_kunjungan' => '2026-11-23',
+            'tgl_kunjungan' => self::seninDepan(),
         ]);
         $k2 = $service->daftar([
             'pasien_id' => $p2->id,
             'jadwal_id' => $jadwal->id,
-            'tgl_kunjungan' => '2026-11-23',
+            'tgl_kunjungan' => self::seninDepan(),
         ]);
 
         $this->assertSame(1, $k1->no_antrean);
@@ -114,7 +114,7 @@ class PendaftaranServiceTest extends TestCase
         $service->daftar([
             'pasien_id' => $p3->id,
             'jadwal_id' => $jadwal->id,
-            'tgl_kunjungan' => '2026-11-23',
+            'tgl_kunjungan' => self::seninDepan(),
         ]);
     }
 
@@ -148,14 +148,26 @@ class PendaftaranServiceTest extends TestCase
 
         $service = new PendaftaranService();
 
-        // 2026-11-24 adalah hari Selasa (bukan Senin).
+        // Sehari setelahnya adalah hari Selasa (bukan Senin).
         try {
             $service->daftar([
                 'pasien_id' => $p1->id,
                 'jadwal_id' => $jadwalSenin->id,
-                'tgl_kunjungan' => '2026-11-24',
+                'tgl_kunjungan' => self::seninDepan(1),
             ]);
             $this->fail('Pendaftaran di luar hari jadwal seharusnya ditolak');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('tgl_kunjungan', $e->errors);
+        }
+
+        // Senin lalu sesuai hari jadwal, tetapi tanggal lampau tetap ditolak.
+        try {
+            $service->daftar([
+                'pasien_id' => $p1->id,
+                'jadwal_id' => $jadwalSenin->id,
+                'tgl_kunjungan' => self::seninDepan(-14),
+            ]);
+            $this->fail('Pendaftaran tanggal lampau seharusnya ditolak');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('tgl_kunjungan', $e->errors);
         }
@@ -164,14 +176,14 @@ class PendaftaranServiceTest extends TestCase
         $service->daftar([
             'pasien_id' => $p1->id,
             'jadwal_id' => $jadwalSenin->id,
-            'tgl_kunjungan' => '2026-11-23',
+            'tgl_kunjungan' => self::seninDepan(),
         ]);
 
         $this->expectException(ConflictHttpException::class);
         $service->daftar([
             'pasien_id' => $p1->id,
             'jadwal_id' => $jadwalSenin->id,
-            'tgl_kunjungan' => '2026-11-23',
+            'tgl_kunjungan' => self::seninDepan(),
         ]);
     }
 
@@ -213,7 +225,7 @@ class PendaftaranServiceTest extends TestCase
         $k1 = $service->daftar([
             'pasien_id' => $p1->id,
             'jadwal_id' => $jadwal->id,
-            'tgl_kunjungan' => '2026-11-23',
+            'tgl_kunjungan' => self::seninDepan(),
         ]);
 
         // Setelah kunjungan dibatalkan, partial unique index mengizinkan pendaftaran ulang di tanggal yang sama.
@@ -222,7 +234,7 @@ class PendaftaranServiceTest extends TestCase
         $k2 = $service->daftar([
             'pasien_id' => $p1->id,
             'jadwal_id' => $jadwal->id,
-            'tgl_kunjungan' => '2026-11-23',
+            'tgl_kunjungan' => self::seninDepan(),
         ]);
         $this->assertSame(2, $k2->no_antrean);
 
@@ -234,7 +246,7 @@ class PendaftaranServiceTest extends TestCase
             'poli_id' => $poli->id,
             'dokter_id' => $dokter->id,
             'jadwal_id' => $jadwal->id,
-            'tgl_kunjungan' => '2026-11-23',
+            'tgl_kunjungan' => self::seninDepan(),
             'no_antrean' => 2,
             'status' => 'menunggu',
         ])->execute();
