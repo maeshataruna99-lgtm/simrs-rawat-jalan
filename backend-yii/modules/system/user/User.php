@@ -25,9 +25,42 @@ use yii\web\IdentityInterface;
  */
 class User extends ActiveRecord implements IdentityInterface
 {
+    public const SCENARIO_CREATE = 'create';
+
+    /** Password teks biasa dari form tambah user; hanya dipakai untuk membuat hash, tidak disimpan. */
+    public ?string $password = null;
+
     public static function tableName(): string
     {
         return 'm_user';
+    }
+
+    public function rules(): array
+    {
+        return [
+            [['username', 'nama', 'role_id'], 'required'],
+            [['username', 'nama'], 'trim'],
+            [['username'], 'string', 'min' => 3, 'max' => 50],
+            [['username'], 'match', 'pattern' => '/^[a-z0-9._-]+$/', 'message' => 'Username hanya boleh huruf kecil, angka, titik, garis bawah, dan tanda hubung.'],
+            [['username'], 'unique', 'filter' => ['deleted_at' => null], 'message' => 'Username sudah dipakai.'],
+            [['nama'], 'string', 'max' => 100],
+            [['role_id'], 'integer'],
+            [['role_id'], 'exist', 'targetClass' => Role::class, 'targetAttribute' => 'id', 'filter' => ['deleted_at' => null], 'message' => 'Role tidak ditemukan.'],
+            [['dokter_id'], 'integer'],
+            [['dokter_id'], 'default', 'value' => null],
+            [['is_active'], 'boolean'],
+            [['is_active'], 'default', 'value' => true],
+            [['password'], 'required', 'on' => self::SCENARIO_CREATE],
+            [['password'], 'string', 'min' => 8, 'max' => 100, 'on' => self::SCENARIO_CREATE],
+        ];
+    }
+
+    public function attributeLabels(): array
+    {
+        return [
+            'username' => 'Username', 'nama' => 'Nama', 'role_id' => 'Role', 'dokter_id' => 'Dokter',
+            'is_active' => 'Status aktif', 'password' => 'Password',
+        ];
     }
 
     /**
@@ -37,6 +70,7 @@ class User extends ActiveRecord implements IdentityInterface
     {
         $fields = parent::fields();
         unset($fields['password_hash']);
+        $fields['role'] = fn () => $this->role ? ['id' => $this->role->id, 'kode' => $this->role->kode, 'nama' => $this->role->nama] : null;
 
         return $fields;
     }

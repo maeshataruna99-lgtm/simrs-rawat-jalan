@@ -19,4 +19,22 @@ class Role extends ActiveRecord
     {
         return 'm_role';
     }
+
+    public function rules(): array
+    {
+        return [
+            [['kode', 'nama'], 'required'],
+            [['kode', 'nama', 'keterangan'], 'trim'],
+            [['kode'], 'string', 'max' => 50],
+            [['kode'], 'match', 'pattern' => '/^[a-z0-9-]+$/', 'message' => 'Kode hanya boleh huruf kecil, angka, dan tanda hubung.'],
+            [['kode'], 'unique', 'filter' => ['deleted_at' => null], 'message' => 'Kode sudah dipakai.'],
+            [['nama'], 'string', 'max' => 100],
+            [['keterangan'], 'string', 'max' => 255],
+        ];
+    }
+
+    public function attributeLabels(): array
+    {
+        return ['kode' => 'Kode', 'nama' => 'Nama', 'keterangan' => 'Keterangan'];
+    }
 }

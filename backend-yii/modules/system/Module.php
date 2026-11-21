@@ -12,5 +12,7 @@ class Module extends \yii\base\Module
         'module' => module\ModuleController::class,
         'menu' => menu\MenuController::class,
         'role-access' => access\RoleAccessController::class,
+        'role' => role\RoleController::class,
+        'user' => user\UserController::class,
     ];
 }
