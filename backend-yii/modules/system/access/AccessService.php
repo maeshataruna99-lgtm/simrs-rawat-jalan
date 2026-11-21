@@ -62,6 +62,86 @@ class AccessService
     }
 
     /**
+     * Pohon menu yang boleh dilihat role, dikelompokkan per modul sesuai urutan.
+     * Menu induk (grup tanpa path) ikut tampil bila minimal satu anaknya boleh dibaca.
+     * Modul tanpa menu yang terlihat tidak dikembalikan.
+     *
+     * @return array<int, array{kode: string, nama: string, icon: ?string, menus: array}>
+     *
+     * Dipakai di: AuthService::profile() untuk sidebar frontend.
+     */
+    public function menuTreeFor(int $roleId): array
+    {
+        $allowed = $this->permissionsFor($roleId);
+        if ($allowed === []) {
+            return [];
+        }
+
+        $rows = (new Query())
+            ->select([
+                'module_kode' => 'mo.kode', 'module_nama' => 'mo.nama', 'module_icon' => 'mo.icon',
+                'm.id', 'm.parent_id', 'm.kode', 'm.nama', 'm.path', 'm.icon',
+            ])
+            ->from('m_module_menu mm')
+            ->innerJoin('m_module mo', 'mo.id = mm.module_id AND mo.is_active AND mo.deleted_at IS NULL')
+            ->innerJoin('m_menu m', 'm.id = mm.menu_id AND m.is_active AND m.deleted_at IS NULL')
+            ->orderBy(['mo.urutan' => SORT_ASC, 'mm.urutan' => SORT_ASC, 'm.urutan' => SORT_ASC])
+            ->all();
+
+        $modules = [];
+        foreach ($rows as $row) {
+            $moduleKode = $row['module_kode'];
+            $modules[$moduleKode] ??= [
+                'kode' => $moduleKode,
+                'nama' => $row['module_nama'],
+                'icon' => $row['module_icon'],
+                'rows' => [],
+            ];
+            $modules[$moduleKode]['rows'][] = $row;
+        }
+
+        $result = [];
+        foreach ($modules as $module) {
+            $menus = $this->buildTree($module['rows'], null, $allowed);
+            if ($menus !== []) {
+                unset($module['rows']);
+                $result[] = $module + ['menus' => $menus];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Menyusun menu bertingkat dari daftar datar. Menu daun hanya masuk bila punya izin baca;
+     * menu induk masuk bila punya anak yang terlihat atau ia sendiri boleh dibaca.
+     */
+    private function buildTree(array $rows, ?int $parentId, array $allowed): array
+    {
+        $tree = [];
+        foreach ($rows as $row) {
+            if (($row['parent_id'] === null ? null : (int) $row['parent_id']) !== $parentId) {
+                continue;
+            }
+
+            $children = $this->buildTree($rows, (int) $row['id'], $allowed);
+            if ($children === [] && !isset($allowed[$row['kode']])) {
+                continue;
+            }
+
+            $tree[] = [
+                'kode' => $row['kode'],
+                'nama' => $row['nama'],
+                'path' => $row['path'],
+                'icon' => $row['icon'],
+                'children' => $children,
+            ];
+        }
+
+        return $tree;
+    }
+
+    /**
      * Mengosongkan cache, dipanggil setelah hak akses diubah.
      *
      * Dipakai di: service hak akses role (poin 1.9), tests.

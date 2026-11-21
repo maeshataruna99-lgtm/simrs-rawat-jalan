@@ -3,6 +3,7 @@
 namespace app\modules\system\auth;
 
 use app\common\JwtService;
+use app\modules\system\access\AccessService;
 use app\modules\system\user\User;
 use yii\db\Expression;
 use yii\web\ForbiddenHttpException;
@@ -39,19 +40,23 @@ class AuthService
     }
 
     /**
-     * Data profil user yang aman dikirim ke frontend (tanpa password hash).
-     * Pohon menu dan izin ditambahkan di poin 1.6.
+     * Data profil user yang aman dikirim ke frontend (tanpa password hash),
+     * beserta pohon menu sidebar dan izin per menu untuk menampilkan/menyembunyikan tombol.
      *
      * Dipakai di: login(), AuthController::actionMe().
      */
     public function profile(User $user): array
     {
+        $access = new AccessService();
+
         return [
             'id' => $user->id,
             'username' => $user->username,
             'nama' => $user->nama,
             'dokter_id' => $user->dokter_id,
             'role' => ['id' => $user->role->id, 'kode' => $user->role->kode, 'nama' => $user->role->nama],
+            'modules' => $access->menuTreeFor($user->role_id),
+            'permissions' => (object) $access->permissionsFor($user->role_id),
         ];
     }
 }

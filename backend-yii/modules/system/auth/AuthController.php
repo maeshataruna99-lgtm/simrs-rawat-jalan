@@ -43,7 +43,7 @@ class AuthController extends BaseApiController
 
     /**
      * GET /system/auth/me
-     * Profil user dari token. Pohon menu dan izin ditambahkan di poin 1.6.
+     * Profil user dari token, pohon menu sidebar, dan izin per menu.
      */
     public function actionMe(): array
     {
