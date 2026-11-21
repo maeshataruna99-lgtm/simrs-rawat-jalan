@@ -11,5 +11,6 @@ class Module extends \yii\base\Module
         'auth' => auth\AuthController::class,
         'module' => module\ModuleController::class,
         'menu' => menu\MenuController::class,
+        'role-access' => access\RoleAccessController::class,
     ];
 }

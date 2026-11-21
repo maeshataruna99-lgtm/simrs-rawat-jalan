@@ -44,7 +44,7 @@ Hak akses berbasis menu: role diberi izin baca/tambah/ubah/hapus per menu, menu 
 - [x] 1.6 Endpoint profil user beserta pohon menu dan izin sesuai role
 - [x] 1.7 Middleware Node untuk verifikasi JWT dan validasi request — C.3
 - [x] 1.8 Endpoint master modul dan menu
-- [ ] 1.9 Endpoint master hak akses role (matriks menu × aksi)
+- [x] 1.9 Endpoint master hak akses role (matriks menu × aksi)
 - [ ] 1.10 Halaman login, penyimpanan sesi, dan guard halaman berdasarkan izin di React
 - [ ] 1.11 Layout dan sidebar dinamis dari pohon menu user
 - [ ] 1.12 Halaman master modul, menu, dan hak akses role
