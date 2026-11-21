@@ -1,0 +1,165 @@
+# Alur CI untuk memastikan lint, pengecekan tipe, pengujian, dan build seluruh layanan lulus.
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-yii:
+    name: Backend Yii2 (Lint & Test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-yii
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: simrs
+          POSTGRES_PASSWORD: simrs_dev
+          POSTGRES_DB: simrs
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U simrs -d simrs"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_USER: simrs
+      DB_PASSWORD: simrs_dev
+      DB_NAME: simrs_test
+    steps:
+      - name: Checkout repositori
+        uses: actions/checkout@v4
+
+      - name: Siapkan PHP 8.3 dan Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_pgsql, mbstring, intl
+          tools: composer:v2
+
+      - name: Buat database uji simrs_test
+        run: |
+          PGPASSWORD=simrs_dev psql -h localhost -U simrs -d simrs -c "CREATE DATABASE simrs_test;"
+
+      - name: Instal dependensi Composer
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Periksa gaya kode PHP (php-cs-fixer)
+        run: composer lint
+
+      - name: Jalankan migrasi dan pengujian PHPUnit
+        run: composer test
+
+  service-node:
+    name: Service Node (Lint, Types, Test & Build)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: simrs
+          POSTGRES_PASSWORD: simrs_dev
+          POSTGRES_DB: simrs
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U simrs -d simrs"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_USER: simrs
+      DB_PASSWORD: simrs_dev
+      DB_READONLY_USER: simrs_readonly
+      DB_READONLY_PASSWORD: simrs_ro_dev
+      TEST_DB_NAME: simrs_test
+    steps:
+      - name: Checkout repositori
+        uses: actions/checkout@v4
+
+      - name: Siapkan PHP 8.3 untuk migrasi skema uji
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_pgsql, mbstring, intl
+          tools: composer:v2
+
+      - name: Siapkan Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: service-node/package-lock.json
+
+      - name: Siapkan database simrs_test dan user read-only
+        run: |
+          PGPASSWORD=simrs_dev psql -h localhost -U simrs -d simrs -c "CREATE DATABASE simrs_test;"
+          composer --working-dir=backend-yii install --no-interaction --prefer-dist --no-dev
+          DB_NAME=simrs_test php backend-yii/yii migrate --interactive=0
+          PGPASSWORD=simrs_dev psql -h localhost -U simrs -d simrs -f database/init/02-create-readonly-user.sql
+
+      - name: Instal dependensi service-node
+        working-directory: service-node
+        run: npm ci
+
+      - name: Lint, format, dan cek tipe TypeScript
+        working-directory: service-node
+        run: |
+          npm run lint
+          npm run check-types
+          npx prettier --check .
+
+      - name: Jalankan pengujian Vitest
+        working-directory: service-node
+        run: npm test
+
+      - name: Build produksi service-node
+        working-directory: service-node
+        run: npm run build
+
+  frontend-react:
+    name: Frontend React (Lint, Test & Build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend-react
+    steps:
+      - name: Checkout repositori
+        uses: actions/checkout@v4
+
+      - name: Siapkan Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend-react/package-lock.json
+
+      - name: Instal dependensi frontend-react
+        run: npm ci
+
+      - name: Lint dan cek format Prettier
+        run: |
+          npm run lint
+          npx prettier --check .
+
+      - name: Jalankan pengujian Vitest
+        run: npm test
+
+      - name: Build produksi frontend-react
+        run: npm run build

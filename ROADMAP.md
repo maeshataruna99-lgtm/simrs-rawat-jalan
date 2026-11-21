@@ -157,6 +157,6 @@ Dikerjakan hanya jika waktu tersisa, tidak mengubah fitur inti.
 - [x] Export laporan ke Excel
 - [x] Filter laporan lanjutan (per dokter, per penjamin)
 - [x] Penyempurnaan UI (tema, responsif, empty state)
-- [ ] CI GitHub Actions untuk lint dan test
+- [x] CI GitHub Actions untuk lint dan test
 - [ ] Layar display antrean
 - [ ] Bahasa Inggris (`en`) untuk i18n
