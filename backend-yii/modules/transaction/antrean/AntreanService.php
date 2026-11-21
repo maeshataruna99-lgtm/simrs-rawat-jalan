@@ -88,6 +88,17 @@ class AntreanService
             return $kunjungan;
         }
 
+        // Selesai dan batal adalah status akhir; membuka kembali kunjungan batal bisa bentrok dengan kunjungan aktif baru.
+        $transisi = [
+            Kunjungan::STATUS_MENUNGGU => [Kunjungan::STATUS_DIPERIKSA, Kunjungan::STATUS_BATAL],
+            Kunjungan::STATUS_DIPERIKSA => [Kunjungan::STATUS_SELESAI, Kunjungan::STATUS_BATAL],
+        ];
+        if (!in_array($target, $transisi[$kunjungan->status] ?? [], true)) {
+            throw new ValidationException([
+                'status' => ["Status tidak dapat diubah dari {$kunjungan->status} menjadi {$target}."],
+            ]);
+        }
+
         Yii::$app->db->transaction(function () use ($kunjungan, $target) {
             $statusLama = $kunjungan->status;
             $userId = Yii::$app->has('user') ? Yii::$app->user->id : null;

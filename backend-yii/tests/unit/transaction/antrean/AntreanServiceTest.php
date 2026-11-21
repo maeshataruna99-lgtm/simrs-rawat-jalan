@@ -2,6 +2,7 @@
 
 namespace app\tests\unit\transaction\antrean;
 
+use app\common\ValidationException;
 use app\modules\master\dokter\DokterService;
 use app\modules\master\jadwal\JadwalDokterService;
 use app\modules\master\pasien\PasienService;
@@ -64,5 +65,17 @@ class AntreanServiceTest extends TestCase
         $this->assertSame('menunggu', $riwayat[0]['status_logs'][0]['status_baru']);
         $this->assertSame('menunggu', $riwayat[0]['status_logs'][1]['status_lama']);
         $this->assertSame('diperiksa', $riwayat[0]['status_logs'][1]['status_baru']);
+
+        // Status tidak boleh mundur, dan status akhir tidak bisa dibuka kembali.
+        foreach ([['menunggu'], ['selesai', 'menunggu']] as $langkah) {
+            try {
+                foreach ($langkah as $status) {
+                    $antreanService->ubahStatus($kunjungan->id, $status);
+                }
+                $this->fail('Transisi status tidak valid seharusnya ditolak');
+            } catch (ValidationException $e) {
+                $this->assertArrayHasKey('status', $e->errors);
+            }
+        }
     }
 }
