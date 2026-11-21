@@ -6,9 +6,12 @@
 import type { RouteObject } from 'react-router';
 import { AppLayout } from '@/components/layout/AppLayout';
 import DokterPage from '@/modules/master/dokter/DokterPage';
+import Icd10Page from '@/modules/master/icd10/Icd10Page';
 import JadwalDokterPage from '@/modules/master/jadwal/JadwalDokterPage';
+import PemeriksaanLabPage from '@/modules/master/lab/PemeriksaanLabPage';
 import PasienPage from '@/modules/master/pasien/PasienPage';
 import PoliPage from '@/modules/master/poli/PoliPage';
+import TindakanPage from '@/modules/master/tindakan/TindakanPage';
 import LoginPage from '@/modules/system/auth/LoginPage';
 import MenuPage from '@/modules/system/menu/MenuPage';
 import ModulePage from '@/modules/system/module/ModulePage';
@@ -100,6 +103,30 @@ export const routes: RouteObject[] = [
             element: (
               <PermissionGuard menu="master-jadwal-dokter">
                 <JadwalDokterPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/master/tindakan',
+            element: (
+              <PermissionGuard menu="master-tindakan">
+                <TindakanPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/master/pemeriksaan-lab',
+            element: (
+              <PermissionGuard menu="master-pemeriksaan-lab">
+                <PemeriksaanLabPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/master/icd10',
+            element: (
+              <PermissionGuard menu="master-icd10">
+                <Icd10Page />
               </PermissionGuard>
             ),
           },

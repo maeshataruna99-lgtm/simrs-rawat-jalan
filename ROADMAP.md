@@ -66,7 +66,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 2.10 Halaman master pasien
 - [x] 2.11 Halaman master dokter dan poli
 - [x] 2.12 Halaman master jadwal praktik
-- [ ] 2.13 Halaman master tindakan dan pemeriksaan laboratorium
+- [x] 2.13 Halaman master tindakan dan pemeriksaan laboratorium
 - [ ] 2.14 Halaman master obat dan stok
 
 ## 3. Pendaftaran dan Antrean — B.2, D.1

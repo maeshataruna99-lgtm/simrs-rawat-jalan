@@ -258,6 +258,18 @@
       "deleteTitle": "Hapus pemeriksaan laboratorium?",
       "deleteConfirm": "Pemeriksaan {{nama}} akan dihapus dari daftar aktif."
     },
+    "icd10": {
+      "title": "Master ICD-10",
+      "subtitle": "Katalog kode dan nama diagnosis ICD-10",
+      "searchPlaceholder": "Cari kode atau nama diagnosis ICD-10...",
+      "addButton": "Tambah ICD-10",
+      "addTitle": "Tambah ICD-10",
+      "editTitle": "Ubah ICD-10",
+      "kodeRequired": "Kode ICD-10 wajib diisi.",
+      "namaRequired": "Nama diagnosis wajib diisi.",
+      "deleteTitle": "Hapus ICD-10?",
+      "deleteConfirm": "Diagnosis {{nama}} akan dihapus dari daftar aktif."
+    },
     "obat": {
       "title": "Master Obat dan Stok",
       "subtitle": "Kelola katalog obat, harga satuan, penyesuaian stok, dan riwayat mutasi",
