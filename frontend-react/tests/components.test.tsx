@@ -1,10 +1,11 @@
 /**
- * Uji komponen aplikasi bersama (poin 2.9): AppDataTable dan AppSelect.
+ * Uji komponen aplikasi bersama (poin 2.9 & penyempurnaan UI): AppDataTable, AppSelect, dan AppEmptyState.
  */
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { AppDataTable, type AppColumn } from '@/components/AppDataTable';
+import { AppEmptyState } from '@/components/AppEmptyState';
 import { AppSelect } from '@/components/AppSelect';
 
 interface SampleRow {
@@ -92,5 +93,40 @@ describe('AppSelect', () => {
     await userEvent.click(option);
 
     expect(onChange).toHaveBeenCalledWith('10');
+  });
+});
+
+describe('AppEmptyState', () => {
+  it('menampilkan judul, deskripsi, dan aksi ketika data kosong', async () => {
+    const onReset = vi.fn();
+
+    render(
+      <AppEmptyState
+        title="Belum ada kunjungan"
+        description="Ubah filter tanggal untuk melihat data lain."
+        action={
+          <button type="button" onClick={onReset}>
+            Reset Filter
+          </button>
+        }
+      />,
+    );
+
+    expect(screen.getByText('Belum ada kunjungan')).toBeInTheDocument();
+    expect(screen.getByText('Ubah filter tanggal untuk melihat data lain.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Reset Filter' }));
+    expect(onReset).toHaveBeenCalledTimes(1);
+  });
+
+  it('dipakai oleh AppDataTable saat baris kosong', () => {
+    render(
+      <AppDataTable
+        columns={columns}
+        rows={[]}
+        rowKey={(r) => r.id}
+        emptyText="Data poli kosong"
+      />,
+    );
+    expect(screen.getByText('Data poli kosong')).toBeInTheDocument();
   });
 });

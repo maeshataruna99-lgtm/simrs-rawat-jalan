@@ -156,7 +156,7 @@ Dikerjakan hanya jika waktu tersisa, tidak mengubah fitur inti.
 - [x] Export PDF invoice dan laporan
 - [x] Export laporan ke Excel
 - [x] Filter laporan lanjutan (per dokter, per penjamin)
-- [ ] Penyempurnaan UI (tema, responsif, empty state)
+- [x] Penyempurnaan UI (tema, responsif, empty state)
 - [ ] CI GitHub Actions untuk lint dan test
 - [ ] Layar display antrean
 - [ ] Bahasa Inggris (`en`) untuk i18n

@@ -4,6 +4,7 @@
  * Dipakai di: DashboardPage.tsx.
  */
 import { useTranslation } from 'react-i18next';
+import { AppEmptyState } from '@/components/AppEmptyState';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatRupiah } from '@/lib/format';
 import type {
@@ -47,7 +48,7 @@ export function DashboardCharts({ perPoli, tindakan, pendapatan, obat, pembayara
         </CardHeader>
         <CardContent>
           {perPoli.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('common.emptyData')}</p>
+            <AppEmptyState title={t('common.emptyData')} compact />
           ) : (
             <div className="space-y-3">
               {perPoli.map((item) => (
@@ -79,7 +80,7 @@ export function DashboardCharts({ perPoli, tindakan, pendapatan, obat, pembayara
         </CardHeader>
         <CardContent className="space-y-4">
           {perHari.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('common.emptyData')}</p>
+            <AppEmptyState title={t('common.emptyData')} compact />
           ) : (
             <div className="flex h-36 items-end gap-2 border-b pb-2 pt-4">
               {perHari.slice(-14).map((d) => {
@@ -140,7 +141,7 @@ export function DashboardCharts({ perPoli, tindakan, pendapatan, obat, pembayara
         </CardHeader>
         <CardContent>
           {tindakan.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('common.emptyData')}</p>
+            <AppEmptyState title={t('common.emptyData')} compact />
           ) : (
             <div className="space-y-3">
               {tindakan.slice(0, 6).map((item) => (
@@ -174,7 +175,7 @@ export function DashboardCharts({ perPoli, tindakan, pendapatan, obat, pembayara
         </CardHeader>
         <CardContent className="space-y-4">
           {obat.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('common.emptyData')}</p>
+            <AppEmptyState title={t('common.emptyData')} compact />
           ) : (
             <div className="space-y-2.5">
               {obat.slice(0, 5).map((item) => (

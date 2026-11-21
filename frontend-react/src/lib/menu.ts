@@ -53,9 +53,10 @@ export interface FlatMenuEntry {
 }
 
 /**
- * Meratakan seluruh menu ber-path dari setiap modul agar mudah dicari pada pencarian global (Ctrl+K).
+ * Meratakan seluruh menu ber-path dari setiap modul agar mudah dicari pada pencarian global (Ctrl+K)
+ * dan ditampilkan pada daftar akses cepat beranda.
  *
- * Dipakai di: components/AppCommandSearch.tsx.
+ * Dipakai di: components/AppCommandSearch.tsx, pages/HomePage.tsx.
  */
 export function flattenModuleMenus(modules: MenuModuleGroup[]): FlatMenuEntry[] {
   const result: FlatMenuEntry[] = [];

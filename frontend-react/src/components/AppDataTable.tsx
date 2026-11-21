@@ -7,6 +7,7 @@
 import { ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AppEmptyState } from '@/components/AppEmptyState';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -89,7 +90,7 @@ export function AppDataTable<T>({
   };
 
   return (
-    <div className="rounded-md border bg-card">
+    <div className="overflow-x-auto rounded-md border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -132,11 +133,8 @@ export function AppDataTable<T>({
             ))
           ) : sortedRows.length === 0 ? (
             <TableRow>
-              <TableCell
-                colSpan={columns.length + (showActions ? 1 : 0)}
-                className="h-24 text-center text-muted-foreground"
-              >
-                {emptyText ?? t('common.emptyData')}
+              <TableCell colSpan={columns.length + (showActions ? 1 : 0)} className="p-0">
+                <AppEmptyState title={emptyText ?? t('common.emptyData')} compact />
               </TableCell>
             </TableRow>
           ) : (
