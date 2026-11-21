@@ -142,7 +142,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 10.6 Dokumentasi endpoint API — C.5
 - [x] 10.7 Postman collection, environment, dan hasil pengujian
 - [x] 10.8 Daftar test case fitur utama
-- [ ] 10.9 Screenshot alur pendaftaran sampai pembayaran dan bukti invoice
+- [x] 10.9 Screenshot alur pendaftaran sampai pembayaran dan bukti invoice
 - [ ] 10.10 README: instalasi, konfigurasi, dan akun dummy
 - [ ] 10.11 Tag rilis `v1.0-submission`
 
