@@ -48,9 +48,12 @@ return [
                 'DELETE <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/delete',
                 // Aksi khusus pada satu data, contoh PUT /system/user/5/reset-password atau GET /master/obat/1/mutasi.
                 'GET,PUT,POST <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>/<action:[\w-]+>' => '<module>/<controller>/<action>',
+                // Aksi khusus tingkat controller, contoh GET /transaction/pendaftaran/cari-pasien.
+                'GET,PUT,POST <module:(master|transaction|system)>/<controller:[\w-]+>/<action:[a-zA-Z][\w-]*>' => '<module>/<controller>/<action>',
                 // Preflight CORS untuk URL dengan id diarahkan ke action yang ada agar filter CORS bisa menjawab.
                 'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/view',
                 'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>/<action:[\w-]+>' => '<module>/<controller>/<action>',
+                'OPTIONS <module:(master|transaction|system)>/<controller:[\w-]+>/<action:[a-zA-Z][\w-]*>' => '<module>/<controller>/<action>',
             ],
         ],
         'log' => [

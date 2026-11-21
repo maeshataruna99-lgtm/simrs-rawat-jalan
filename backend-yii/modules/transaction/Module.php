@@ -8,5 +8,7 @@ namespace app\modules\transaction;
  */
 class Module extends \yii\base\Module
 {
-    public $controllerMap = [];
+    public $controllerMap = [
+        'pendaftaran' => pendaftaran\PendaftaranController::class,
+    ];
 }
