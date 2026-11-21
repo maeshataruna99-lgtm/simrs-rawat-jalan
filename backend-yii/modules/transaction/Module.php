@@ -12,5 +12,6 @@ class Module extends \yii\base\Module
         'pendaftaran' => pendaftaran\PendaftaranController::class,
         'antrean' => antrean\AntreanController::class,
         'riwayat-kunjungan' => antrean\RiwayatKunjunganController::class,
+        'pemeriksaan' => pemeriksaan\PemeriksaanController::class,
     ];
 }
