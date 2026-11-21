@@ -3,7 +3,7 @@
  *
  * Dipakai di: routes/index.tsx.
  */
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, FileDown, Printer } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { errorMessage } from '@/lib/api-client';
+import { exportInvoicePdf } from '@/lib/export-pdf';
 import { formatRupiah } from '@/lib/format';
 import * as pembayaranApi from './pembayaran.api';
 import type { Invoice } from './pembayaran.types';
@@ -77,10 +78,16 @@ export default function InvoicePrintPage() {
             {t('transaction.billing.print.back')}
           </Link>
         </Button>
-        <Button size="sm" onClick={() => window.print()}>
-          <Printer className="mr-1.5 size-4" />
-          {t('transaction.billing.print.printNow')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportInvoicePdf(invoice)}>
+            <FileDown className="mr-1.5 size-4" />
+            {t('common.exportPdf')}
+          </Button>
+          <Button size="sm" onClick={() => window.print()}>
+            <Printer className="mr-1.5 size-4" />
+            {t('transaction.billing.print.printNow')}
+          </Button>
+        </div>
       </div>
 
       <article className="print-sheet mx-auto max-w-3xl rounded-lg border bg-white p-8 text-gray-900 shadow-sm">

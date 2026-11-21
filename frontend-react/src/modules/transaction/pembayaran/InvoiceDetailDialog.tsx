@@ -3,7 +3,7 @@
  *
  * Dipakai di: BillingPage.tsx.
  */
-import { Printer } from 'lucide-react';
+import { FileDown, Printer } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { exportInvoicePdf } from '@/lib/export-pdf';
 import { formatRupiah } from '@/lib/format';
 import * as pembayaranApi from './pembayaran.api';
 import type { Invoice, InvoiceAuditLog, InvoiceStatus } from './pembayaran.types';
@@ -261,6 +262,10 @@ export function InvoiceDetailDialog({ open, invoice, canPay, onOpenChange, onPay
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               {t('common.close')}
+            </Button>
+            <Button variant="outline" onClick={() => exportInvoicePdf(invoice)}>
+              <FileDown className="mr-1.5 size-4" />
+              {t('common.exportPdf')}
             </Button>
             <Button asChild variant="outline">
               <Link to={`/transaction/billing/invoice/${invoice.id}/cetak`}>

@@ -4,7 +4,7 @@
  *
  * Dipakai di: routes/index.tsx.
  */
-import { Activity, CreditCard, Stethoscope, Users } from 'lucide-react';
+import { Activity, CreditCard, FileDown, Stethoscope, Users } from 'lucide-react';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { errorMessage } from '@/lib/api-client';
+import { exportDashboardPdf } from '@/lib/export-pdf';
 import { formatRupiah } from '@/lib/format';
 import { DashboardCharts } from './DashboardCharts';
 import * as dashboardApi from './dashboard.api';
@@ -341,6 +342,24 @@ export default function DashboardPage() {
             </Button>
             <Button type="button" variant="outline" size="sm" onClick={() => applyPreset('month')}>
               {t('dashboard.presetMonth')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                exportDashboardPdf({
+                  from: periode.from,
+                  to: periode.to,
+                  summary,
+                  perPoli,
+                  tindakan,
+                  obat,
+                })
+              }
+            >
+              <FileDown className="mr-1 size-3.5" />
+              {t('common.exportPdf')}
             </Button>
           </div>
         </form>
