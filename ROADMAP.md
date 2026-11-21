@@ -58,7 +58,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 2.2 Master dokter dan tenaga medis
 - [x] 2.3 Master poli / unit pelayanan
 - [x] 2.4 Master jadwal praktik dokter (cegah jadwal bentrok)
-- [ ] 2.5 Master tindakan medis dan tarif
+- [x] 2.5 Master tindakan medis dan tarif
 - [ ] 2.6 Master obat, stok, dan harga
 - [ ] 2.7 Master pemeriksaan laboratorium dan tarif
 - [ ] 2.8 Master ICD-10 (seed data)
