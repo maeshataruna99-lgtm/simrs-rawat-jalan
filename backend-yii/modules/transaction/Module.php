@@ -13,5 +13,6 @@ class Module extends \yii\base\Module
         'antrean' => antrean\AntreanController::class,
         'riwayat-kunjungan' => antrean\RiwayatKunjunganController::class,
         'pemeriksaan' => pemeriksaan\PemeriksaanController::class,
+        'diagnosis' => pemeriksaan\DiagnosisController::class,
     ];
 }

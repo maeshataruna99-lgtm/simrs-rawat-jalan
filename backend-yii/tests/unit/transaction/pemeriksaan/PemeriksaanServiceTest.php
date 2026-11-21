@@ -4,6 +4,7 @@ namespace app\tests\unit\transaction\pemeriksaan;
 
 use app\common\ValidationException;
 use app\modules\master\dokter\DokterService;
+use app\modules\master\icd10\Icd10Service;
 use app\modules\master\jadwal\JadwalDokterService;
 use app\modules\master\pasien\PasienService;
 use app\modules\master\poli\PoliService;
@@ -110,5 +111,41 @@ class PemeriksaanServiceTest extends TestCase
         (new AntreanService())->ubahStatus($kunjunganId, 'selesai');
         $this->expectException(ConflictHttpException::class);
         $service->simpan($kunjunganId, ['keluhan_utama' => 'Ubah'], $data['dokter1']);
+    }
+
+    public function testDiagnosisWajibTepatSatuUtamaDanSekunderBolehBanyak(): void
+    {
+        $data = $this->siapkanKunjungan();
+        $kunjunganId = $data['kunjungan'][0];
+        $icd = [];
+        foreach (['A09', 'J06.9', 'R50.9'] as $kode) {
+            $icd[] = (new Icd10Service())->create(['kode' => "T{$kode}", 'nama' => "Uji {$kode}"])->id;
+        }
+        $service = new PemeriksaanService();
+
+        $tanpaUtama = [['icd10_id' => $icd[0], 'jenis' => 'sekunder']];
+        $duaUtama = [['icd10_id' => $icd[0], 'jenis' => 'utama'], ['icd10_id' => $icd[1], 'jenis' => 'utama']];
+        $ganda = [['icd10_id' => $icd[0], 'jenis' => 'utama'], ['icd10_id' => $icd[0], 'jenis' => 'sekunder']];
+        foreach ([$tanpaUtama, $duaUtama, $ganda, [], 'bukan-array'] as $items) {
+            try {
+                $service->simpanDiagnosis($kunjunganId, $items, $data['dokter1']);
+                $this->fail('Diagnosis tidak valid seharusnya ditolak');
+            } catch (ValidationException) {
+            }
+        }
+
+        $rows = $service->simpanDiagnosis($kunjunganId, [
+            ['icd10_id' => $icd[1], 'jenis' => 'sekunder'],
+            ['icd10_id' => $icd[0], 'jenis' => 'utama'],
+            ['icd10_id' => $icd[2], 'jenis' => 'sekunder'],
+        ], $data['dokter1']);
+        $this->assertSame(['utama', 'sekunder', 'sekunder'], array_column($rows, 'jenis'));
+        $this->assertSame('TA09', $rows[0]['icd10']['kode']);
+
+        // Simpan ulang mengganti seluruh diagnosis lama.
+        $service->simpanDiagnosis($kunjunganId, [['icd10_id' => $icd[2], 'jenis' => 'utama']], null);
+        $detail = $service->detail($kunjunganId, null);
+        $this->assertCount(1, $detail['diagnosis']);
+        $this->assertSame($icd[2], $detail['diagnosis'][0]['icd10_id']);
     }
 }

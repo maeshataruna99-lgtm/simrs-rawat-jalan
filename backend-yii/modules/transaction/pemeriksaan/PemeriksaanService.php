@@ -3,6 +3,7 @@
 namespace app\modules\transaction\pemeriksaan;
 
 use app\common\ValidationException;
+use app\modules\master\icd10\Icd10;
 use app\modules\transaction\antrean\AntreanService;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use Yii;
@@ -11,9 +12,9 @@ use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
- * Service pemeriksaan dokter: worklist pasien serta penyimpanan anamnesis, tanda vital, dan pemeriksaan fisik.
+ * Service pemeriksaan dokter: worklist pasien, anamnesis, tanda vital, pemeriksaan fisik, dan diagnosis ICD-10.
  *
- * Dipakai di: PemeriksaanController.
+ * Dipakai di: PemeriksaanController, DiagnosisController.
  */
 class PemeriksaanService
 {
@@ -58,6 +59,7 @@ class PemeriksaanService
         return [
             'kunjungan' => $kunjungan->toArray(),
             'pemeriksaan' => $pemeriksaan?->toArray(),
+            'diagnosis' => $this->daftarDiagnosis($kunjunganId),
         ];
     }
 
@@ -94,6 +96,74 @@ class PemeriksaanService
         });
 
         return $model;
+    }
+
+    /**
+     * Mengganti seluruh diagnosis kunjungan dengan daftar baru: wajib tepat satu utama, sekunder boleh banyak.
+     *
+     * @param mixed $items Daftar [{icd10_id, jenis}] dari request.
+     * @return array<int, array<string, mixed>> Diagnosis tersimpan, utama lebih dulu.
+     *
+     * @throws ValidationException Bila jumlah diagnosis utama bukan satu, ICD-10 tidak ada, atau ganda.
+     * @throws ConflictHttpException Bila kunjungan sudah batal.
+     *
+     * Dipakai di: DiagnosisController::actionUpdate().
+     */
+    public function simpanDiagnosis(int $kunjunganId, mixed $items, ?int $dokterId): array
+    {
+        $kunjungan = $this->kunjunganMilik($kunjunganId, $dokterId);
+        if ($kunjungan->status === Kunjungan::STATUS_BATAL) {
+            throw new ConflictHttpException('Kunjungan batal tidak dapat diberi diagnosis.');
+        }
+
+        $items = is_array($items) ? array_values($items) : [];
+        $ids = [];
+        $utama = 0;
+        foreach ($items as $i => $item) {
+            $item = is_array($item) ? $item : [];
+            $icd10Id = filter_var($item['icd10_id'] ?? null, FILTER_VALIDATE_INT);
+            $jenis = $item['jenis'] ?? null;
+            if ($icd10Id === false || !in_array($jenis, [Diagnosis::JENIS_UTAMA, Diagnosis::JENIS_SEKUNDER], true)) {
+                throw new ValidationException(["diagnosis.{$i}" => ['ICD-10 dan jenis (utama/sekunder) wajib diisi.']]);
+            }
+            $ids[] = $icd10Id;
+            $utama += $jenis === Diagnosis::JENIS_UTAMA ? 1 : 0;
+        }
+        if ($utama !== 1) {
+            throw new ValidationException(['diagnosis' => ['Wajib tepat satu diagnosis utama.']]);
+        }
+        if (count(array_unique($ids)) !== count($ids)) {
+            throw new ValidationException(['diagnosis' => ['Kode ICD-10 tidak boleh dipilih lebih dari sekali.']]);
+        }
+        if ((int) Icd10::findActive()->andWhere(['id' => $ids])->count() !== count($ids)) {
+            throw new ValidationException(['diagnosis' => ['Kode ICD-10 tidak ditemukan.']]);
+        }
+
+        Yii::$app->db->transaction(function () use ($kunjunganId, $items) {
+            Diagnosis::deleteAll(['kunjungan_id' => $kunjunganId]);
+            foreach ($items as $item) {
+                (new Diagnosis([
+                    'kunjungan_id' => $kunjunganId,
+                    'icd10_id' => (int) $item['icd10_id'],
+                    'jenis' => $item['jenis'],
+                ]))->save(false);
+            }
+        });
+
+        return $this->daftarDiagnosis($kunjunganId);
+    }
+
+    /**
+     * Diagnosis satu kunjungan, utama lebih dulu.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function daftarDiagnosis(int $kunjunganId): array
+    {
+        $rows = Diagnosis::find()->with('icd10')->where(['kunjungan_id' => $kunjunganId])
+            ->orderBy(['jenis' => SORT_DESC, 'id' => SORT_ASC])->all();
+
+        return array_map(fn (Diagnosis $d) => $d->toArray(), $rows);
     }
 
     /**
