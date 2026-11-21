@@ -56,7 +56,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 - [x] 2.1 Master pasien dan nomor rekam medis otomatis
 - [x] 2.2 Master dokter dan tenaga medis
-- [ ] 2.3 Master poli / unit pelayanan
+- [x] 2.3 Master poli / unit pelayanan
 - [ ] 2.4 Master jadwal praktik dokter (cegah jadwal bentrok)
 - [ ] 2.5 Master tindakan medis dan tarif
 - [ ] 2.6 Master obat, stok, dan harga
