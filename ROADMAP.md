@@ -60,7 +60,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 2.4 Master jadwal praktik dokter (cegah jadwal bentrok)
 - [x] 2.5 Master tindakan medis dan tarif
 - [x] 2.6 Master obat, stok, dan harga
-- [ ] 2.7 Master pemeriksaan laboratorium dan tarif
+- [x] 2.7 Master pemeriksaan laboratorium dan tarif
 - [ ] 2.8 Master ICD-10 (seed data)
 - [ ] 2.9 Komponen aplikasi bersama berbasis shadcn/ui: tabel data, filter, form, dialog konfirmasi, select pencarian
 - [ ] 2.10 Halaman master pasien

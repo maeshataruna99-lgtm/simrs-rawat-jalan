@@ -15,5 +15,6 @@ class Module extends \yii\base\Module
         'jadwal-dokter' => jadwal\JadwalDokterController::class,
         'tindakan' => tindakan\TindakanController::class,
         'obat' => obat\ObatController::class,
+        'pemeriksaan-lab' => lab\PemeriksaanLabController::class,
     ];
 }
