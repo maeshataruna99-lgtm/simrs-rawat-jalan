@@ -159,4 +159,4 @@ Dikerjakan hanya jika waktu tersisa, tidak mengubah fitur inti.
 - [x] Penyempurnaan UI (tema, responsif, empty state)
 - [x] CI GitHub Actions untuk lint dan test
 - [x] Layar display antrean
-- [ ] Bahasa Inggris (`en`) untuk i18n
+- [x] Bahasa Inggris (`en`) untuk i18n

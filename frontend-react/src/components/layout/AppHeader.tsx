@@ -7,6 +7,7 @@ import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 import { AppCommandSearch } from '@/components/AppCommandSearch';
+import { AppLocaleToggle } from '@/components/AppLocaleToggle';
 import { AppThemeToggle } from '@/components/AppThemeToggle';
 import {
   Breadcrumb,
@@ -58,6 +59,7 @@ export function AppHeader({ activeModule }: Props) {
         </BreadcrumbList>
       </Breadcrumb>
       <AppCommandSearch />
+      <AppLocaleToggle />
       <AppThemeToggle />
     </header>
   );

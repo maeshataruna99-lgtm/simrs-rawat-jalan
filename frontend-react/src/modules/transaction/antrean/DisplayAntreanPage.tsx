@@ -9,6 +9,7 @@ import { Maximize2, Minimize2, Monitor, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppEmptyState } from '@/components/AppEmptyState';
+import { AppLocaleToggle } from '@/components/AppLocaleToggle';
 import { AppThemeToggle } from '@/components/AppThemeToggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -160,6 +161,7 @@ export default function DisplayAntreanPage() {
               )}
             </Button>
 
+            <AppLocaleToggle />
             <AppThemeToggle />
 
             <div className="text-right pl-2 border-l">

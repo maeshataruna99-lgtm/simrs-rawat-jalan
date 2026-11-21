@@ -64,6 +64,11 @@
   "theme": {
     "toggle": "Ganti tema terang atau gelap"
   },
+  "locale": {
+    "switch": "Ganti bahasa ke Inggris",
+    "id": "Indonesia",
+    "en": "Inggris"
+  },
   "system": {
     "common": {
       "kode": "Kode",

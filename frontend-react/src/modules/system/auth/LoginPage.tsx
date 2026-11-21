@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation } from 'react-router';
 import { z } from 'zod';
+import { AppLocaleToggle } from '@/components/AppLocaleToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -60,7 +61,10 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-muted px-4">
+    <main className="relative flex min-h-svh items-center justify-center bg-muted px-4">
+      <div className="absolute right-4 top-4">
+        <AppLocaleToggle />
+      </div>
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl">{t('app.name')}</CardTitle>
