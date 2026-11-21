@@ -65,7 +65,7 @@ export async function listOrders(status: string) {
  * Meneruskan satu hasil ke Yii dengan header Idempotency-Key.
  * Error validasi dari Yii (4xx) diteruskan apa adanya; Yii tidak terjangkau melempar YiiUnavailableError.
  *
- * Dipakai di: lab.routes.ts (POST /api/lab/results).
+ * Dipakai di: outbox.ts (deliver).
  */
 export async function forwardResult(input: LabResultInput) {
   const res = await yiiRequest<YiiOrderDetail>(

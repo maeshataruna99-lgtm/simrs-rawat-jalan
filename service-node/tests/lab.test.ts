@@ -1,10 +1,14 @@
 /**
- * Uji route integrasi laboratorium (/api/lab) dengan backend Yii tiruan lewat fetch yang di-stub.
+ * Uji route integrasi laboratorium (/api/lab) dan outbox dengan backend Yii tiruan lewat fetch yang di-stub.
+ * Outbox memakai database simrs_test.
  */
 import request from 'supertest';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
+import { db } from '../src/lib/db.js';
 import { resetYiiToken } from '../src/lib/yii-client.js';
+import { processDueOutbox } from '../src/modules/lab/outbox.worker.js';
+import { cleanOutbox, outboxRow, useTestDatabase } from './test-db.js';
 
 const API_KEY = 'kunci-lab-uji';
 
@@ -17,7 +21,11 @@ function json(status: number, body: unknown) {
 
 const fetchMock = vi.fn<typeof fetch>();
 
+const PREFIX = `uji-lab-${Date.now()}-`;
+const login = () => json(200, { success: true, data: { token: 'tok' } });
+
 beforeAll(() => {
+  useTestDatabase();
   process.env.LAB_API_KEYS = API_KEY;
   process.env.YII_URL = 'http://yii.test';
   process.env.LAB_YII_USERNAME = 'laboratorium';
@@ -33,6 +41,14 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
 });
+
+afterAll(async () => {
+  await cleanOutbox(PREFIX, true);
+});
+
+function kirim(body: object) {
+  return request(createApp()).post('/api/lab/results').set('X-Api-Key', API_KEY).send(body);
+}
 
 describe('GET /api/lab/orders', () => {
   it('menolak tanpa API key', async () => {
@@ -92,8 +108,9 @@ describe('GET /api/lab/orders', () => {
   });
 });
 
-describe('POST /api/lab/results', () => {
-  it('meneruskan hasil ke Yii dengan Idempotency-Key dan login ulang saat token ditolak', async () => {
+describe('POST /api/lab/results dengan outbox', () => {
+  it('meneruskan hasil dengan Idempotency-Key, login ulang saat token ditolak, outbox terkirim', async () => {
+    const key = `${PREFIX}ok`;
     fetchMock
       .mockResolvedValueOnce(json(200, { success: true, data: { token: 'tok-lama' } }))
       .mockResolvedValueOnce(json(401, { success: false, message: 'Sesi berakhir' }))
@@ -102,10 +119,7 @@ describe('POST /api/lab/results', () => {
         json(200, { success: true, data: { id: 11, hasil: '150', flag: 'tinggi' } }),
       );
 
-    const res = await request(createApp())
-      .post('/api/lab/results')
-      .set('X-Api-Key', API_KEY)
-      .send({ detail_id: 11, hasil: '150', idempotency_key: 'alat-01-0001' });
+    const res = await kirim({ detail_id: 11, hasil: '150', idempotency_key: key });
 
     expect(res.status).toBe(200);
     expect(res.body.data.flag).toBe('tinggi');
@@ -113,29 +127,69 @@ describe('POST /api/lab/results', () => {
     expect(url).toBe('http://yii.test/transaction/hasil-lab/11');
     expect(init?.method).toBe('PUT');
     const headers = init?.headers as Record<string, string>;
-    expect(headers['Idempotency-Key']).toBe('alat-01-0001');
+    expect(headers['Idempotency-Key']).toBe(key);
     expect(headers.Authorization).toBe('Bearer tok-baru');
+    expect(await outboxRow(key)).toMatchObject({ status: 'terkirim', percobaan: 1 });
   });
 
-  it('error validasi dari Yii diteruskan apa adanya', async () => {
+  it('Yii mati: dibalas 202, outbox tetap pending dan terkirim oleh worker setelah Yii hidup', async () => {
+    const key = `${PREFIX}mati`;
+    fetchMock.mockRejectedValue(new TypeError('fetch failed'));
+
+    const res = await kirim({ detail_id: 12, hasil: '90', idempotency_key: key });
+    expect(res.status).toBe(202);
+    expect(res.body.data).toEqual({ idempotency_key: key, status: 'pending' });
+    expect(await outboxRow(key)).toMatchObject({
+      status: 'pending',
+      percobaan: 1,
+      terjadwal: true,
+    });
+
+    // Jatuh tempo dimajukan agar worker langsung mencoba lagi; Yii kini hidup.
+    await db().query(
+      "UPDATE t_integration_outbox SET retry_berikutnya = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE idempotency_key = $1",
+      [key],
+    );
+    fetchMock.mockReset();
     fetchMock
-      .mockResolvedValueOnce(json(200, { success: true, data: { token: 'tok' } }))
+      .mockResolvedValueOnce(login())
+      .mockResolvedValueOnce(json(200, { success: true, data: { id: 12, hasil: '90' } }));
+
+    await processDueOutbox();
+    expect(await outboxRow(key)).toMatchObject({ status: 'terkirim', percobaan: 2 });
+  });
+
+  it('kiriman ulang dengan key sama tidak membuat baris outbox baru', async () => {
+    const key = `${PREFIX}ganda`;
+    fetchMock.mockImplementation(async (input) =>
+      String(input).endsWith('/login') ? login() : json(200, { success: true, data: { id: 13 } }),
+    );
+
+    await kirim({ detail_id: 13, hasil: '7', idempotency_key: key });
+    await kirim({ detail_id: 13, hasil: '7', idempotency_key: key });
+
+    const { rows } = await db().query(
+      'SELECT count(*)::int AS n FROM t_integration_outbox WHERE idempotency_key = $1',
+      [key],
+    );
+    expect(rows[0].n).toBe(1);
+  });
+
+  it('ditolak Yii (4xx) diteruskan apa adanya dan outbox ditandai gagal tanpa retry', async () => {
+    const key = `${PREFIX}tolak`;
+    fetchMock
+      .mockResolvedValueOnce(login())
       .mockResolvedValueOnce(json(404, { success: false, message: 'Detail tidak ditemukan.' }));
 
-    const res = await request(createApp())
-      .post('/api/lab/results')
-      .set('X-Api-Key', API_KEY)
-      .send({ detail_id: 999, hasil: '5', idempotency_key: 'alat-01-0002' });
+    const res = await kirim({ detail_id: 999, hasil: '5', idempotency_key: key });
 
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('Detail tidak ditemukan.');
+    expect(await outboxRow(key)).toMatchObject({ status: 'gagal' });
   });
 
-  it('body tidak valid dibalas 422 tanpa memanggil Yii', async () => {
-    const res = await request(createApp())
-      .post('/api/lab/results')
-      .set('X-Api-Key', API_KEY)
-      .send({ detail_id: 'x', hasil: '' });
+  it('body tidak valid dibalas 422 tanpa menyentuh outbox atau Yii', async () => {
+    const res = await kirim({ detail_id: 'x', hasil: '' });
 
     expect(res.status).toBe(422);
     expect(Object.keys(res.body.errors)).toEqual(

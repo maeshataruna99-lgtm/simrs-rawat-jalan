@@ -1,12 +1,14 @@
 /**
  * Route integrasi laboratorium untuk sistem eksternal (header X-Api-Key): /api/lab/orders dan /api/lab/results.
+ * Hasil selalu masuk outbox dulu; saat Yii mati request tetap dibalas 202 Accepted.
  */
 import { Router } from 'express';
 import { z } from 'zod';
 import { success } from '../../lib/response.js';
 import { authenticate } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
-import { forwardResult, listOrders, type LabResultInput } from './lab.service.js';
+import { listOrders, type LabResultInput } from './lab.service.js';
+import { deliver, enqueue } from './outbox.js';
 
 export const labRoutes = Router();
 
@@ -40,7 +42,23 @@ labRoutes.post(
   authenticate('apiKey'),
   validate({ body: resultBody }),
   async (req, res) => {
-    const data = await forwardResult(req.validated!.body as LabResultInput);
-    res.json(success(data, 'Hasil laboratorium diterima.'));
+    const input = req.validated!.body as LabResultInput;
+    const result = await deliver(await enqueue(input));
+    if (result.status === 'gagal') {
+      throw result.error;
+    }
+    if (result.status === 'pending') {
+      // Yii belum dapat diakses: hasil aman di outbox dan dikirim ulang oleh worker.
+      res
+        .status(202)
+        .json(
+          success(
+            { idempotency_key: input.idempotency_key, status: 'pending' },
+            'Hasil diterima dan akan dikirim ulang.',
+          ),
+        );
+      return;
+    }
+    res.json(success(result.data, 'Hasil laboratorium diterima.'));
   },
 );
