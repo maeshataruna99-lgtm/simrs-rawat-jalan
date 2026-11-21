@@ -21,6 +21,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
         $config = require __DIR__ . '/../config/web.php';
         new \yii\web\Application($config);
+        // Biaya bcrypt minimum agar test cepat; produksi tetap memakai nilai bawaan Yii.
+        Yii::$app->security->passwordHashCost = 4;
 
         $this->transaction = Yii::$app->db->beginTransaction();
     }

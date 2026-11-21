@@ -35,6 +35,8 @@ services:
       YII_DEBUG: ${YII_DEBUG}
       YII_ENV: ${YII_ENV}
       CORS_ORIGIN: ${CORS_ORIGIN}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_TTL: ${JWT_TTL}
       TZ: Asia/Jakarta
     ports:
       - "8080:8080"

@@ -12,6 +12,8 @@ use Yii;
  */
 class HealthController extends BaseApiController
 {
+    protected array $publicActions = ['index'];
+
     /**
      * GET /health
      */

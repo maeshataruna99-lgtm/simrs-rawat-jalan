@@ -7,5 +7,7 @@ namespace app\modules\system;
  */
 class Module extends \yii\base\Module
 {
-    public $controllerMap = [];
+    public $controllerMap = [
+        'auth' => auth\AuthController::class,
+    ];
 }

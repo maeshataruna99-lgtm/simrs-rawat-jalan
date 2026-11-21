@@ -38,7 +38,7 @@ Hak akses berbasis menu: role diberi izin baca/tambah/ubah/hapus per menu, menu 
 
 - [x] 1.1 Migrasi user dan role
 - [x] 1.2 Migrasi modul, menu (bertingkat), relasi modul-menu, dan hak akses role per menu
-- [ ] 1.3 Login dan penerbitan JWT di Yii
+- [x] 1.3 Login dan penerbitan JWT di Yii
 - [ ] 1.4 Seed enam role (Administrator, Pendaftaran, Dokter, Farmasi, Laboratorium, Kasir), user dummy, modul, menu, dan hak akses default
 - [ ] 1.5 Pengecekan hak akses per menu dan aksi di setiap endpoint Yii
 - [ ] 1.6 Endpoint profil user beserta pohon menu dan izin sesuai role

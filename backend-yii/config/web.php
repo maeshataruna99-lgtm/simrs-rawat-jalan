@@ -31,7 +31,7 @@ return [
             'on beforeSend' => [ApiResponse::class, 'normalizeError'],
         ],
         'user' => [
-            'identityClass' => null,
+            'identityClass' => app\modules\system\user\User::class,
             'enableSession' => false,
             'loginUrl' => null,
         ],
