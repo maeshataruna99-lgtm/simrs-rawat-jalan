@@ -10,5 +10,6 @@ class Module extends \yii\base\Module
 {
     public $controllerMap = [
         'pasien' => pasien\PasienController::class,
+        'dokter' => dokter\DokterController::class,
     ];
 }
