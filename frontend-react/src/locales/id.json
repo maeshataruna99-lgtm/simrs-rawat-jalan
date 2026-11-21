@@ -1,0 +1,12 @@
+{
+  "app": {
+    "name": "SIMRS Rawat Jalan",
+    "tagline": "Sistem pelayanan rawat jalan terintegrasi"
+  },
+  "common": {
+    "backHome": "Kembali ke beranda"
+  },
+  "error": {
+    "notFound": "Halaman tidak ditemukan"
+  }
+}
