@@ -7,7 +7,7 @@ use Yii;
 /**
  * Pembangkit nomor urut atomik berbasis tabel t_sequence_counter dengan row lock (SELECT ... FOR UPDATE).
  *
- * Dipakai di: PasienService (nomor RM), PendaftaranService (nomor kunjungan dan antrean).
+ * Dipakai di: PasienService (nomor RM), PendaftaranService (nomor kunjungan dan antrean), ResepService (nomor resep).
  */
 class SequenceService
 {
@@ -49,7 +49,7 @@ class SequenceService
     /**
      * Membentuk kode berformat awalan + angka dengan padding nol, contoh RM000001.
      *
-     * Dipakai di: PasienService::create().
+     * Dipakai di: PasienService::create(), PendaftaranService::daftar(), ResepService::buat().
      */
     public static function nextFormatted(string $kode, string $periode, string $prefix, int $padLength = 6): string
     {

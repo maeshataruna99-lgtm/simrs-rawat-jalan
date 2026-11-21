@@ -1,0 +1,91 @@
+<?php
+
+namespace app\tests\unit\transaction\resep;
+
+use app\common\ValidationException;
+use app\modules\master\dokter\DokterService;
+use app\modules\master\jadwal\JadwalDokterService;
+use app\modules\master\obat\ObatService;
+use app\modules\master\pasien\PasienService;
+use app\modules\master\poli\PoliService;
+use app\modules\transaction\pendaftaran\PendaftaranService;
+use app\modules\transaction\resep\ResepService;
+use app\tests\TestCase;
+use yii\web\ForbiddenHttpException;
+
+/**
+ * Uji resep dokter dan pelayanan farmasi (poin 6.2 dan seterusnya).
+ */
+class ResepServiceTest extends TestCase
+{
+    /**
+     * Kunjungan Senin depan untuk satu dokter dan dua obat berstok 10 dan 3.
+     *
+     * @return array{kunjungan: int, pasien: int, dokter: int, paracetamol: int, amoxicillin: int}
+     */
+    private function siapkan(): array
+    {
+        $poli = (new PoliService())->create(['kode' => 'POLI-UMUM', 'nama' => 'Poli Umum', 'tarif_pendaftaran' => 25000]);
+        $dokter = (new DokterService())->create(['kode' => 'DR001', 'nama' => 'dr. Uji', 'sip' => 'SIP/001', 'jenis_tenaga' => 'dokter']);
+        $jadwal = (new JadwalDokterService())->create([
+            'dokter_id' => $dokter->id, 'poli_id' => $poli->id, 'hari' => 1,
+            'jam_mulai' => '08:00', 'jam_selesai' => '12:00', 'kuota' => 10,
+        ]);
+        $pasien = (new PasienService())->create(['nik' => '3201010101900001', 'nama' => 'Budi', 'tgl_lahir' => '1990-01-01', 'jenis_kelamin' => 'L']);
+        $kunjungan = (new PendaftaranService())->daftar([
+            'pasien_id' => $pasien->id, 'jadwal_id' => $jadwal->id, 'tgl_kunjungan' => self::seninDepan(),
+        ]);
+        $obatService = new ObatService();
+        $obat = [];
+        foreach ([['OBT01', 'Paracetamol 500mg', 500, 10], ['OBT02', 'Amoxicillin 500mg', 1500, 3]] as [$kode, $nama, $harga, $stok]) {
+            $o = $obatService->create(['kode' => $kode, 'nama' => $nama, 'satuan' => 'tablet', 'harga' => $harga]);
+            $obatService->sesuaikanStok($o->id, ['stok_baru' => $stok]);
+            $obat[] = $o->id;
+        }
+
+        return [
+            'kunjungan' => $kunjungan->id, 'pasien' => $pasien->id, 'dokter' => $dokter->id,
+            'paracetamol' => $obat[0], 'amoxicillin' => $obat[1],
+        ];
+    }
+
+    public function testBuatResepValidasiStokDanSnapshotHarga(): void
+    {
+        $d = $this->siapkan();
+        $service = new ResepService();
+        $item = fn (int $obatId, int $jumlah) => ['obat_id' => $obatId, 'dosis' => '500mg', 'frekuensi' => '3x1', 'jumlah' => $jumlah];
+
+        try {
+            $service->buat(['kunjungan_id' => $d['kunjungan'], 'items' => [$item($d['paracetamol'], 5), $item($d['amoxicillin'], 4)]], $d['dokter']);
+            $this->fail('Jumlah melebihi stok seharusnya ditolak');
+        } catch (ValidationException $e) {
+            $this->assertStringContainsString('Amoxicillin 500mg', $e->errors['items.1'][0]);
+        }
+        foreach ([[], [$item($d['paracetamol'], 1), $item($d['paracetamol'], 2)], [$item($d['paracetamol'], 0)]] as $salah) {
+            try {
+                $service->buat(['kunjungan_id' => $d['kunjungan'], 'items' => $salah], $d['dokter']);
+                $this->fail('Isian resep tidak valid seharusnya ditolak');
+            } catch (ValidationException) {
+            }
+        }
+        try {
+            $service->buat(['kunjungan_id' => $d['kunjungan'], 'items' => [$item($d['paracetamol'], 1)]], $d['dokter'] + 1);
+            $this->fail('Dokter lain seharusnya ditolak');
+        } catch (ForbiddenHttpException) {
+        }
+
+        $resep = $service->buat([
+            'kunjungan_id' => $d['kunjungan'],
+            'items' => [$item($d['paracetamol'], 10), $item($d['amoxicillin'], 3)],
+        ], $d['dokter']);
+        $data = $resep->toArray();
+        $this->assertSame('baru', $data['status']);
+        $this->assertMatchesRegularExpression('/^RSP\d{8}\d{4}$/', $data['no_resep']);
+        $this->assertSame(9500.0, $data['total']);
+
+        (new ObatService())->update($d['paracetamol'], ['harga' => 900]);
+        $daftar = $service->daftarPerKunjungan($d['kunjungan'], $d['dokter']);
+        $this->assertSame(500.0, $daftar[0]['details'][0]['harga']);
+        $this->assertSame(10, $daftar[0]['details'][0]['obat']['stok']);
+    }
+}
