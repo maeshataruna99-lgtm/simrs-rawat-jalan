@@ -389,6 +389,19 @@
       "choosePatient": "Pilih pasien...",
       "current": "Kunjungan ini",
       "notExamined": "Belum ada hasil pemeriksaan."
+    },
+    "tindakan": {
+      "title": "Tindakan",
+      "choose": "Pilih tindakan medis...",
+      "qty": "Jumlah",
+      "tarif": "Tarif",
+      "subtotal": "Subtotal",
+      "total": "Total tindakan",
+      "addButton": "Tambah",
+      "cancelButton": "Batalkan",
+      "statusBatal": "Batal",
+      "added": "Tindakan ditambahkan.",
+      "cancelled": "Tindakan dibatalkan."
     }
   },
   "uiKit": {

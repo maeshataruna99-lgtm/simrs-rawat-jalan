@@ -1,7 +1,7 @@
 /**
  * Pemanggilan endpoint CRUD master tindakan medis di backend Yii (/master/tindakan).
  *
- * Dipakai di: TindakanPage, TindakanForm, PemeriksaanPage.
+ * Dipakai di: TindakanPage, TindakanForm, TindakanPanel.
  */
 import type { PaginatedResult } from '@/hooks/use-crud';
 import { yiiApi, type ApiResponse } from '@/lib/api-client';
@@ -10,7 +10,7 @@ import type { TindakanItem, TindakanPayload } from './tindakan.types';
 /**
  * Mengambil daftar tindakan medis berhalaman dari server.
  *
- * Dipakai di: TindakanPage, PemeriksaanPage.
+ * Dipakai di: TindakanPage, TindakanPanel.
  */
 export async function listTindakan(params: {
   q?: string;

@@ -6,13 +6,17 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/lib/auth-store';
 import * as icd10Api from '@/modules/master/icd10/icd10.api';
+import * as masterTindakanApi from '@/modules/master/tindakan/tindakan.api';
 import type { UserProfile } from '@/modules/system/auth/auth.types';
 import * as pemeriksaanApi from '@/modules/transaction/pemeriksaan/pemeriksaan.api';
+import * as tindakanApi from '@/modules/transaction/tindakan/tindakan.api';
 import { renderAt } from './render';
 
 vi.mock('@/modules/transaction/pemeriksaan/pemeriksaan.api');
 vi.mock('@/modules/transaction/pendaftaran/pendaftaran.api');
 vi.mock('@/modules/master/icd10/icd10.api');
+vi.mock('@/modules/master/tindakan/tindakan.api');
+vi.mock('@/modules/transaction/tindakan/tindakan.api');
 
 const fullPerm = { read: true, create: true, update: true, delete: true };
 
@@ -88,11 +92,37 @@ beforeEach(() => {
           icd10: { id: 7, kode: 'A01.0', nama: 'Demam tifoid' },
         },
       ],
+      tindakan: [],
     },
   ]);
   vi.mocked(pemeriksaanApi.cariPasienRiwayat).mockResolvedValue([
     { ...kunjungan.pasien, alamat: null, no_hp: null },
   ]);
+  vi.mocked(masterTindakanApi.listTindakan).mockResolvedValue({
+    items: [
+      {
+        id: 3,
+        kode: 'TND01',
+        nama: 'Nebulizer',
+        tarif: 75000,
+        poli_id: null,
+        is_active: true,
+        poli: null,
+      },
+    ],
+    meta: { page: 1, per_page: 20, total: 1 },
+  });
+  vi.mocked(tindakanApi.daftarTindakan).mockResolvedValue({ items: [], total: 0 });
+  vi.mocked(tindakanApi.tambahTindakan).mockResolvedValue({
+    id: 1,
+    kunjungan_id: 100,
+    tindakan_id: 3,
+    qty: 2,
+    tarif: 75000,
+    subtotal: 150000,
+    status: 'aktif',
+    tindakan: { id: 3, kode: 'TND01', nama: 'Nebulizer' },
+  });
   vi.mocked(icd10Api.listIcd10).mockResolvedValue({
     items: [{ id: 7, kode: 'A01.0', nama: 'Demam tifoid', is_active: true }],
     meta: { page: 1, per_page: 20, total: 1 },
@@ -153,6 +183,37 @@ describe('Pemeriksaan dokter (poin 4.6)', () => {
     const item = await screen.findByTestId('riwayat-medis-item');
     expect(within(item).getByText('Demam tifoid')).toBeInTheDocument();
     expect(within(item).getByText('Kunjungan ini')).toBeInTheDocument();
+  });
+
+  it('panel tindakan menambahkan tindakan dengan jumlah lalu menampilkan tarif dan total', async () => {
+    renderAt('/transaction/pemeriksaan/100');
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Tindakan' }));
+    await userEvent.click(screen.getByRole('combobox', { name: 'Pilih tindakan medis...' }));
+    await userEvent.click(await screen.findByText('TND01 — Nebulizer'));
+    await userEvent.clear(screen.getByLabelText('Jumlah'));
+    await userEvent.type(screen.getByLabelText('Jumlah'), '2');
+
+    vi.mocked(tindakanApi.daftarTindakan).mockResolvedValue({
+      items: [
+        {
+          id: 1,
+          kunjungan_id: 100,
+          tindakan_id: 3,
+          qty: 2,
+          tarif: 75000,
+          subtotal: 150000,
+          status: 'aktif',
+          tindakan: { id: 3, kode: 'TND01', nama: 'Nebulizer' },
+        },
+      ],
+      total: 150000,
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Tambah' }));
+
+    expect(tindakanApi.tambahTindakan).toHaveBeenCalledWith(100, { tindakan_id: 3, qty: 2 });
+    expect(await screen.findByTestId('tindakan-total')).toHaveTextContent('Rp 150.000');
+    expect(screen.getByText('Nebulizer')).toBeInTheDocument();
   });
 
   it('halaman riwayat rekam medis menampilkan kunjungan pasien terpilih', async () => {

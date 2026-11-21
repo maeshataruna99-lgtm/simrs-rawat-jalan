@@ -1,5 +1,5 @@
 /**
- * Daftar riwayat rekam medis pasien per kunjungan: tanda vital, anamnesis, pemeriksaan fisik, dan diagnosis.
+ * Daftar riwayat rekam medis pasien per kunjungan: tanda vital, anamnesis, pemeriksaan fisik, diagnosis, dan tindakan.
  */
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -48,7 +48,7 @@ export function RiwayatMedisList({ pasienId, currentKunjunganId }: Props) {
 
   return (
     <div className="space-y-4">
-      {rows.map(({ kunjungan, pemeriksaan, diagnosis }) => {
+      {rows.map(({ kunjungan, pemeriksaan, diagnosis, tindakan }) => {
         const p = pemeriksaan;
         const ttv = p
           ? [
@@ -104,6 +104,12 @@ export function RiwayatMedisList({ pasienId, currentKunjunganId }: Props) {
                 </>
               ) : (
                 <p className="text-muted-foreground">{t('transaction.riwayatMedis.notExamined')}</p>
+              )}
+              {tindakan.length > 0 && (
+                <p>
+                  <span className="font-medium">{t('transaction.tindakan.title')}:</span>{' '}
+                  {tindakan.map((i) => `${i.tindakan?.nama ?? '-'} ×${i.qty}`).join(', ')}
+                </p>
               )}
               {diagnosis.length > 0 && (
                 <ul className="space-y-1">

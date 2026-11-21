@@ -3,6 +3,7 @@
  * (/transaction/pemeriksaan, /transaction/diagnosis, /transaction/riwayat-medis).
  */
 import type { KunjunganItem } from '@/modules/transaction/pendaftaran/pendaftaran.types';
+import type { TindakanKunjunganItem } from '@/modules/transaction/tindakan/tindakan.api';
 
 export interface PemeriksaanData {
   keluhan_utama: string | null;
@@ -46,4 +47,5 @@ export interface RiwayatMedisItem {
   >;
   pemeriksaan: PemeriksaanData | null;
   diagnosis: DiagnosisItem[];
+  tindakan: TindakanKunjunganItem[];
 }

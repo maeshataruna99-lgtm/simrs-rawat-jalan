@@ -91,7 +91,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 - [x] 5.1 Migrasi transaksi tindakan (snapshot tarif saat tindakan diberikan)
 - [x] 5.2 Input lebih dari satu tindakan per kunjungan sebagai komponen tagihan
-- [ ] 5.3 Panel tindakan di halaman pemeriksaan
+- [x] 5.3 Panel tindakan di halaman pemeriksaan
 
 ## 6. Farmasi dan Resep — B.5, D.2
 
