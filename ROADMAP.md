@@ -71,7 +71,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 ## 3. Pendaftaran dan Antrean — B.2, D.1
 
-- [ ] 3.1 Migrasi kunjungan dan antrean (unique constraint kunjungan aktif)
+- [x] 3.1 Migrasi kunjungan dan antrean (unique constraint kunjungan aktif)
 - [ ] 3.2 Pencarian pasien berdasarkan nomor RM atau identitas
 - [ ] 3.3 Pendaftaran kunjungan sesuai jadwal praktik dan nomor antrean otomatis (row lock pada counter)
 - [ ] 3.4 Status antrean dan riwayat kunjungan pasien
