@@ -1,0 +1,325 @@
+openapi: 3.0.3
+info:
+  title: SIMRS Rawat Jalan — Service Node API
+  version: 1.0.0
+  description: >
+    Service pendukung SIMRS Rawat Jalan berbasis Node.js/Express:
+    integrasi pemeriksaan laboratorium (dengan outbox retry) dan API dashboard agregasi read-only.
+servers:
+  - url: http://localhost:3000
+    description: Lingkungan pengembangan lokal
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT HS256 diterbitkan oleh backend Yii (`POST /system/auth/login`).
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: Kunci API sistem/alat laboratorium eksternal (`LAB_API_KEYS`).
+
+  parameters:
+    FromDate:
+      name: from
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+        example: '2026-11-01'
+      description: Tanggal awal periode (`YYYY-MM-DD`). Default 30 hari terakhir.
+    ToDate:
+      name: to
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+        example: '2026-11-22'
+      description: Tanggal akhir periode (`YYYY-MM-DD`, harus >= `from`, rentang maks 366 hari).
+
+  schemas:
+    SuccessEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: OK
+        data: {}
+        meta:
+          type: object
+          properties:
+            page:
+              type: integer
+            per_page:
+              type: integer
+            total:
+              type: integer
+    ErrorEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Validasi gagal.
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    LabResultPayload:
+      type: object
+      required:
+        - order_detail_id
+        - hasil
+        - idempotency_key
+      properties:
+        order_detail_id:
+          type: integer
+          minimum: 1
+          example: 12
+        hasil:
+          type: string
+          maxLength: 100
+          example: '95'
+        idempotency_key:
+          type: string
+          maxLength: 100
+          example: 'lab-ext-20261122-001'
+
+paths:
+  /health:
+    get:
+      summary: Cek kesehatan service Node
+      tags: [Health]
+      responses:
+        '200':
+          description: Service berjalan normal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+
+  /api/lab/orders:
+    get:
+      summary: Daftar order laboratorium terbuka untuk sistem eksternal
+      tags: [Integrasi Lab]
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            example: diminta,diproses
+      responses:
+        '200':
+          description: Daftar order dari backend Yii
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Autentikasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/lab/results:
+    post:
+      summary: Terima hasil lab eksternal dan teruskan ke Yii (atau simpan ke outbox)
+      description: >
+        Meneruskan hasil pemeriksaan ke `PUT /transaction/hasil-lab/{detailId}` di Yii dengan header
+        `Idempotency-Key`. Jika Yii tidak dapat dijangkau atau merespons 5xx, payload disimpan ke
+        `t_integration_outbox` dan dijadwalkan untuk retry eksponensial (membalas `202`).
+      tags: [Integrasi Lab]
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabResultPayload'
+      responses:
+        '200':
+          description: Hasil berhasil diteruskan ke backend Yii
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '202':
+          description: Backend Yii sementara tidak tersedia; hasil tersimpan di outbox untuk retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: API key atau JWT tidak valid
+        '422':
+          description: Validasi payload gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/dashboard/summary:
+    get:
+      summary: Ringkasan KPI utama dashboard (read-only)
+      description: Memerlukan JWT valid dengan izin `dashboard:read`.
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: Total kunjungan, tindakan, pendapatan, tagihan, dan invoice per status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Token tidak valid
+        '403':
+          description: Tidak memiliki izin `dashboard:read`
+        '422':
+          description: Parameter periode tidak valid
+
+  /api/dashboard/kunjungan-per-poli:
+    get:
+      summary: Jumlah kunjungan rawat jalan non-batal per poli
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: Daftar poli beserta jumlah kunjungan
+        '422':
+          description: Parameter periode tidak valid
+
+  /api/dashboard/tindakan:
+    get:
+      summary: Daftar tindakan medis terbanyak pada periode
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: Daftar tindakan diurutkan berdasarkan jumlah terbanyak
+        '422':
+          description: Parameter periode tidak valid
+
+  /api/dashboard/pendapatan:
+    get:
+      summary: Pendapatan harian dan komposisi tagihan per sumber biaya
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: Objek `per_hari` dan `per_sumber`
+        '422':
+          description: Parameter periode tidak valid
+
+  /api/dashboard/obat:
+    get:
+      summary: Rekap penggunaan obat dari resep non-batal
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: Daftar obat terbanyak beserta satuan, total jumlah, dan total nilai
+        '422':
+          description: Parameter periode tidak valid
+
+  /api/dashboard/pembayaran:
+    get:
+      summary: Ringkasan status invoice dan metode pembayaran
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: Objek `per_status` dan `per_metode`
+        '422':
+          description: Parameter periode tidak valid
+
+  /api/dashboard/detail/{jenis}:
+    get:
+      summary: Rincian data dashboard berhalaman
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jenis
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [kunjungan, tindakan, pendapatan, obat, pembayaran]
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: poli_id
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Filter opsional untuk jenis `kunjungan`.
+        - name: status
+          in: query
+          schema:
+            type: string
+          description: Filter status opsional untuk jenis `kunjungan` atau `pembayaran`.
+      responses:
+        '200':
+          description: Daftar rincian berhalaman beserta `meta`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Parameter periode atau `jenis` tidak valid

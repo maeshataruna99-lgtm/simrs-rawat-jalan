@@ -139,7 +139,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 10.3 Diagram arsitektur dan alur komunikasi React, Yii, Node, PostgreSQL
 - [x] 10.4 Pembagian tanggung jawab Yii dan Node — C, E.10
 - [x] 10.5 Analisis dan bukti skenario teknis D.1 sampai D.6
-- [ ] 10.6 Dokumentasi endpoint API — C.5
+- [x] 10.6 Dokumentasi endpoint API — C.5
 - [ ] 10.7 Postman collection, environment, dan hasil pengujian
 - [ ] 10.8 Daftar test case fitur utama
 - [ ] 10.9 Screenshot alur pendaftaran sampai pembayaran dan bukti invoice
