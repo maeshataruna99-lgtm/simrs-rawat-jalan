@@ -135,7 +135,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 ## 10. Dokumentasi dan Pengujian — F
 
 - [x] 10.1 ERD dan `database/schema.sql`
-- [ ] 10.2 Seed data dummy untuk alur end-to-end
+- [x] 10.2 Seed data dummy untuk alur end-to-end
 - [ ] 10.3 Diagram arsitektur dan alur komunikasi React, Yii, Node, PostgreSQL
 - [ ] 10.4 Pembagian tanggung jawab Yii dan Node — C, E.10
 - [ ] 10.5 Analisis dan bukti skenario teknis D.1 sampai D.6
