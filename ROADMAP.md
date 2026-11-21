@@ -98,7 +98,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 6.1 Migrasi resep, detail resep, dan mutasi stok (constraint stok tidak minus)
 - [x] 6.2 Pembuatan resep oleh dokter dengan validasi ketersediaan stok
 - [x] 6.3 Proses resep dan penyerahan obat dengan pengurangan stok atomik
-- [ ] 6.4 Riwayat penggunaan obat pasien
+- [x] 6.4 Riwayat penggunaan obat pasien
 - [ ] 6.5 Test dua penyerahan bersamaan tidak membuat stok minus — D.2
 - [ ] 6.6 Panel resep di halaman pemeriksaan
 - [ ] 6.7 Halaman antrean dan penyerahan farmasi

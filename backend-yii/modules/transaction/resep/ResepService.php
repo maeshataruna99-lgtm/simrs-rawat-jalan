@@ -5,15 +5,17 @@ namespace app\modules\transaction\resep;
 use app\common\SequenceService;
 use app\common\ValidationException;
 use app\modules\master\obat\Obat;
+use app\modules\master\pasien\Pasien;
 use app\modules\transaction\pemeriksaan\PemeriksaanService;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use Yii;
 use yii\web\ConflictHttpException;
+use yii\web\NotFoundHttpException;
 
 /**
- * Service resep obat: pembuatan resep oleh dokter dengan validasi ketersediaan stok.
+ * Service resep obat: pembuatan resep oleh dokter dengan validasi ketersediaan stok dan riwayat obat pasien.
  *
- * Dipakai di: ResepController.
+ * Dipakai di: ResepController, RiwayatObatController, PemeriksaanService::riwayatMedis().
  */
 class ResepService
 {
@@ -31,6 +33,61 @@ class ResepService
             ->where(['kunjungan_id' => $kunjunganId])->orderBy(['id' => SORT_DESC])->all();
 
         return array_map(fn (Resep $r) => $r->toArray(), $rows);
+    }
+
+    /**
+     * Riwayat penggunaan obat pasien: resep yang tidak batal dikelompokkan per kunjungan, terbaru dulu.
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * @throws NotFoundHttpException Bila pasien tidak ditemukan.
+     *
+     * Dipakai di: RiwayatObatController::actionView().
+     */
+    public function riwayatObat(int $pasienId): array
+    {
+        if (!Pasien::findActive()->andWhere(['id' => $pasienId])->exists()) {
+            throw new NotFoundHttpException('Pasien tidak ditemukan.');
+        }
+        $kunjungan = Kunjungan::find()->with(['poli', 'dokter'])
+            ->where(['pasien_id' => $pasienId])
+            ->orderBy(['tgl_kunjungan' => SORT_DESC, 'id' => SORT_DESC])->all();
+        $resep = $this->resepPerKunjungan(array_map(fn (Kunjungan $k) => $k->id, $kunjungan));
+
+        $result = [];
+        foreach ($kunjungan as $k) {
+            if (isset($resep[$k->id])) {
+                $result[] = [
+                    'kunjungan' => $k->toArray(['id', 'no_kunjungan', 'tgl_kunjungan', 'status', 'poli', 'dokter']),
+                    'resep' => $resep[$k->id],
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Resep yang tidak batal untuk beberapa kunjungan sekaligus.
+     *
+     * @param int[] $kunjunganIds
+     * @return array<int, array<int, array<string, mixed>>> kunjungan_id => daftar resep.
+     *
+     * Dipakai di: riwayatObat(), PemeriksaanService::riwayatMedis().
+     */
+    public function resepPerKunjungan(array $kunjunganIds): array
+    {
+        $rows = Resep::find()->with(['details.obat', 'dokter'])
+            ->where(['kunjungan_id' => $kunjunganIds])
+            ->andWhere(['<>', 'status', Resep::STATUS_BATAL])
+            ->orderBy(['id' => SORT_ASC])->all();
+
+        $result = [];
+        foreach ($rows as $r) {
+            $result[$r->kunjungan_id][] = $r->toArray(['id', 'no_resep', 'status', 'catatan', 'diserahkan_at', 'details', 'total']);
+        }
+
+        return $result;
     }
 
     /**

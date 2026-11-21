@@ -9,6 +9,7 @@ use app\modules\master\obat\Obat;
 use app\modules\master\obat\ObatService;
 use app\modules\master\pasien\PasienService;
 use app\modules\master\poli\PoliService;
+use app\modules\transaction\pemeriksaan\PemeriksaanService;
 use app\modules\transaction\pendaftaran\PendaftaranService;
 use app\modules\transaction\resep\FarmasiService;
 use app\modules\transaction\resep\Resep;
@@ -133,5 +134,24 @@ class ResepServiceTest extends TestCase
 
         $this->expectException(ConflictHttpException::class);
         $farmasi->serahkan($resep1->id);
+    }
+
+    public function testRiwayatObatDanRiwayatMedisMemuatResep(): void
+    {
+        $d = $this->siapkan();
+        $service = new ResepService();
+        $this->assertSame([], $service->riwayatObat($d['pasien']));
+
+        $service->buat(['kunjungan_id' => $d['kunjungan'], 'items' => [
+            ['obat_id' => $d['paracetamol'], 'dosis' => '1 tab', 'frekuensi' => '3x1', 'jumlah' => 6],
+        ]], $d['dokter']);
+
+        $riwayat = $service->riwayatObat($d['pasien']);
+        $this->assertCount(1, $riwayat);
+        $this->assertSame('Paracetamol 500mg', $riwayat[0]['resep'][0]['details'][0]['obat']['nama']);
+        $this->assertSame(6, $riwayat[0]['resep'][0]['details'][0]['jumlah']);
+
+        $medis = (new PemeriksaanService())->riwayatMedis($d['pasien']);
+        $this->assertCount(1, $medis[0]['resep']);
     }
 }
