@@ -12,7 +12,20 @@
     "detail": "Detail"
   },
   "error": {
-    "notFound": "Halaman tidak ditemukan"
+    "notFound": "Halaman tidak ditemukan",
+    "forbidden": "Akses ditolak",
+    "forbiddenHint": "Role Anda tidak memiliki izin untuk membuka halaman ini. Hubungi administrator bila Anda memerlukan akses."
+  },
+  "auth": {
+    "subtitle": "Masuk dengan akun petugas Anda",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Masuk",
+    "usernameRequired": "Username wajib diisi.",
+    "passwordRequired": "Password wajib diisi.",
+    "serverUnavailable": "Server tidak dapat dihubungi. Coba beberapa saat lagi.",
+    "welcome": "Selamat datang, {{nama}} ({{role}})",
+    "logout": "Keluar"
   },
   "theme": {
     "toggle": "Ganti tema terang atau gelap"

@@ -1,9 +1,10 @@
 /**
- * Uji router dan teks i18n pada halaman dasar.
+ * Uji router: halaman publik, pengalihan ke login, dan halaman tidak ditemukan.
  */
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { useAuthStore } from '@/lib/auth-store';
 import { routes } from '@/routes';
 
 function renderAt(path: string) {
@@ -11,9 +12,14 @@ function renderAt(path: string) {
 }
 
 describe('routes', () => {
-  it('beranda menampilkan nama aplikasi dari i18n', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useAuthStore.setState({ status: 'guest', user: null });
+  });
+
+  it('beranda tanpa login dialihkan ke halaman login', () => {
     renderAt('/');
-    expect(screen.getByRole('heading', { name: 'SIMRS Rawat Jalan' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Masuk' })).toBeInTheDocument();
   });
 
   it('URL tidak terdaftar menampilkan halaman tidak ditemukan', () => {

@@ -1,6 +1,6 @@
 /**
  * Klien HTTP ke backend Yii dan service Node.
- * Token JWT disisipkan otomatis; response 401 menghapus token agar user diarahkan login ulang.
+ * Token JWT disisipkan otomatis; response 401 menghapus token dan memanggil handler logout.
  *
  * Dipakai di: file `*.api.ts` di setiap modul (src/modules/...).
  */
@@ -14,6 +14,33 @@ export interface ApiResponse<T> {
   data: T;
   meta?: { page: number; per_page: number; total: number };
   errors?: Record<string, string[]>;
+}
+
+let onUnauthorized: () => void = () => {};
+
+/**
+ * Mendaftarkan aksi saat server membalas 401 (token tidak sah atau kedaluwarsa).
+ *
+ * Dipakai di: lib/auth-store.ts (logout otomatis).
+ */
+export function setUnauthorizedHandler(handler: () => void): void {
+  onUnauthorized = handler;
+}
+
+/** Pesan error dari respons API seragam, atau pesan cadangan bila server tidak terjangkau. */
+export function errorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError<ApiResponse<unknown>>(error)) {
+    return error.response?.data?.message ?? fallback;
+  }
+  return fallback;
+}
+
+/** Error validasi per field dari respons 422. */
+export function fieldErrors(error: unknown): Record<string, string[]> {
+  if (axios.isAxiosError<ApiResponse<unknown>>(error) && error.response?.status === 422) {
+    return error.response.data?.errors ?? {};
+  }
+  return {};
 }
 
 function createClient(baseURL: string): AxiosInstance {
@@ -30,8 +57,11 @@ function createClient(baseURL: string): AxiosInstance {
   client.interceptors.response.use(
     (response) => response,
     (error) => {
-      if (error.response?.status === 401) {
+      // Login gagal juga 401, tetapi itu bukan sesi kedaluwarsa sehingga tidak memicu logout.
+      const isLoginRequest = error.config?.url?.endsWith('/system/auth/login');
+      if (error.response?.status === 401 && !isLoginRequest) {
         tokenStorage.clear();
+        onUnauthorized();
       }
       return Promise.reject(error);
     },
