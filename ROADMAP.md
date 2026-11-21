@@ -36,7 +36,7 @@ Referensi kode di setiap poin: `B.x` ruang lingkup, `C.x` backend services, `D.x
 Hak akses berbasis menu: role diberi izin baca/tambah/ubah/hapus per menu, menu dikelompokkan dalam modul.
 
 - [x] 1.1 Migrasi user dan role
-- [ ] 1.2 Migrasi modul, menu (bertingkat), relasi modul-menu, dan hak akses role per menu
+- [x] 1.2 Migrasi modul, menu (bertingkat), relasi modul-menu, dan hak akses role per menu
 - [ ] 1.3 Login dan penerbitan JWT di Yii
 - [ ] 1.4 Seed enam role (Administrator, Pendaftaran, Dokter, Farmasi, Laboratorium, Kasir), user dummy, modul, menu, dan hak akses default
 - [ ] 1.5 Pengecekan hak akses per menu dan aksi di setiap endpoint Yii
