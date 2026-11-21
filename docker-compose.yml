@@ -53,6 +53,8 @@ services:
     restart: unless-stopped
     environment:
       PORT: 3000
+      JWT_SECRET: ${JWT_SECRET}
+      LAB_API_KEYS: ${LAB_API_KEYS}
       TZ: Asia/Jakarta
     ports:
       - "3000:3000"
