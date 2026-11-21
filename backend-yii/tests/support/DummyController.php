@@ -12,7 +12,7 @@ use app\common\BaseApiController;
 class DummyController extends BaseApiController
 {
     protected ?string $menuCode = 'master-pasien';
-    protected array $actionPermissions = ['serahkan' => 'update'];
+    protected array $actionPermissions = ['serahkan' => 'update', 'antrean' => 'antrean:read', 'lain' => 'billing:read'];
 
     public function actionIndex(): string
     {
@@ -32,6 +32,16 @@ class DummyController extends BaseApiController
     public function actionSerahkan(): string
     {
         return 'serahkan';
+    }
+
+    public function actionAntrean(): string
+    {
+        return 'antrean';
+    }
+
+    public function actionLain(): string
+    {
+        return 'lain';
     }
 
     public function actionBelumDipetakan(): string

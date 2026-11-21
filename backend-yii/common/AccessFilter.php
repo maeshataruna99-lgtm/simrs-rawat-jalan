@@ -28,7 +28,10 @@ class AccessFilter extends ActionFilter
     /** Kode menu, contoh `master-pasien`. Null berarti cukup login. */
     public ?string $menu = null;
 
-    /** @var array<string, string> Pemetaan tambahan action => aksi, contoh ['proses' => 'update']. */
+    /**
+     * @var array<string, string> Pemetaan tambahan action => aksi, contoh ['proses' => 'update'].
+     * Aksi pada menu lain ditulis `menu:aksi`, contoh ['create' => 'pemeriksaan:create'].
+     */
     public array $actionPermissions = [];
 
     public function beforeAction($action): bool
@@ -38,12 +41,16 @@ class AccessFilter extends ActionFilter
         }
 
         $permission = $this->actionPermissions[$action->id] ?? self::DEFAULT_PERMISSIONS[$action->id] ?? null;
+        $menu = $this->menu;
+        if (is_string($permission) && str_contains($permission, ':')) {
+            [$menu, $permission] = explode(':', $permission, 2);
+        }
         if (!in_array($permission, AccessService::PERMISSIONS, true)) {
-            throw new InvalidConfigException("Action '{$action->id}' belum dipetakan ke aksi izin pada menu '{$this->menu}'.");
+            throw new InvalidConfigException("Action '{$action->id}' belum dipetakan ke aksi izin pada menu '{$menu}'.");
         }
 
         $roleId = Yii::$app->user->identity->role_id;
-        if (!(new AccessService())->can($roleId, $this->menu, $permission)) {
+        if (!(new AccessService())->can($roleId, $menu, $permission)) {
             throw new ForbiddenHttpException('Anda tidak memiliki akses ke fitur ini.');
         }
 

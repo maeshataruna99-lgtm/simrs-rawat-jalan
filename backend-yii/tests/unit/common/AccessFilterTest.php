@@ -25,6 +25,7 @@ class AccessFilterTest extends TestCase
 
         $this->role = Fixtures::role('pendaftaran', 'Pendaftaran');
         Fixtures::grant($this->role, Fixtures::menu('master-pasien'), 'RCU');
+        Fixtures::grant($this->role, Fixtures::menu('antrean'), 'R');
         $user = Fixtures::user($this->role, 'petugas');
 
         Yii::$app->request->headers->set('Authorization', 'Bearer ' . JwtService::issue($user)['token']);
@@ -50,6 +51,13 @@ class AccessFilterTest extends TestCase
     public function testActionKhususMemakaiPemetaanController(): void
     {
         $this->assertSame('serahkan', $this->runDummy('serahkan'));
+    }
+
+    public function testIzinMenuLainLewatFormatMenuAksi(): void
+    {
+        $this->assertSame('antrean', $this->runDummy('antrean'));
+        $this->expectException(ForbiddenHttpException::class);
+        $this->runDummy('lain');
     }
 
     public function testActionBelumDipetakanDianggapKesalahanKonfigurasi(): void
