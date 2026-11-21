@@ -18,4 +18,14 @@ export default tseslint.config(
   {
     languageOptions: { globals: globals.browser },
   },
+  {
+    // Komponen shadcn/ui disalin apa adanya dari registry agar mudah diperbarui.
+    // Polanya (ekspor variant, Math.random di skeleton, setState di effect) memang bawaan library.
+    files: ['src/components/ui/**', 'src/hooks/use-mobile.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
 );

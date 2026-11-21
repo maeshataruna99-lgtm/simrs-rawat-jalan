@@ -28,7 +28,7 @@ Referensi kode di setiap poin: `B.x` ruang lingkup, `C.x` backend services, `D.x
 - [x] 0.6 Skeleton `backend-yii` (Yii2, modul `master`, `transaction`, `system`, format response API, service Docker)
 - [x] 0.7 Skeleton `service-node` (Express + TypeScript, ESLint, format response, error handler, service Docker) — C.4
 - [x] 0.8 Skeleton `frontend-react` (Vite + TypeScript, ESLint, router, API client, i18n satu bahasa `id`, service Docker)
-- [ ] 0.10 UI kit: Tailwind, tema warna, dan komponen dasar shadcn/ui
+- [x] 0.10 UI kit: Tailwind, tema warna, dan komponen dasar shadcn/ui
 - [x] 0.9 Standar kode PHP (PHP-CS-Fixer PSR-12)
 
 ## 1. Autentikasi dan Hak Akses — B.9

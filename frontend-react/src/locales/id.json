@@ -4,9 +4,50 @@
     "tagline": "Sistem pelayanan rawat jalan terintegrasi"
   },
   "common": {
-    "backHome": "Kembali ke beranda"
+    "backHome": "Kembali ke beranda",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "filter": "Filter",
+    "detail": "Detail"
   },
   "error": {
     "notFound": "Halaman tidak ditemukan"
+  },
+  "theme": {
+    "toggle": "Ganti tema terang atau gelap"
+  },
+  "uiKit": {
+    "title": "UI Kit",
+    "subtitle": "Komponen dasar dan tema aplikasi",
+    "buttons": "Tombol",
+    "showToast": "Tampilkan notifikasi",
+    "toastSuccess": "Data berhasil disimpan",
+    "form": "Form",
+    "formHint": "Input, select, textarea, checkbox, dan switch",
+    "patientName": "Nama pasien",
+    "poli": "Poli",
+    "choosePoli": "Pilih poli",
+    "complaint": "Keluhan",
+    "newPatient": "Pasien baru",
+    "active": "Aktif",
+    "overlay": "Dialog dan tab",
+    "openDialog": "Buka dialog",
+    "dialogTitle": "Detail pasien",
+    "dialogDescription": "Contoh dialog untuk form tambah atau ubah data.",
+    "confirmTitle": "Hapus data?",
+    "confirmDescription": "Data yang dihapus tidak tampil lagi di daftar.",
+    "tabAnamnesis": "Anamnesis",
+    "tabVitals": "Tanda vital",
+    "tabAnamnesisContent": "Keluhan utama dan riwayat penyakit.",
+    "tabVitalsContent": "Tekanan darah, nadi, suhu, dan pernapasan.",
+    "table": "Tabel",
+    "colRm": "No. RM",
+    "colStatus": "Status",
+    "status": {
+      "menunggu": "Menunggu",
+      "diperiksa": "Diperiksa",
+      "selesai": "Selesai"
+    }
   }
 }

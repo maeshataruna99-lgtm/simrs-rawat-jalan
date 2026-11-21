@@ -7,9 +7,9 @@ export default function HomePage() {
   const { t } = useTranslation();
 
   return (
-    <main>
-      <h1>{t('app.name')}</h1>
-      <p>{t('app.tagline')}</p>
+    <main className="container py-8">
+      <h1 className="text-2xl font-semibold">{t('app.name')}</h1>
+      <p className="text-muted-foreground">{t('app.tagline')}</p>
     </main>
   );
 }
