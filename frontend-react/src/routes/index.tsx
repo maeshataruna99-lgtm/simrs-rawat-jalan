@@ -5,6 +5,7 @@
  */
 import type { RouteObject } from 'react-router';
 import { AppLayout } from '@/components/layout/AppLayout';
+import PasienPage from '@/modules/master/pasien/PasienPage';
 import LoginPage from '@/modules/system/auth/LoginPage';
 import MenuPage from '@/modules/system/menu/MenuPage';
 import ModulePage from '@/modules/system/module/ModulePage';
@@ -64,6 +65,14 @@ export const routes: RouteObject[] = [
             element: (
               <PermissionGuard menu="system-role-access">
                 <RoleAccessPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: '/master/pasien',
+            element: (
+              <PermissionGuard menu="master-pasien">
+                <PasienPage />
               </PermissionGuard>
             ),
           },
