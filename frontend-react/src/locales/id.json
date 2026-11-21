@@ -431,6 +431,26 @@
       "serahkanButton": "Serahkan",
       "prosesSuccess": "Resep sedang diproses.",
       "serahkanSuccess": "Obat berhasil diserahkan."
+    },
+    "lab": {
+      "title": "Laboratorium",
+      "newOrder": "Order Laboratorium Baru",
+      "searchPemeriksaan": "Cari pemeriksaan laboratorium...",
+      "catatanKlinis": "Catatan klinis",
+      "totalTarif": "Total tarif",
+      "saveOrder": "Kirim Order",
+      "orderSaved": "Order laboratorium berhasil dibuat.",
+      "noResult": "Belum ada hasil",
+      "status": {
+        "diminta": "Diminta",
+        "diproses": "Diproses",
+        "selesai": "Selesai"
+      },
+      "flag": {
+        "normal": "Normal",
+        "tinggi": "Tinggi",
+        "rendah": "Rendah"
+      }
     }
   },
   "uiKit": {

@@ -6,10 +6,12 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/lib/auth-store';
 import * as icd10Api from '@/modules/master/icd10/icd10.api';
+import * as masterLabApi from '@/modules/master/lab/lab.api';
 import * as obatApi from '@/modules/master/obat/obat.api';
 import * as masterTindakanApi from '@/modules/master/tindakan/tindakan.api';
 import type { UserProfile } from '@/modules/system/auth/auth.types';
 import * as pemeriksaanApi from '@/modules/transaction/pemeriksaan/pemeriksaan.api';
+import * as labApi from '@/modules/transaction/lab/lab.api';
 import * as resepApi from '@/modules/transaction/resep/resep.api';
 import * as tindakanApi from '@/modules/transaction/tindakan/tindakan.api';
 import { renderAt } from './render';
@@ -20,6 +22,8 @@ vi.mock('@/modules/master/icd10/icd10.api');
 vi.mock('@/modules/master/tindakan/tindakan.api');
 vi.mock('@/modules/transaction/tindakan/tindakan.api');
 vi.mock('@/modules/transaction/resep/resep.api');
+vi.mock('@/modules/transaction/lab/lab.api');
+vi.mock('@/modules/master/lab/lab.api');
 vi.mock('@/modules/master/obat/obat.api');
 
 const fullPerm = { read: true, create: true, update: true, delete: true };
@@ -129,6 +133,30 @@ beforeEach(() => {
     tindakan: { id: 3, kode: 'TND01', nama: 'Nebulizer' },
   });
   vi.mocked(resepApi.daftarResep).mockResolvedValue([]);
+  vi.mocked(labApi.orderPerKunjungan).mockResolvedValue([]);
+  vi.mocked(masterLabApi.listPemeriksaanLab).mockResolvedValue({
+    items: [
+      {
+        id: 1,
+        kode: 'LAB01',
+        nama: 'Gula Darah',
+        satuan: 'mg/dL',
+        nilai_rujukan: '70-110',
+        tarif: 40000,
+        is_active: true,
+      },
+      {
+        id: 2,
+        kode: 'LAB02',
+        nama: 'Hemoglobin',
+        satuan: 'g/dL',
+        nilai_rujukan: '12-16',
+        tarif: 30000,
+        is_active: true,
+      },
+    ],
+    meta: { page: 1, per_page: 100, total: 2 },
+  });
   vi.mocked(obatApi.listObat).mockResolvedValue({
     items: [
       {
@@ -272,6 +300,52 @@ describe('Pemeriksaan dokter (poin 4.6)', () => {
     expect(
       await screen.findByText('Stok Paracetamol tidak cukup (tersedia 3 tablet).'),
     ).toBeInTheDocument();
+  });
+
+  it('order lab memilih banyak pemeriksaan dengan total tarif lalu menampilkan hasil dan flag', async () => {
+    renderAt('/transaction/pemeriksaan/100');
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Laboratorium' }));
+    await userEvent.click(await screen.findByLabelText(/Gula Darah/));
+    await userEvent.click(screen.getByLabelText(/Hemoglobin/));
+    expect(screen.getByTestId('order-lab-total')).toHaveTextContent('Rp 70.000');
+
+    vi.mocked(labApi.orderPerKunjungan).mockResolvedValue([
+      {
+        id: 5,
+        no_order: 'LAB202611210001',
+        kunjungan_id: 100,
+        status: 'diproses',
+        catatan_klinis: null,
+        created_at: '2026-11-21 09:00:00',
+        total: 70000,
+        dokter: null,
+        pasien: null,
+        poli: null,
+        details: [
+          {
+            id: 11,
+            pemeriksaan_lab_id: 1,
+            tarif: 40000,
+            hasil: '180',
+            satuan: 'mg/dL',
+            nilai_rujukan: '70-110',
+            flag: 'tinggi',
+            diinput_at: '2026-11-21 10:00:00',
+            pemeriksaan: { id: 1, kode: 'LAB01', nama: 'Gula Darah' },
+          },
+        ],
+      },
+    ]);
+    await userEvent.click(screen.getByRole('button', { name: 'Kirim Order' }));
+
+    expect(labApi.buatOrderLab).toHaveBeenCalledWith({
+      kunjungan_id: 100,
+      catatan_klinis: '',
+      pemeriksaan_lab_ids: [1, 2],
+    });
+    const item = await screen.findByTestId('order-lab-item');
+    expect(within(item).getByText('Tinggi')).toBeInTheDocument();
   });
 
   it('halaman riwayat rekam medis menampilkan kunjungan pasien terpilih', async () => {

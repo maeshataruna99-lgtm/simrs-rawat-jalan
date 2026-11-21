@@ -1,7 +1,7 @@
 /**
  * Pemanggilan endpoint CRUD master pemeriksaan laboratorium di backend Yii (/master/pemeriksaan-lab).
  *
- * Dipakai di: PemeriksaanLabPage, PemeriksaanLabForm, PemeriksaanPage.
+ * Dipakai di: PemeriksaanLabPage, PemeriksaanLabForm, OrderLabPanel.
  */
 import type { PaginatedResult } from '@/hooks/use-crud';
 import { yiiApi, type ApiResponse } from '@/lib/api-client';
@@ -10,7 +10,7 @@ import type { PemeriksaanLabItem, PemeriksaanLabPayload } from './lab.types';
 /**
  * Mengambil daftar pemeriksaan laboratorium berhalaman dari server.
  *
- * Dipakai di: PemeriksaanLabPage, PemeriksaanPage.
+ * Dipakai di: PemeriksaanLabPage, OrderLabPanel.
  */
 export async function listPemeriksaanLab(params: {
   q?: string;
