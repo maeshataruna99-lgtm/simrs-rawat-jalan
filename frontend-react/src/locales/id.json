@@ -8,7 +8,10 @@
     "home": "Beranda",
     "activeModule": "Modul Aktif",
     "moduleSwitcher": "Pemilihan modul",
-    "moduleList": "Daftar modul"
+    "moduleList": "Daftar modul",
+    "searchMenu": "Cari menu...",
+    "searchPlaceholder": "Ketik nama menu atau modul...",
+    "searchEmpty": "Menu tidak ditemukan."
   },
   "home": {
     "greeting": "Selamat datang, {{nama}}",

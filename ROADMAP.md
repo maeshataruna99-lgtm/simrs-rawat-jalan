@@ -152,7 +152,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 Dikerjakan hanya jika waktu tersisa, tidak mengubah fitur inti.
 
-- [ ] Global search menu (Ctrl+K)
+- [x] Global search menu (Ctrl+K)
 - [ ] Export PDF invoice dan laporan
 - [ ] Export laporan ke Excel
 - [ ] Filter laporan lanjutan (per dokter, per penjamin)

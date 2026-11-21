@@ -127,6 +127,20 @@ describe('AppLayout', () => {
     expect(await screen.findByRole('button', { name: 'Masuk' })).toBeInTheDocument();
     expect(localStorage.getItem('simrs_token')).toBeNull();
   });
+
+  it('pencarian menu global terbuka dengan Ctrl+K dan menavigasi ke menu terpilih', async () => {
+    const user = userEvent.setup();
+    renderAt('/');
+
+    await user.keyboard('{Control>}k{/Control}');
+    const dialog = await screen.findByRole('dialog');
+    const searchInput = within(dialog).getByPlaceholderText('Ketik nama menu atau modul...');
+    await user.type(searchInput, 'Tagihan');
+    await user.click(within(dialog).getByRole('option', { name: /Tagihan dan Pembayaran/ }));
+
+    const breadcrumb = screen.getByRole('navigation', { name: /breadcrumb/i });
+    expect(within(breadcrumb).getByText('Billing')).toBeInTheDocument();
+  });
 });
 
 describe('findMenuByPath', () => {

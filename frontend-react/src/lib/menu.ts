@@ -42,3 +42,42 @@ function findTrail(menus: MenuItem[], pathname: string): MenuItem[] | null {
   }
   return null;
 }
+
+export interface FlatMenuEntry {
+  kode: string;
+  nama: string;
+  path: string;
+  icon: string | null;
+  moduleKode: string;
+  moduleNama: string;
+}
+
+/**
+ * Meratakan seluruh menu ber-path dari setiap modul agar mudah dicari pada pencarian global (Ctrl+K).
+ *
+ * Dipakai di: components/AppCommandSearch.tsx.
+ */
+export function flattenModuleMenus(modules: MenuModuleGroup[]): FlatMenuEntry[] {
+  const result: FlatMenuEntry[] = [];
+  const collect = (items: MenuItem[], mod: MenuModuleGroup) => {
+    for (const item of items) {
+      if (item.path) {
+        result.push({
+          kode: item.kode,
+          nama: item.nama,
+          path: item.path,
+          icon: item.icon,
+          moduleKode: mod.kode,
+          moduleNama: mod.nama,
+        });
+      }
+      if (item.children.length > 0) {
+        collect(item.children, mod);
+      }
+    }
+  };
+  for (const mod of modules) {
+    collect(mod.menus, mod);
+  }
+  return result;
+}
