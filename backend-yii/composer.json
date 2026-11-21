@@ -4,7 +4,7 @@
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.3",
         "yiisoft/yii2": "~2.0.49"
     },
     "replace": {
@@ -23,5 +23,12 @@
         "allow-plugins": {
             "yiisoft/yii2-composer": true
         }
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95"
+    },
+    "scripts": {
+        "lint": "php-cs-fixer check --diff",
+        "lint:fix": "php-cs-fixer fix"
     }
 }
