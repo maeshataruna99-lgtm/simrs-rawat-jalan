@@ -80,7 +80,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 ## 4. Pemeriksaan dan Rekam Medis Elektronik — B.3
 
-- [ ] 4.1 Migrasi pemeriksaan, tanda vital, dan diagnosis
+- [x] 4.1 Migrasi pemeriksaan, tanda vital, dan diagnosis
 - [ ] 4.2 Worklist pasien menunggu pemeriksaan
 - [ ] 4.3 Simpan anamnesis, keluhan, tanda vital, dan pemeriksaan fisik
 - [ ] 4.4 Diagnosis utama dan sekunder (ICD-10)
