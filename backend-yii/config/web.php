@@ -40,6 +40,10 @@ return [
             'showScriptName' => false,
             'rules' => [
                 'GET health' => 'health/index',
+                // Tindakan per kunjungan: POST /transaction/tindakan/{kunjunganId}, DELETE /transaction/tindakan/item/{id}.
+                'POST transaction/tindakan/<id:\d+>' => 'transaction/tindakan/create',
+                'DELETE transaction/tindakan/item/<id:\d+>' => 'transaction/tindakan/delete',
+                'OPTIONS transaction/tindakan/item/<id:\d+>' => 'transaction/tindakan/options',
                 // Pola REST untuk semua controller CRUD di modul master, transaction, dan system.
                 'GET <module:(master|transaction|system)>/<controller:[\w-]+>' => '<module>/<controller>/index',
                 'GET <module:(master|transaction|system)>/<controller:[\w-]+>/<id:\d+>' => '<module>/<controller>/view',

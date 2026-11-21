@@ -7,6 +7,7 @@ use app\modules\master\icd10\Icd10;
 use app\modules\master\pasien\Pasien;
 use app\modules\transaction\antrean\AntreanService;
 use app\modules\transaction\pendaftaran\Kunjungan;
+use app\modules\transaction\tindakan\TindakanKunjunganService;
 use Yii;
 use yii\web\ConflictHttpException;
 use yii\web\ForbiddenHttpException;
@@ -155,7 +156,7 @@ class PemeriksaanService
     }
 
     /**
-     * Riwayat rekam medis pasien: setiap kunjungan yang tidak batal beserta pemeriksaan dan diagnosisnya, terbaru dulu.
+     * Riwayat rekam medis pasien: setiap kunjungan yang tidak batal beserta pemeriksaan, diagnosis, dan tindakan aktif, terbaru dulu.
      *
      * @return array<int, array<string, mixed>>
      *
@@ -183,11 +184,13 @@ class PemeriksaanService
         foreach ($rows as $d) {
             $diagnosis[$d->kunjungan_id][] = $d->toArray();
         }
+        $tindakan = (new TindakanKunjunganService())->itemsPerKunjungan($ids, true);
 
         return array_map(fn (Kunjungan $k) => [
             'kunjungan' => $k->toArray(['id', 'no_kunjungan', 'tgl_kunjungan', 'status', 'poli', 'dokter']),
             'pemeriksaan' => isset($pemeriksaan[$k->id]) ? $pemeriksaan[$k->id]->toArray() : null,
             'diagnosis' => $diagnosis[$k->id] ?? [],
+            'tindakan' => $tindakan[$k->id] ?? [],
         ], $kunjungan);
     }
 
@@ -209,8 +212,10 @@ class PemeriksaanService
      *
      * @throws NotFoundHttpException
      * @throws ForbiddenHttpException
+     *
+     * Dipakai di: method service ini, TindakanKunjunganService.
      */
-    private function kunjunganMilik(int $kunjunganId, ?int $dokterId): Kunjungan
+    public function kunjunganMilik(int $kunjunganId, ?int $dokterId): Kunjungan
     {
         $kunjungan = Kunjungan::findOne($kunjunganId);
         if ($kunjungan === null) {
