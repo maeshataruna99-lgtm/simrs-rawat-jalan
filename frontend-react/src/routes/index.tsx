@@ -5,6 +5,7 @@
  */
 import type { RouteObject } from 'react-router';
 import { AppLayout } from '@/components/layout/AppLayout';
+import DashboardPage from '@/modules/dashboard/DashboardPage';
 import DokterPage from '@/modules/master/dokter/DokterPage';
 import Icd10Page from '@/modules/master/icd10/Icd10Page';
 import JadwalDokterPage from '@/modules/master/jadwal/JadwalDokterPage';
@@ -45,6 +46,14 @@ export const routes: RouteObject[] = [
         element: <AppLayout />,
         children: [
           { path: '/', element: <HomePage /> },
+          {
+            path: '/dashboard',
+            element: (
+              <PermissionGuard menu="dashboard">
+                <DashboardPage />
+              </PermissionGuard>
+            ),
+          },
           {
             path: '/system/user',
             element: (
