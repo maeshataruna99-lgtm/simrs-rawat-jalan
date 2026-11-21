@@ -14,6 +14,7 @@ class InvoiceController extends BaseApiController
     protected ?string $menuCode = 'billing';
     protected array $actionPermissions = [
         'belum-tagih' => 'read',
+        'audit-log' => 'read',
     ];
 
     protected function verbs(): array
@@ -23,6 +24,7 @@ class InvoiceController extends BaseApiController
             'view' => ['GET'],
             'create' => ['POST'],
             'belum-tagih' => ['GET'],
+            'audit-log' => ['GET'],
         ];
     }
 
@@ -61,5 +63,13 @@ class InvoiceController extends BaseApiController
         Yii::$app->response->statusCode = 201;
 
         return ApiResponse::success($invoice->toArray(), 'Invoice berhasil dibuat.');
+    }
+
+    /**
+     * GET /transaction/invoice/{id}/audit-log — jejak perubahan tagihan dan klinis kunjungan (D.4).
+     */
+    public function actionAuditLog(int $id): array
+    {
+        return ApiResponse::success((new BillingSyncService())->auditLogInvoice($id));
     }
 }

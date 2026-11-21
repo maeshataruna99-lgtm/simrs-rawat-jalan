@@ -209,7 +209,7 @@ class InvoiceService
      *
      * @return array<int, array{sumber: string, referensi_id: int, deskripsi: string, qty: int, harga: float, subtotal: float}>
      *
-     * Dipakai di: InvoiceService::buat.
+     * Dipakai di: InvoiceService::buat, BillingSyncService::sinkronkan.
      */
     public function kumpulkanItemSumber(Kunjungan $kunjungan): array
     {

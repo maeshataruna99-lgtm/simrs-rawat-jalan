@@ -120,7 +120,7 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 - [x] 8.2 Pembentukan invoice dari pendaftaran, tindakan, laboratorium, dan obat
 - [x] 8.3 Pembayaran tunai/non-tunai (simulasi), bertahap, dengan status belum dibayar/sebagian/lunas
 - [x] 8.4 Pencegahan pembayaran ganda dengan idempotency key — D.3
-- [ ] 8.5 Revisi tagihan dan audit log ketika diagnosis atau tindakan berubah — D.4
+- [x] 8.5 Revisi tagihan dan audit log ketika diagnosis atau tindakan berubah — D.4
 - [ ] 8.6 Test pembayaran ganda dan revisi tagihan
 - [ ] 8.7 Halaman billing, pembayaran, dan riwayat pembayaran
 - [ ] 8.8 Invoice dan bukti pembayaran yang dapat dicetak

@@ -3,6 +3,7 @@
 namespace app\modules\transaction\pemeriksaan;
 
 use app\common\ActiveRecord;
+use app\common\AuditLogBehavior;
 
 /**
  * Model tabel t_pemeriksaan: anamnesis, tanda vital, dan pemeriksaan fisik satu kunjungan.
@@ -34,6 +35,13 @@ class Pemeriksaan extends ActiveRecord
     public static function tableName(): string
     {
         return 't_pemeriksaan';
+    }
+
+    public function behaviors(): array
+    {
+        return array_merge(parent::behaviors(), [
+            'auditLog' => AuditLogBehavior::class,
+        ]);
     }
 
     public function rules(): array

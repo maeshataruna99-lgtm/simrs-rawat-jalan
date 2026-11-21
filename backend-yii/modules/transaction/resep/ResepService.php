@@ -6,6 +6,7 @@ use app\common\SequenceService;
 use app\common\ValidationException;
 use app\modules\master\obat\Obat;
 use app\modules\master\pasien\Pasien;
+use app\modules\transaction\pembayaran\BillingSyncService;
 use app\modules\transaction\pemeriksaan\PemeriksaanService;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use Yii;
@@ -152,8 +153,11 @@ class ResepService
             throw new ValidationException($errors);
         }
 
+        $billing = new BillingSyncService();
+        $billing->pastikanBelumLunas($kunjungan->id);
+
         /** @var Resep $resep */
-        $resep = Yii::$app->db->transaction(function () use ($kunjungan, $rows, $obatList, $data) {
+        $resep = Yii::$app->db->transaction(function () use ($kunjungan, $rows, $obatList, $data, $billing) {
             $ymd = date('Ymd');
             $resep = new Resep([
                 'no_resep' => SequenceService::nextFormatted('RESEP', $ymd, "RSP{$ymd}", 4),
@@ -175,6 +179,7 @@ class ResepService
                     'subtotal' => round($harga * $row['jumlah'], 2),
                 ]))->save(false);
             }
+            $billing->sinkronkan($kunjungan->id, 'Penambahan resep obat: ' . $resep->no_resep);
 
             return $resep;
         });

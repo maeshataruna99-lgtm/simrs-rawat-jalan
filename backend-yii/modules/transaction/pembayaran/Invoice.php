@@ -3,6 +3,7 @@
 namespace app\modules\transaction\pembayaran;
 
 use app\common\ActiveRecord;
+use app\common\AuditLogBehavior;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use yii\db\ActiveQuery;
 
@@ -28,6 +29,13 @@ class Invoice extends ActiveRecord
     public static function tableName(): string
     {
         return 't_invoice';
+    }
+
+    public function behaviors(): array
+    {
+        return array_merge(parent::behaviors(), [
+            'auditLog' => AuditLogBehavior::class,
+        ]);
     }
 
     /**

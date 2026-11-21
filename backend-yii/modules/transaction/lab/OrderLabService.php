@@ -5,6 +5,7 @@ namespace app\modules\transaction\lab;
 use app\common\SequenceService;
 use app\common\ValidationException;
 use app\modules\master\lab\PemeriksaanLab;
+use app\modules\transaction\pembayaran\BillingSyncService;
 use app\modules\transaction\pemeriksaan\PemeriksaanService;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use Yii;
@@ -53,7 +54,10 @@ class OrderLabService
             throw new ValidationException(['pemeriksaan_lab_ids' => ['Pemeriksaan laboratorium tidak ditemukan atau nonaktif.']]);
         }
 
-        $orderId = Yii::$app->db->transaction(function () use ($kunjungan, $pemeriksaan, $data) {
+        $billing = new BillingSyncService();
+        $billing->pastikanBelumLunas($kunjungan->id);
+
+        $orderId = Yii::$app->db->transaction(function () use ($kunjungan, $pemeriksaan, $data, $billing) {
             $ymd = date('Ymd');
             $order = new OrderLab([
                 'no_order' => SequenceService::nextFormatted('ORDER_LAB', $ymd, "LAB{$ymd}", 4),
@@ -72,6 +76,7 @@ class OrderLabService
                     'nilai_rujukan' => $p->nilai_rujukan,
                 ]))->save(false);
             }
+            $billing->sinkronkan($kunjungan->id, 'Penambahan order laboratorium: ' . $order->no_order);
 
             return $order->id;
         });

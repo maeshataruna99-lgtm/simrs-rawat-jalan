@@ -4,8 +4,10 @@ namespace app\modules\transaction\tindakan;
 
 use app\common\ValidationException;
 use app\modules\master\tindakan\Tindakan;
+use app\modules\transaction\pembayaran\BillingSyncService;
 use app\modules\transaction\pemeriksaan\PemeriksaanService;
 use app\modules\transaction\pendaftaran\Kunjungan;
+use Yii;
 use yii\web\ConflictHttpException;
 use yii\web\NotFoundHttpException;
 
@@ -64,16 +66,25 @@ class TindakanKunjunganService
             throw new ValidationException($errors);
         }
 
-        $item = new TindakanKunjungan([
-            'kunjungan_id' => $kunjungan->id,
-            'tindakan_id' => $tindakan->id,
-            'qty' => $qty,
-            'tarif' => $tindakan->tarif,
-            'subtotal' => round((float) $tindakan->tarif * $qty, 2),
-            'dokter_id' => $kunjungan->dokter_id,
-            'status' => TindakanKunjungan::STATUS_AKTIF,
-        ]);
-        $item->save(false);
+        $billing = new BillingSyncService();
+        $billing->pastikanBelumLunas($kunjungan->id);
+
+        /** @var TindakanKunjungan $item */
+        $item = Yii::$app->db->transaction(function () use ($kunjungan, $tindakan, $qty, $billing) {
+            $item = new TindakanKunjungan([
+                'kunjungan_id' => $kunjungan->id,
+                'tindakan_id' => $tindakan->id,
+                'qty' => $qty,
+                'tarif' => $tindakan->tarif,
+                'subtotal' => round((float) $tindakan->tarif * $qty, 2),
+                'dokter_id' => $kunjungan->dokter_id,
+                'status' => TindakanKunjungan::STATUS_AKTIF,
+            ]);
+            $item->save(false);
+            $billing->sinkronkan($kunjungan->id, 'Penambahan tindakan medis: ' . $tindakan->nama);
+
+            return $item;
+        });
         $item->refresh();
 
         return $item;
@@ -98,8 +109,15 @@ class TindakanKunjunganService
             throw new ConflictHttpException('Tindakan sudah dibatalkan.');
         }
 
-        $item->status = TindakanKunjungan::STATUS_BATAL;
-        $item->save(false, ['status', 'updated_at', 'updated_by']);
+        $billing = new BillingSyncService();
+        $billing->pastikanBelumLunas($item->kunjungan_id);
+
+        Yii::$app->db->transaction(function () use ($item, $billing) {
+            $item->status = TindakanKunjungan::STATUS_BATAL;
+            $item->save(false, ['status', 'updated_at', 'updated_by']);
+            $namaTindakan = $item->tindakan ? $item->tindakan->nama : "Tindakan #{$item->id}";
+            $billing->sinkronkan($item->kunjungan_id, 'Pembatalan tindakan medis: ' . $namaTindakan);
+        });
 
         return $item;
     }

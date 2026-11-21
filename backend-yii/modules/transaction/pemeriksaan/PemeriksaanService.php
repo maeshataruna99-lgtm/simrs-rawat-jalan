@@ -2,6 +2,7 @@
 
 namespace app\modules\transaction\pemeriksaan;
 
+use app\common\AuditLog;
 use app\common\ValidationException;
 use app\modules\master\icd10\Icd10;
 use app\modules\master\pasien\Pasien;
@@ -143,7 +144,9 @@ class PemeriksaanService
             throw new ValidationException(['diagnosis' => ['Kode ICD-10 tidak ditemukan.']]);
         }
 
-        Yii::$app->db->transaction(function () use ($kunjunganId, $items) {
+        $sebelum = $this->daftarDiagnosis($kunjunganId);
+
+        Yii::$app->db->transaction(function () use ($kunjunganId, $items, $sebelum) {
             Diagnosis::deleteAll(['kunjungan_id' => $kunjunganId]);
             foreach ($items as $item) {
                 (new Diagnosis([
@@ -152,6 +155,9 @@ class PemeriksaanService
                     'jenis' => $item['jenis'],
                 ]))->save(false);
             }
+            $sesudah = $this->daftarDiagnosis($kunjunganId);
+            // Perubahan diagnosis tidak mengubah tagihan tetapi tetap dicatat di t_audit_log (D.4).
+            AuditLog::catat('t_diagnosis', $kunjunganId, 'update', ['diagnosis' => $sebelum], ['diagnosis' => $sesudah]);
         });
 
         return $this->daftarDiagnosis($kunjunganId);

@@ -3,6 +3,7 @@
 namespace app\modules\transaction\pembayaran;
 
 use app\common\ActiveRecord;
+use app\common\AuditLogBehavior;
 use yii\db\ActiveQuery;
 
 /**
@@ -29,6 +30,13 @@ class InvoiceItem extends ActiveRecord
     public static function tableName(): string
     {
         return 't_invoice_item';
+    }
+
+    public function behaviors(): array
+    {
+        return array_merge(parent::behaviors(), [
+            'auditLog' => AuditLogBehavior::class,
+        ]);
     }
 
     /**

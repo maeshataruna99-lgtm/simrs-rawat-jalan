@@ -3,6 +3,7 @@
 namespace app\modules\transaction\tindakan;
 
 use app\common\ActiveRecord;
+use app\common\AuditLogBehavior;
 use app\modules\master\tindakan\Tindakan;
 use yii\db\ActiveQuery;
 
@@ -27,6 +28,13 @@ class TindakanKunjungan extends ActiveRecord
     public static function tableName(): string
     {
         return 't_tindakan';
+    }
+
+    public function behaviors(): array
+    {
+        return array_merge(parent::behaviors(), [
+            'auditLog' => AuditLogBehavior::class,
+        ]);
     }
 
     public function getTindakan(): ActiveQuery
