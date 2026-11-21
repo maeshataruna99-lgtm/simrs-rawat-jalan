@@ -26,7 +26,7 @@ Referensi kode di setiap poin: `B.x` ruang lingkup, `C.x` backend services, `D.x
 - [ ] 0.5 Docker Compose: PostgreSQL, Yii, Node, React
 - [ ] 0.6 Skeleton `backend-yii` (Yii2, modul `master`, `transaction`, `system`, format response API)
 - [ ] 0.7 Skeleton `service-node` (Express + TypeScript, ESLint, format response, error handler) — C.4
-- [ ] 0.8 Skeleton `frontend-react` (Vite + TypeScript, ESLint, router, API client)
+- [ ] 0.8 Skeleton `frontend-react` (Vite + TypeScript, ESLint, router, API client, i18n satu bahasa `id`)
 - [ ] 0.9 Standar kode PHP (PHP-CS-Fixer PSR-12)
 
 ## 1. Autentikasi dan Hak Akses — B.9
@@ -141,9 +141,11 @@ Setiap master: migrasi, model, service, controller, validasi, pencegahan duplika
 
 Dikerjakan hanya jika waktu tersisa, tidak mengubah fitur inti.
 
+- [ ] Global search menu (Ctrl+K)
 - [ ] Export PDF invoice dan laporan
 - [ ] Export laporan ke Excel
 - [ ] Filter laporan lanjutan (per dokter, per penjamin)
 - [ ] Penyempurnaan UI (tema, responsif, empty state)
 - [ ] CI GitHub Actions untuk lint dan test
 - [ ] Layar display antrean
+- [ ] Bahasa Inggris (`en`) untuk i18n
