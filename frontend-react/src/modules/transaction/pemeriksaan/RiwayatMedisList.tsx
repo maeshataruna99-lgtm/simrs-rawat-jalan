@@ -1,11 +1,12 @@
 /**
- * Daftar riwayat rekam medis pasien per kunjungan: tanda vital, anamnesis, pemeriksaan fisik, diagnosis, tindakan, dan resep.
+ * Daftar riwayat rekam medis pasien per kunjungan: tanda vital, anamnesis, pemeriksaan fisik, diagnosis, tindakan, resep, dan hasil laboratorium.
  */
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { errorMessage } from '@/lib/api-client';
+import { LabHasilBadge } from '@/modules/transaction/lab/LabHasilBadge';
 import * as pemeriksaanApi from './pemeriksaan.api';
 import type { RiwayatMedisItem } from './pemeriksaan.types';
 
@@ -48,7 +49,7 @@ export function RiwayatMedisList({ pasienId, currentKunjunganId }: Props) {
 
   return (
     <div className="space-y-4">
-      {rows.map(({ kunjungan, pemeriksaan, diagnosis, tindakan, resep }) => {
+      {rows.map(({ kunjungan, pemeriksaan, diagnosis, tindakan, resep, order_lab: orderLab }) => {
         const p = pemeriksaan;
         const ttv = p
           ? [
@@ -122,6 +123,20 @@ export function RiwayatMedisList({ pasienId, currentKunjunganId }: Props) {
                     )
                     .join(', ')}
                 </p>
+              )}
+              {orderLab.flatMap((o) => o.details).length > 0 && (
+                <div data-testid="riwayat-hasil-lab">
+                  <span className="font-medium">{t('transaction.lab.title')}:</span>
+                  <ul className="ml-4 list-disc">
+                    {orderLab
+                      .flatMap((o) => o.details)
+                      .map((d) => (
+                        <li key={d.id}>
+                          {d.pemeriksaan?.nama}: <LabHasilBadge detail={d} />
+                        </li>
+                      ))}
+                  </ul>
+                </div>
               )}
               {diagnosis.length > 0 && (
                 <ul className="space-y-1">

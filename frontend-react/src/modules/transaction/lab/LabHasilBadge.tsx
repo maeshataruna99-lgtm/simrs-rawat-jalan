@@ -8,7 +8,7 @@ import type { OrderLabDetailItem } from './lab.api';
 /**
  * Menampilkan hasil dan flag; hasil kosong ditampilkan sebagai "belum ada hasil".
  *
- * Dipakai di: OrderLabPanel, LaboratoriumPage.
+ * Dipakai di: OrderLabPanel, LaboratoriumPage, RiwayatMedisList.
  */
 export function LabHasilBadge({ detail }: { detail: OrderLabDetailItem }) {
   const { t } = useTranslation();

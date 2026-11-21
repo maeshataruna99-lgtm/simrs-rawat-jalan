@@ -6,6 +6,7 @@ use app\common\ValidationException;
 use app\modules\master\icd10\Icd10;
 use app\modules\master\pasien\Pasien;
 use app\modules\transaction\antrean\AntreanService;
+use app\modules\transaction\lab\OrderLabService;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use app\modules\transaction\resep\ResepService;
 use app\modules\transaction\tindakan\TindakanKunjunganService;
@@ -157,7 +158,7 @@ class PemeriksaanService
     }
 
     /**
-     * Riwayat rekam medis pasien: setiap kunjungan yang tidak batal beserta pemeriksaan, diagnosis, tindakan aktif, dan resep, terbaru dulu.
+     * Riwayat rekam medis pasien: setiap kunjungan yang tidak batal beserta pemeriksaan, diagnosis, tindakan aktif, resep, dan hasil laboratorium, terbaru dulu.
      *
      * @return array<int, array<string, mixed>>
      *
@@ -187,6 +188,7 @@ class PemeriksaanService
         }
         $tindakan = (new TindakanKunjunganService())->itemsPerKunjungan($ids, true);
         $resep = (new ResepService())->resepPerKunjungan($ids);
+        $orderLab = (new OrderLabService())->orderPerKunjungan($ids);
 
         return array_map(fn (Kunjungan $k) => [
             'kunjungan' => $k->toArray(['id', 'no_kunjungan', 'tgl_kunjungan', 'status', 'poli', 'dokter']),
@@ -194,6 +196,7 @@ class PemeriksaanService
             'diagnosis' => $diagnosis[$k->id] ?? [],
             'tindakan' => $tindakan[$k->id] ?? [],
             'resep' => $resep[$k->id] ?? [],
+            'order_lab' => $orderLab[$k->id] ?? [],
         ], $kunjungan);
     }
 

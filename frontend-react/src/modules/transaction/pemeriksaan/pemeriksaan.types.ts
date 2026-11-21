@@ -2,6 +2,7 @@
  * Tipe data pemeriksaan dokter, diagnosis ICD-10, dan riwayat rekam medis
  * (/transaction/pemeriksaan, /transaction/diagnosis, /transaction/riwayat-medis).
  */
+import type { OrderLabItem } from '@/modules/transaction/lab/lab.api';
 import type { KunjunganItem } from '@/modules/transaction/pendaftaran/pendaftaran.types';
 import type { ResepItem } from '@/modules/transaction/resep/resep.api';
 import type { TindakanKunjunganItem } from '@/modules/transaction/tindakan/tindakan.api';
@@ -50,4 +51,5 @@ export interface RiwayatMedisItem {
   diagnosis: DiagnosisItem[];
   tindakan: TindakanKunjunganItem[];
   resep: Pick<ResepItem, 'id' | 'no_resep' | 'status' | 'details' | 'total'>[];
+  order_lab: Pick<OrderLabItem, 'id' | 'no_order' | 'status' | 'catatan_klinis' | 'details'>[];
 }

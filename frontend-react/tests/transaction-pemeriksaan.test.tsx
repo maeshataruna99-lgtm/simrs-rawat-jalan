@@ -102,6 +102,27 @@ beforeEach(() => {
       ],
       tindakan: [],
       resep: [],
+      order_lab: [
+        {
+          id: 5,
+          no_order: 'LAB202611210001',
+          status: 'selesai',
+          catatan_klinis: null,
+          details: [
+            {
+              id: 11,
+              pemeriksaan_lab_id: 1,
+              tarif: 40000,
+              hasil: '180',
+              satuan: 'mg/dL',
+              nilai_rujukan: '70-110',
+              flag: 'tinggi',
+              diinput_at: '2026-11-21 10:00:00',
+              pemeriksaan: { id: 1, kode: 'LAB01', nama: 'Gula Darah' },
+            },
+          ],
+        },
+      ],
     },
   ]);
   vi.mocked(pemeriksaanApi.cariPasienRiwayat).mockResolvedValue([
@@ -356,5 +377,8 @@ describe('Pemeriksaan dokter (poin 4.6)', () => {
 
     expect(await screen.findByTestId('riwayat-medis-item')).toBeInTheDocument();
     expect(pemeriksaanApi.riwayatMedis).toHaveBeenCalledWith(10);
+    const hasilLab = screen.getByTestId('riwayat-hasil-lab');
+    expect(within(hasilLab).getByText('180 mg/dL')).toBeInTheDocument();
+    expect(within(hasilLab).getByText('Tinggi')).toBeInTheDocument();
   });
 });

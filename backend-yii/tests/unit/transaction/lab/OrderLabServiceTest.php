@@ -10,6 +10,8 @@ use app\modules\master\pasien\PasienService;
 use app\modules\master\poli\PoliService;
 use app\modules\transaction\lab\OrderLab;
 use app\modules\transaction\lab\OrderLabService;
+use app\modules\transaction\pemeriksaan\PemeriksaanService;
+use app\modules\transaction\pendaftaran\Kunjungan;
 use app\modules\transaction\pendaftaran\PendaftaranService;
 use app\tests\TestCase;
 use yii\web\ForbiddenHttpException;
@@ -87,6 +89,12 @@ class OrderLabServiceTest extends TestCase
 
         $service->simpanHasil($hb['id'], ['hasil' => '13'], null);
         $this->assertSame('selesai', OrderLab::findOne($order['id'])->status);
+
+        // Hasil tampil di riwayat rekam medis kunjungan tersebut.
+        $pasienId = Kunjungan::findOne($d['kunjungan'])->pasien_id;
+        $riwayat = (new PemeriksaanService())->riwayatMedis($pasienId);
+        $this->assertSame(['180', '13'], array_column($riwayat[0]['order_lab'][0]['details'], 'hasil'));
+        $this->assertSame('tinggi', $riwayat[0]['order_lab'][0]['details'][0]['flag']);
 
         $this->expectException(ValidationException::class);
         $service->simpanHasil($hb['id'], ['hasil' => ''], null);
