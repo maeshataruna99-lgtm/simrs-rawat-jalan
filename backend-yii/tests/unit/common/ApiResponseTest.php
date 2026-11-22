@@ -34,6 +34,24 @@ class ApiResponseTest extends TestCase
         );
     }
 
+    public function testPelanggaranUniqueDariRequestKembarDibalas409(): void
+    {
+        $previous = Yii::$app->errorHandler->exception;
+        Yii::$app->errorHandler->exception = new \yii\db\IntegrityException('duplicate key', ['23505', 7, 'duplicate key value']);
+        try {
+            $response = new \yii\web\Response();
+            $response->setStatusCode(500);
+            $response->data = ['name' => 'Integrity constraint violation', 'message' => 'SQLSTATE[23505]'];
+            ApiResponse::normalizeError(new \yii\base\Event(['sender' => $response]));
+
+            $this->assertSame(409, $response->statusCode);
+            $this->assertFalse($response->data['success']);
+            $this->assertStringNotContainsString('SQLSTATE', $response->data['message']);
+        } finally {
+            Yii::$app->errorHandler->exception = $previous;
+        }
+    }
+
     public function testMemakaiDatabaseTest(): void
     {
         $this->assertSame('simrs_test', Yii::$app->db->createCommand('SELECT current_database()')->queryScalar());

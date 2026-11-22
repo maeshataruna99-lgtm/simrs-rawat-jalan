@@ -343,6 +343,12 @@ class DummySeeder
                     'penjamin' => $penjaminList[$idx % count($penjaminList)],
                 ])->execute();
                 $kunjunganId = (int) Yii::$app->db->getLastInsertID('t_kunjungan_id_seq');
+                // Counter antrean ikut disinkronkan agar pendaftaran dari API tidak menerbitkan nomor antrean yang sama.
+                Yii::$app->db->createCommand(
+                    'INSERT INTO t_sequence_counter (kode, periode, nilai_terakhir, updated_at) VALUES (:kode, :periode, :n, CURRENT_TIMESTAMP)
+                     ON CONFLICT (kode, periode) DO UPDATE SET nilai_terakhir = GREATEST(t_sequence_counter.nilai_terakhir, :n)',
+                    [':kode' => "ANTREAN:{$poliId}:{$dokterId}", ':periode' => $tgl, ':n' => $slot]
+                )->execute();
 
                 Yii::$app->db->createCommand()->insert('t_kunjungan_status_log', [
                     'kunjungan_id' => $kunjunganId,

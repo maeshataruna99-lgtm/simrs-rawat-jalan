@@ -72,12 +72,6 @@ class AntreanService
      */
     public function ubahStatus(int $id, ?string $statusBaru): Kunjungan
     {
-        /** @var Kunjungan|null $kunjungan */
-        $kunjungan = Kunjungan::find()->where(['id' => $id])->one();
-        if ($kunjungan === null) {
-            throw new NotFoundHttpException('Data kunjungan tidak ditemukan.');
-        }
-
         $target = trim((string) $statusBaru);
         if (!in_array($target, Kunjungan::STATUS_LIST, true)) {
             throw new ValidationException([
@@ -85,22 +79,29 @@ class AntreanService
             ]);
         }
 
-        if ($kunjungan->status === $target) {
-            return $kunjungan;
-        }
-
         // Selesai dan batal adalah status akhir; membuka kembali kunjungan batal bisa bentrok dengan kunjungan aktif baru.
         $transisi = [
             Kunjungan::STATUS_MENUNGGU => [Kunjungan::STATUS_DIPERIKSA, Kunjungan::STATUS_BATAL],
             Kunjungan::STATUS_DIPERIKSA => [Kunjungan::STATUS_SELESAI, Kunjungan::STATUS_BATAL],
         ];
-        if (!in_array($target, $transisi[$kunjungan->status] ?? [], true)) {
-            throw new ValidationException([
-                'status' => ["Status tidak dapat diubah dari {$kunjungan->status} menjadi {$target}."],
-            ]);
-        }
 
-        Yii::$app->db->transaction(function () use ($kunjungan, $target) {
+        // Baris dikunci lalu status dibaca ulang di dalam transaksi: perubahan paralel diproses bergiliran
+        // sehingga transisi selalu dicek terhadap status terbaru (tidak ada lost update).
+        $kunjungan = Yii::$app->db->transaction(function () use ($id, $target, $transisi) {
+            /** @var Kunjungan|null $kunjungan */
+            $kunjungan = Kunjungan::findBySql('SELECT * FROM t_kunjungan WHERE id = :id FOR UPDATE', [':id' => $id])->one();
+            if ($kunjungan === null) {
+                throw new NotFoundHttpException('Data kunjungan tidak ditemukan.');
+            }
+            if ($kunjungan->status === $target) {
+                return $kunjungan;
+            }
+            if (!in_array($target, $transisi[$kunjungan->status] ?? [], true)) {
+                throw new ValidationException([
+                    'status' => ["Status tidak dapat diubah dari {$kunjungan->status} menjadi {$target}."],
+                ]);
+            }
+
             $statusLama = $kunjungan->status;
             $userId = Yii::$app->has('user') ? Yii::$app->user->id : null;
 
@@ -114,6 +115,8 @@ class AntreanService
                 'user_id' => $userId,
                 'created_by' => $userId,
             ])->execute();
+
+            return $kunjungan;
         });
 
         $kunjungan->refresh();

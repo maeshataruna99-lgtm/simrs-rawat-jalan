@@ -56,6 +56,16 @@ class ApiResponse
             return;
         }
 
+        // Pelanggaran UNIQUE (SQLSTATE 23505) dari request kembar yang lolos validasi bersamaan:
+        // data aman ditahan constraint DB, jadi balas 409 alih-alih 500.
+        $exception = \Yii::$app->has('errorHandler') ? \Yii::$app->errorHandler->exception : null;
+        if ($exception instanceof \yii\db\IntegrityException && ($exception->errorInfo[0] ?? null) === '23505') {
+            $response->setStatusCode(409);
+            $response->data = self::error('Data yang sama baru saja disimpan oleh transaksi lain. Muat ulang lalu periksa kembali.');
+
+            return;
+        }
+
         $message = is_array($data) && isset($data['message']) ? $data['message'] : $response->statusText;
         $response->data = self::error($message);
     }

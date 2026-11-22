@@ -109,6 +109,10 @@ class JadwalDokter extends ActiveRecord
             return;
         }
 
+        // Kunci baris dokter agar dua simpan jadwal paralel untuk dokter yang sama diperiksa bergiliran
+        // (dipanggil di dalam transaksi CrudService::save, lock bertahan sampai commit).
+        static::getDb()->createCommand('SELECT id FROM m_dokter WHERE id = :id FOR UPDATE', [':id' => $this->dokter_id])->execute();
+
         $query = static::findActive()
             ->andWhere(['dokter_id' => $this->dokter_id, 'hari' => $this->hari])
             ->andWhere(['<', 'jam_mulai', $this->jam_selesai])
