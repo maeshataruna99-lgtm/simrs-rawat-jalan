@@ -5,8 +5,8 @@
  *
  * Dipakai di: routes/index.tsx.
  */
-import { Maximize2, Minimize2, Monitor, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Maximize2, Minimize2, Monitor, RefreshCw, Volume2, VolumeX } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppEmptyState } from '@/components/AppEmptyState';
 import { AppLocaleToggle } from '@/components/AppLocaleToggle';
@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQueueAnnouncement } from '@/hooks/use-queue-announcement';
 import { errorMessage } from '@/lib/api-client';
 import * as pendaftaranApi from '@/modules/transaction/pendaftaran/pendaftaran.api';
 import type { DisplayAntreanResponse } from '@/modules/transaction/pendaftaran/pendaftaran.types';
@@ -48,6 +49,25 @@ export default function DisplayAntreanPage() {
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const { announce, audioEnabled, enableAudio } = useQueueAnnouncement();
+  // null = belum ada data untuk filter ini; muatan pertama hanya mencatat, tidak memanggil.
+  const calledIds = useRef<Set<number> | null>(null);
+
+  useEffect(() => {
+    calledIds.current = null;
+  }, [poliId]);
+
+  useEffect(() => {
+    if (!data) return;
+    const entries = data.poli.flatMap((group) => group.sedang_diperiksa);
+    const previous = calledIds.current;
+    calledIds.current = new Set(entries.map((entry) => entry.id));
+    if (!previous) return;
+    const fresh = entries.filter((entry) => !previous.has(entry.id));
+    void (async () => {
+      for (const entry of fresh) await announce(entry.kode_antrean);
+    })();
+  }, [data, announce]);
 
   const load = useCallback(async () => {
     setError(null);
@@ -140,6 +160,23 @@ export default function DisplayAntreanPage() {
             >
               <RefreshCw className="mr-1.5 size-4" />
               {t('transaction.antrean.display.refresh')}
+            </Button>
+
+            <Button
+              type="button"
+              variant={audioEnabled ? 'secondary' : 'outline'}
+              size="sm"
+              disabled={audioEnabled}
+              onClick={() => void enableAudio()}
+            >
+              {audioEnabled ? (
+                <Volume2 className="mr-1.5 size-4" />
+              ) : (
+                <VolumeX className="mr-1.5 size-4" />
+              )}
+              {audioEnabled
+                ? t('transaction.antrean.display.soundOn')
+                : t('transaction.antrean.display.enableSound')}
             </Button>
 
             <Button

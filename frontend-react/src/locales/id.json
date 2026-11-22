@@ -365,6 +365,8 @@
         "doneCount": "Selesai",
         "fullscreen": "Layar Penuh",
         "exitFullscreen": "Keluar Layar Penuh",
+        "enableSound": "Aktifkan Suara",
+        "soundOn": "Suara Aktif",
         "refresh": "Muat Ulang",
         "lastUpdated": "Diperbarui",
         "emptyPoli": "Belum ada poli aktif untuk ditampilkan."

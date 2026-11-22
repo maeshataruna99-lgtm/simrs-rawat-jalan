@@ -365,6 +365,8 @@
         "doneCount": "Completed",
         "fullscreen": "Fullscreen",
         "exitFullscreen": "Exit Fullscreen",
+        "enableSound": "Enable Sound",
+        "soundOn": "Sound On",
         "refresh": "Refresh",
         "lastUpdated": "Updated",
         "emptyPoli": "No active clinics to display."

@@ -5,6 +5,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '@/components/theme-provider';
+import { getAnnouncementFiles } from '@/hooks/use-queue-announcement';
 import DisplayAntreanPage from '@/modules/transaction/antrean/DisplayAntreanPage';
 import * as pendaftaranApi from '@/modules/transaction/pendaftaran/pendaftaran.api';
 
@@ -74,5 +75,17 @@ describe('DisplayAntreanPage (/display-antrean)', () => {
     const selectPoli = screen.getByRole('combobox', { name: 'Poli' });
     await userEvent.selectOptions(selectPoli, '2');
     expect(mockGet).toHaveBeenLastCalledWith({ poli_id: 2 });
+  });
+
+  it('menyusun urutan file suara dari kode antrean', () => {
+    expect(getAnnouncementFiles('umu-010')).toEqual([
+      'Nomor-Antrian',
+      'U',
+      'M',
+      'U',
+      'Nol',
+      'satu',
+      'Nol',
+    ]);
   });
 });
