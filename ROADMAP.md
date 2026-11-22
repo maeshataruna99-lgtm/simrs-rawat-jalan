@@ -160,3 +160,4 @@ Dikerjakan hanya jika waktu tersisa, tidak mengubah fitur inti.
 - [x] CI GitHub Actions untuk lint dan test
 - [x] Layar display antrean
 - [x] Bahasa Inggris (`en`) untuk i18n
+- [x] Chatbot bantuan berbasis menu tanpa LLM (lookup pasien/tagihan dan FAQ fitur), lihat [`docs/chatbot.md`](docs/chatbot.md)

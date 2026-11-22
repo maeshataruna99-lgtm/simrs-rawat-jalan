@@ -653,5 +653,120 @@
     "transaksiCount": "Transactions: {{n}}",
     "totalLabel": "Total",
     "filterTitle": "Report Filters"
+  },
+  "chatbot": {
+    "button": "Help",
+    "title": "SIMRS Assistant",
+    "subtitle": "Menu-based help, no external AI",
+    "chooseTopic": "Choose a help category:",
+    "backToMenu": "Menu",
+    "send": "Send",
+    "searching": "Searching data...",
+    "openPage": "Open page",
+    "related": "Related topics:",
+    "notFound": "No data found for \"{{q}}\".",
+    "minLength": "Enter at least 3 characters.",
+    "lookupFailed": "Failed to fetch data from the server.",
+    "faqNoAnswer": "Sorry, that topic is not in the knowledge base yet. Try other keywords, such as \"register patient\", \"prescription\", or \"lab result\".",
+    "topic": {
+      "pasien": "Find patient information by MRN / Registration No.",
+      "tagihan": "Check bill status by Registration No. / MRN",
+      "faq": "Ask about app features (where is feature X / how do I)"
+    },
+    "prompt": {
+      "pasien": "Type the MRN (e.g. RM000001) or visit Registration No. (e.g. RJ202611220001).",
+      "tagihan": "Type the visit Registration No., MRN, or Invoice No.",
+      "faq": "Type a question about an app feature, or pick a topic below."
+    },
+    "placeholder": {
+      "pasien": "MRN / Registration No.",
+      "tagihan": "Registration No. / MRN / Invoice No.",
+      "faq": "Example: how to register a new patient"
+    },
+    "result": {
+      "pasien": "Patient data:",
+      "kunjungan": "Latest visits:",
+      "tagihan": "Bills:",
+      "antreanNo": "Queue {{no}}",
+      "total": "Total {{total}}",
+      "sisa": "Remaining {{sisa}}"
+    },
+    "kb": {
+      "pendaftaran": {
+        "title": "Visit registration",
+        "keywords": "register registration visit counter appointment schedule queue number",
+        "answer": "Open Registration > Visit Registration. Search the patient by MRN, ID number, or name, choose an available doctor schedule, then save. The system issues the Registration No. and clinic queue number automatically."
+      },
+      "pasien": {
+        "title": "New patient data",
+        "keywords": "new patient medical record mrn id identity edit data",
+        "answer": "Open Master Data > Patient, click Add, then fill in the ID number, name, date of birth, and gender. The MRN is issued automatically by the server. Patient data can also be searched and edited on the same page."
+      },
+      "antrean": {
+        "title": "Clinic queue",
+        "keywords": "queue call status waiting examined cancel clinic",
+        "answer": "Open Registration > Clinic Queue. Filter by clinic, date, or status, then move the queue status from waiting to examined, done, or cancelled. Every status change is logged."
+      },
+      "displayAntrean": {
+        "title": "Queue display screen",
+        "keywords": "display screen tv waiting room monitor public call",
+        "answer": "The queue display screen is at /display-antrean and opens without login, suitable for a waiting room TV. Data refreshes automatically and can be filtered per clinic."
+      },
+      "pemeriksaan": {
+        "title": "Doctor examination",
+        "keywords": "examination examine doctor worklist anamnesis diagnosis icd soap procedure",
+        "answer": "Doctors open Examination to see today's patient worklist. Pick a patient, fill in anamnesis and examination, then add ICD-10 diagnoses, procedures, prescriptions, and lab orders from the same page."
+      },
+      "riwayatMedis": {
+        "title": "Patient medical history",
+        "keywords": "medical history record previous visits past diagnosis",
+        "answer": "Open Medical History, search the patient by MRN or name, then review examinations, diagnoses, and procedures from previous visits."
+      },
+      "farmasi": {
+        "title": "Pharmacy and prescriptions",
+        "keywords": "pharmacy prescription medicine drug dispense process stock",
+        "answer": "Doctors write prescriptions from the examination page. Pharmacy staff open Pharmacy to see the prescription queue, process it, and hand over the medicine. Drug stock decreases automatically when a prescription is dispensed."
+      },
+      "laboratorium": {
+        "title": "Laboratory",
+        "keywords": "lab laboratory order result test sample reference range",
+        "answer": "Doctors create lab orders from the examination page. Lab staff open Laboratory to see the order worklist and enter results per test. Results outside the reference range are flagged."
+      },
+      "billing": {
+        "title": "Billing and payment",
+        "keywords": "billing bill invoice pay payment cashier paid print receipt",
+        "answer": "Open Billing. Create an invoice from an unbilled visit, then process cash, transfer, QRIS, or EDC payment. Partial payments are allowed; invoices and receipts can be printed."
+      },
+      "dashboard": {
+        "title": "Dashboard and reports",
+        "keywords": "dashboard report chart statistics revenue visits export excel pdf",
+        "answer": "Dashboard & Reports appears on the home page and the Dashboard menu. It summarizes visits per clinic, top procedures, revenue, drug usage, and payments, with a period filter and PDF/Excel export."
+      },
+      "jadwal": {
+        "title": "Doctor schedule",
+        "keywords": "doctor schedule practice day hour quota",
+        "answer": "Open Master Data > Doctor Schedule to set practice days, hours, and quota per doctor and clinic. These schedules are used during visit registration."
+      },
+      "obat": {
+        "title": "Drug master and stock",
+        "keywords": "drug medicine stock price mutation adjustment adjust",
+        "answer": "Open Master Data > Drug to add drugs and prices. Use the stock actions to adjust stock and view the mutation history."
+      },
+      "masterData": {
+        "title": "Other master data",
+        "keywords": "master doctor clinic procedure tariff icd10 lab test",
+        "answer": "The Master Data module contains Doctor, Clinic, Procedure, Lab Test, ICD-10, Drug, Doctor Schedule, and Patient. Each menu offers add, edit, delete, and search according to role permissions."
+      },
+      "userRole": {
+        "title": "Users, roles, and access rights",
+        "keywords": "user role access right permission menu module password",
+        "answer": "The System module contains User, Role, Module, Menu, and Role Access. Set read, create, update, and delete permissions per menu on the Role Access page. Sidebar menus follow the user role permissions."
+      },
+      "pengaturan": {
+        "title": "Language, theme, and menu search",
+        "keywords": "language english indonesian theme dark mode search menu ctrl",
+        "answer": "The ID/EN button in the header switches language, the theme button toggles light/dark mode, and Ctrl+K opens menu search."
+      }
+    }
   }
 }

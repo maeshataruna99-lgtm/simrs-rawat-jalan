@@ -653,5 +653,120 @@
     "transaksiCount": "{{n}} transaksi",
     "totalLabel": "Total",
     "filterTitle": "Filter Laporan"
+  },
+  "chatbot": {
+    "button": "Bantuan",
+    "title": "Asisten SIMRS",
+    "subtitle": "Bantuan berbasis menu, tanpa AI eksternal",
+    "chooseTopic": "Pilih kategori bantuan:",
+    "backToMenu": "Menu",
+    "send": "Kirim",
+    "searching": "Mencari data...",
+    "openPage": "Buka halaman",
+    "related": "Topik terkait:",
+    "notFound": "Data untuk \"{{q}}\" tidak ditemukan.",
+    "minLength": "Masukkan minimal 3 karakter.",
+    "lookupFailed": "Gagal mengambil data dari server.",
+    "faqNoAnswer": "Maaf, topik itu belum ada di basis pengetahuan. Coba kata kunci lain, misalnya \"daftar pasien\", \"resep\", atau \"hasil lab\".",
+    "topic": {
+      "pasien": "Cari informasi pasien berdasarkan No. RM / No. Registrasi",
+      "tagihan": "Cek status tagihan berdasarkan No. Registrasi / No. RM",
+      "faq": "Tanya fitur aplikasi (fitur X ada di mana / bagaimana caranya)"
+    },
+    "prompt": {
+      "pasien": "Silakan ketik No. RM (contoh RM000001) atau No. Registrasi kunjungan (contoh RJ202611220001).",
+      "tagihan": "Silakan ketik No. Registrasi kunjungan, No. RM, atau No. Invoice.",
+      "faq": "Silakan ketik pertanyaan tentang fitur aplikasi, atau pilih salah satu topik di bawah."
+    },
+    "placeholder": {
+      "pasien": "No. RM / No. Registrasi",
+      "tagihan": "No. Registrasi / No. RM / No. Invoice",
+      "faq": "Contoh: cara daftar pasien baru"
+    },
+    "result": {
+      "pasien": "Data pasien:",
+      "kunjungan": "Kunjungan terakhir:",
+      "tagihan": "Tagihan:",
+      "antreanNo": "Antrean {{no}}",
+      "total": "Total {{total}}",
+      "sisa": "Sisa {{sisa}}"
+    },
+    "kb": {
+      "pendaftaran": {
+        "title": "Pendaftaran kunjungan",
+        "keywords": "daftar registrasi kunjungan loket berobat jadwal nomor antrean",
+        "answer": "Buka menu Pendaftaran > Pendaftaran Kunjungan. Cari pasien dengan No. RM, NIK, atau nama, pilih jadwal dokter yang tersedia, lalu simpan. Sistem menerbitkan No. Registrasi dan nomor antrean poli secara otomatis."
+      },
+      "pasien": {
+        "title": "Data pasien baru",
+        "keywords": "pasien baru rekam medis rm nik identitas ubah data",
+        "answer": "Buka menu Master Data > Pasien, klik Tambah, lalu isi NIK, nama, tanggal lahir, dan jenis kelamin. No. RM diterbitkan otomatis oleh server. Data pasien juga bisa dicari dan diubah dari halaman yang sama."
+      },
+      "antrean": {
+        "title": "Antrean poli",
+        "keywords": "antrean antri panggil status menunggu diperiksa batal poli",
+        "answer": "Buka menu Pendaftaran > Antrean Poli. Filter per poli, tanggal, atau status, lalu ubah status antrean dari menunggu ke diperiksa, selesai, atau batal. Setiap perubahan status tercatat di log."
+      },
+      "displayAntrean": {
+        "title": "Layar display antrean",
+        "keywords": "display layar tv ruang tunggu monitor panggilan publik",
+        "answer": "Layar display antrean ada di alamat /display-antrean dan bisa dibuka tanpa login, cocok untuk TV ruang tunggu. Data diperbarui otomatis dan bisa difilter per poli."
+      },
+      "pemeriksaan": {
+        "title": "Pemeriksaan dokter",
+        "keywords": "periksa pemeriksaan dokter worklist anamnesa diagnosis icd soap tindakan",
+        "answer": "Dokter membuka menu Pelayanan Medis > Pemeriksaan Pasien untuk melihat worklist pasien hari ini. Pilih pasien, isi anamnesa dan pemeriksaan, tambahkan diagnosis ICD-10, tindakan, resep, dan order lab dari halaman pemeriksaan yang sama."
+      },
+      "riwayatMedis": {
+        "title": "Riwayat medis pasien",
+        "keywords": "riwayat medis rekam histori kunjungan sebelumnya diagnosis lama",
+        "answer": "Buka menu Pelayanan Medis > Riwayat Rekam Medis, cari pasien dengan No. RM atau nama, lalu lihat daftar pemeriksaan, diagnosis, dan tindakan dari kunjungan sebelumnya."
+      },
+      "farmasi": {
+        "title": "Farmasi dan resep",
+        "keywords": "farmasi resep obat apotek serah proses stok",
+        "answer": "Resep dibuat dokter dari halaman pemeriksaan. Petugas farmasi membuka menu Farmasi > Pelayanan Resep untuk melihat antrean resep, memproses, lalu menyerahkan obat. Stok obat berkurang otomatis saat resep diserahkan."
+      },
+      "laboratorium": {
+        "title": "Laboratorium",
+        "keywords": "lab laboratorium order hasil pemeriksaan sampel nilai rujukan",
+        "answer": "Dokter membuat order lab dari halaman pemeriksaan. Petugas lab membuka menu Laboratorium > Pemeriksaan Laboratorium untuk melihat worklist order, lalu mengisi hasil per pemeriksaan. Hasil di luar nilai rujukan diberi tanda."
+      },
+      "billing": {
+        "title": "Billing dan pembayaran",
+        "keywords": "billing tagihan invoice bayar pembayaran kasir lunas cetak kuitansi",
+        "answer": "Buka menu Billing > Tagihan dan Pembayaran. Buat invoice dari kunjungan yang belum ditagih, lalu proses pembayaran tunai, transfer, QRIS, atau EDC. Pembayaran boleh bertahap; invoice dan bukti bayar bisa dicetak."
+      },
+      "dashboard": {
+        "title": "Dashboard dan laporan",
+        "keywords": "dashboard laporan grafik statistik pendapatan kunjungan export excel pdf",
+        "answer": "Dashboard & Laporan tampil di beranda dan menu Dashboard. Berisi ringkasan kunjungan per poli, tindakan terbanyak, pendapatan, pemakaian obat, dan pembayaran, dengan filter periode serta export PDF/Excel."
+      },
+      "jadwal": {
+        "title": "Jadwal dokter",
+        "keywords": "jadwal dokter praktik hari jam kuota",
+        "answer": "Buka menu Master Data > Jadwal Praktik untuk mengatur hari, jam praktik, dan kuota per dokter dan poli. Jadwal ini dipakai saat pendaftaran kunjungan."
+      },
+      "obat": {
+        "title": "Master obat dan stok",
+        "keywords": "obat stok harga mutasi penyesuaian adjust",
+        "answer": "Buka menu Master Data > Obat dan Stok untuk menambah obat dan harga. Gunakan aksi stok untuk penyesuaian stok dan melihat riwayat mutasi."
+      },
+      "masterData": {
+        "title": "Master data lain",
+        "keywords": "master dokter poli tindakan tarif icd10 pemeriksaan lab",
+        "answer": "Modul Master Data berisi Dokter, Poli, Tindakan, Pemeriksaan Lab, ICD-10, Obat, Jadwal Dokter, dan Pasien. Setiap menu menyediakan tambah, ubah, hapus, dan pencarian sesuai izin role."
+      },
+      "userRole": {
+        "title": "User, role, dan hak akses",
+        "keywords": "user pengguna role hak akses izin permission menu modul password",
+        "answer": "Modul Sistem berisi Pengguna, Role, Modul, Menu, dan Hak Akses Role. Atur izin baca, tambah, ubah, dan hapus per menu di halaman Hak Akses Role. Menu yang tampil di sidebar mengikuti izin role user."
+      },
+      "pengaturan": {
+        "title": "Bahasa, tema, dan pencarian menu",
+        "keywords": "bahasa inggris english tema gelap dark mode cari menu ctrl",
+        "answer": "Tombol ID/EN di header mengganti bahasa, tombol tema mengganti mode terang/gelap, dan Ctrl+K membuka pencarian menu."
+      }
+    }
   }
 }

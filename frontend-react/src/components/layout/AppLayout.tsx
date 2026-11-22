@@ -9,6 +9,7 @@ import { Outlet, useLocation } from 'react-router';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/lib/auth-store';
 import { findMenuByPath } from '@/lib/menu';
+import { ChatbotWidget } from '@/modules/chatbot/ChatbotWidget';
 import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
 
@@ -41,6 +42,7 @@ export function AppLayout() {
           <Outlet />
         </div>
       </SidebarInset>
+      <ChatbotWidget />
     </SidebarProvider>
   );
 }
