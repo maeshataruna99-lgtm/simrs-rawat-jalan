@@ -50,6 +50,7 @@ export interface DaftarKunjunganPayload {
   pasien_id: number;
   jadwal_id: number;
   tgl_kunjungan: string;
+  penjamin?: 'umum' | 'bpjs' | 'asuransi';
 }
 
 export interface DisplayAntreanEntry {

@@ -67,6 +67,7 @@ export default function PendaftaranPage() {
   const [tglKunjungan, setTglKunjungan] = useState<string>(todayIso());
   const [selectedPoliId, setSelectedPoliId] = useState<number>(0);
   const [selectedJadwalId, setSelectedJadwalId] = useState<number>(0);
+  const [penjamin, setPenjamin] = useState<'umum' | 'bpjs' | 'asuransi'>('umum');
 
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -147,6 +148,7 @@ export default function PendaftaranPage() {
         pasien_id: selectedPasien.id,
         jadwal_id: activeJadwalId,
         tgl_kunjungan: tglKunjungan,
+        penjamin,
       });
       setTicket(created);
       toast.success(t('transaction.pendaftaran.successToast'));
@@ -292,6 +294,22 @@ export default function PendaftaranPage() {
                 </select>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="daftar-penjamin">{t('dashboard.filterPenjamin')}</Label>
+                <select
+                  id="daftar-penjamin"
+                  className={selectClassName}
+                  value={penjamin}
+                  onChange={(e) => setPenjamin(e.target.value as typeof penjamin)}
+                >
+                  {(['umum', 'bpjs', 'asuransi'] as const).map((p) => (
+                    <option key={p} value={p}>
+                      {t(`dashboard.penjaminLabel.${p}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {serverError && (
                 <p
                   role="alert"
@@ -396,11 +414,9 @@ export default function PendaftaranPage() {
         open={pasienFormOpen}
         onOpenChange={setPasienFormOpen}
         editing={null}
-        onSaved={() => {
-          void pendaftaranApi.cariPasienPendaftaran(keyword).then((res) => {
-            setPasienResults(res);
-            if (res[0]) handleSelectPasien(res[0]);
-          });
+        onSaved={(saved) => {
+          setPasienResults((prev) => [saved, ...prev.filter((p) => p.id !== saved.id)]);
+          handleSelectPasien(saved);
         }}
       />
     </div>

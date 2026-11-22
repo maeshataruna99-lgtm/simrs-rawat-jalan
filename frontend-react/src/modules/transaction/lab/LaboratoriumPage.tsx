@@ -154,7 +154,7 @@ export default function LaboratoriumPage() {
                 <HasilRow
                   key={`${d.id}-${d.hasil ?? ''}`}
                   detail={d}
-                  canUpdate={canUpdate}
+                  canUpdate={canUpdate && order.status !== 'selesai'}
                   onSaved={reload}
                 />
               ))}

@@ -5,6 +5,8 @@ namespace app\common;
 use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
+use yii\db\Query;
+use yii\web\ConflictHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -123,5 +125,22 @@ abstract class CrudService
     /** Hook sebelum hapus, contoh menolak hapus bila data masih dipakai (lempar ConflictHttpException). */
     protected function beforeDelete(ActiveRecord $model): void
     {
+    }
+
+    /**
+     * Menolak hapus bila masih ada baris aktif yang merujuk data ini.
+     * Soft delete tidak memicu FOREIGN KEY ON DELETE RESTRICT, jadi pengecekan dilakukan di aplikasi.
+     *
+     * @throws ConflictHttpException
+     */
+    protected function assertNotUsed(string $table, array $where, string $message): void
+    {
+        $query = (new Query())->from($table)->where($where);
+        if (Yii::$app->db->getTableSchema($table)?->getColumn('deleted_at') !== null) {
+            $query->andWhere(["{$table}.deleted_at" => null]);
+        }
+        if ($query->exists()) {
+            throw new ConflictHttpException($message);
+        }
     }
 }

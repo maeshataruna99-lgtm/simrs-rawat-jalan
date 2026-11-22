@@ -31,10 +31,12 @@ class Pasien extends ActiveRecord
             [['nik', 'nama', 'alamat', 'no_hp'], 'trim'],
             [['nik'], 'match', 'pattern' => '/^\d{16}$/', 'message' => 'NIK harus terdiri dari 16 digit angka.'],
             [['nama'], 'string', 'max' => 100],
-            [['tgl_lahir'], 'date', 'format' => 'php:Y-m-d', 'message' => 'Format tanggal lahir harus YYYY-MM-DD.'],
+            [['tgl_lahir'], 'date', 'format' => 'php:Y-m-d', 'message' => 'Format tanggal lahir harus YYYY-MM-DD.',
+                'max' => date('Y-m-d'), 'tooBig' => 'Tanggal lahir tidak boleh melebihi hari ini.'],
             [['jenis_kelamin'], 'in', 'range' => ['L', 'P'], 'message' => 'Jenis kelamin harus L atau P.'],
             [['alamat'], 'string'],
             [['no_hp'], 'string', 'max' => 20],
+            [['no_hp'], 'match', 'pattern' => '/^\+?[0-9]{8,15}$/', 'message' => 'No. HP harus 8-15 digit angka.'],
             [['alamat', 'no_hp'], 'default', 'value' => null],
         ];
     }

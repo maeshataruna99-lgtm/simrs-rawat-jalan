@@ -39,7 +39,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editing: PasienItem | null;
-  onSaved: () => void;
+  onSaved: (saved: PasienItem) => void;
 }
 
 /**
@@ -93,14 +93,12 @@ export function PasienForm({ open, onOpenChange, editing, onSaved }: Props) {
         no_hp: values.no_hp || null,
         alamat: values.alamat || null,
       };
-      if (editing) {
-        await pasienApi.updatePasien(editing.id, payload);
-      } else {
-        await pasienApi.createPasien(payload);
-      }
+      const saved = editing
+        ? await pasienApi.updatePasien(editing.id, payload)
+        : await pasienApi.createPasien(payload);
       toast.success(t('common.saveSuccess'));
       handleOpenChange(false);
-      onSaved();
+      onSaved(saved);
     } catch (err) {
       const fields = fieldErrors(err);
       const keys = Object.keys(fields) as (keyof FormValues)[];

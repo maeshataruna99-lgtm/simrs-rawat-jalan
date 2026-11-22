@@ -7,6 +7,8 @@
  * Cara menjalankan: node tests/concurrency/pendaftaran.mjs
  */
 
+import { freePrefix } from './free-prefix.mjs';
+
 const BASE_URL = process.env.YII_URL ?? 'http://localhost:8080';
 const PARALLEL_COUNT = 10;
 
@@ -57,6 +59,7 @@ async function main() {
       kode: `POLI-C${suffix}`,
       nama: `Poli Concurrency ${suffix}`,
       tarif_pendaftaran: 25000,
+      prefix_antrean: await freePrefix(api, token),
     },
     token,
   );

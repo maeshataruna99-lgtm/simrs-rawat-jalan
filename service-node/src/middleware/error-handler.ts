@@ -30,6 +30,11 @@ export function errorHandler(
     res.status(err.status).json(failure(err.message, err.errors));
     return;
   }
+  // Body JSON rusak dari express.json() adalah kesalahan klien, bukan server.
+  if ((err as { type?: string }).type === 'entity.parse.failed') {
+    res.status(400).json(failure('Body request bukan JSON yang valid.'));
+    return;
+  }
 
   console.error(err);
   res.status(500).json(failure('Terjadi kesalahan pada server.'));

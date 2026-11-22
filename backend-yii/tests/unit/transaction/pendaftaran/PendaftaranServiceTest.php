@@ -49,6 +49,36 @@ class PendaftaranServiceTest extends TestCase
         $this->assertCount(1, $byNama);
     }
 
+    public function testCounterTertinggalTidakMenerbitkanAntreanGandaDanPenjaminTersimpan(): void
+    {
+        $pasienService = new PasienService();
+        $p1 = $pasienService->create(['nik' => '3201010101900011', 'nama' => 'Seed', 'tgl_lahir' => '1990-01-01', 'jenis_kelamin' => 'L']);
+        $p2 = $pasienService->create(['nik' => '3201010101900012', 'nama' => 'Baru', 'tgl_lahir' => '1990-01-01', 'jenis_kelamin' => 'P']);
+        $dokter = (new DokterService())->create(['kode' => 'DR009', 'nama' => 'dr. Seed', 'sip' => 'SIP/009', 'jenis_tenaga' => 'dokter']);
+        $poli = (new PoliService())->create(['kode' => 'POLI-S', 'nama' => 'Poli Seed', 'prefix_antrean' => 'S', 'tarif_pendaftaran' => 25000]);
+        $jadwal = (new JadwalDokterService())->create([
+            'dokter_id' => $dokter->id, 'poli_id' => $poli->id, 'hari' => 1,
+            'jam_mulai' => '08:00', 'jam_selesai' => '12:00', 'kuota' => 10,
+        ]);
+
+        // Kunjungan ala seeder: no_antrean 1 tanpa menaikkan t_sequence_counter.
+        Yii::$app->db->createCommand()->insert('t_kunjungan', [
+            'no_kunjungan' => 'RJSEED0001', 'pasien_id' => $p1->id, 'poli_id' => $poli->id,
+            'dokter_id' => $dokter->id, 'jadwal_id' => $jadwal->id, 'tgl_kunjungan' => self::seninDepan(),
+            'no_antrean' => 1, 'status' => 'menunggu',
+        ])->execute();
+
+        $k = (new PendaftaranService())->daftar([
+            'pasien_id' => $p2->id,
+            'jadwal_id' => $jadwal->id,
+            'tgl_kunjungan' => self::seninDepan(),
+            'penjamin' => 'bpjs',
+        ]);
+
+        $this->assertSame(2, $k->no_antrean);
+        $this->assertSame('bpjs', $k->penjamin);
+    }
+
     public function testPendaftaranSesuaiJadwalAntreanBerurutanDanKuotaPenuhDitolak(): void
     {
         $pasienService = new PasienService();

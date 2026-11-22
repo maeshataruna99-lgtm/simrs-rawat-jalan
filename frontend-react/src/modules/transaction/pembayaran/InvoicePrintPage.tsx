@@ -71,7 +71,7 @@ export default function InvoicePrintPage() {
 
   return (
     <div className="space-y-4">
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 print:hidden">
+      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-2 print:hidden">
         <Button asChild variant="outline" size="sm">
           <Link to="/transaction/billing">
             <ArrowLeft className="mr-1.5 size-4" />
@@ -142,7 +142,7 @@ export default function InvoicePrintPage() {
           </dl>
         </section>
 
-        <section className="mt-6">
+        <section className="mt-6 overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-y border-gray-400 bg-gray-100 text-left">
@@ -213,7 +213,7 @@ export default function InvoicePrintPage() {
         </section>
 
         {invoice.pembayaran.length > 0 && (
-          <section className="mt-6">
+          <section className="mt-6 overflow-x-auto">
             <h3 className="mb-2 text-sm font-semibold">
               {t('transaction.billing.riwayatPembayaran')}
             </h3>

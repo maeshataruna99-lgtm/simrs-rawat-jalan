@@ -86,15 +86,23 @@ beforeAll(async () => {
   );
   ids.userId = user.rows[0].id;
 
+  // prefix_antrean wajib dan unik di antara poli aktif: ambil dua huruf yang masih bebas.
+  const freePrefix = await pool.query<{ huruf: string }>(
+    `SELECT chr(64 + n) AS huruf FROM generate_series(1, 26) n
+     WHERE chr(64 + n) NOT IN (SELECT prefix_antrean FROM m_poli WHERE deleted_at IS NULL)
+     ORDER BY n DESC LIMIT 2`,
+  );
+  const [prefixA, prefixB] = freePrefix.rows.map((r) => r.huruf);
+
   const poliA = await pool.query<{ id: number }>(
-    `INSERT INTO m_poli (kode, nama, tarif_pendaftaran) VALUES ($1, 'Poli Umum Dash', 25000) RETURNING id`,
-    [`PA_${SFX}`],
+    `INSERT INTO m_poli (kode, nama, tarif_pendaftaran, prefix_antrean) VALUES ($1, 'Poli Umum Dash', 25000, $2) RETURNING id`,
+    [`PA_${SFX}`, prefixA],
   );
   ids.poliA = poliA.rows[0].id;
 
   const poliB = await pool.query<{ id: number }>(
-    `INSERT INTO m_poli (kode, nama, tarif_pendaftaran) VALUES ($1, 'Poli Gigi Dash', 30000) RETURNING id`,
-    [`PB_${SFX}`],
+    `INSERT INTO m_poli (kode, nama, tarif_pendaftaran, prefix_antrean) VALUES ($1, 'Poli Gigi Dash', 30000, $2) RETURNING id`,
+    [`PB_${SFX}`, prefixB],
   );
   ids.poliB = poliB.rows[0].id;
 

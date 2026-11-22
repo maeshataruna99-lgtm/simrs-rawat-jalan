@@ -141,16 +141,24 @@ class OrderLabService
     {
         $key = $idempotencyKey === null ? null : mb_substr(trim($idempotencyKey), 0, 100);
         $key = $key === '' ? null : $key;
+        $hasil = trim((string) ($data['hasil'] ?? ''));
         if ($key !== null && ($lama = OrderLabDetail::findOne(['idempotency_key' => $key])) !== null) {
+            if ((int) $lama->id !== $detailId || $lama->hasil !== $hasil) {
+                throw new ConflictHttpException('Idempotency-Key sudah digunakan untuk hasil dengan isi berbeda.');
+            }
+
             return ['detail' => $lama, 'duplikat' => true];
         }
 
-        $hasil = trim((string) ($data['hasil'] ?? ''));
         if ($hasil === '' || mb_strlen($hasil) > 100) {
             throw new ValidationException(['hasil' => ['Hasil wajib diisi, maksimal 100 karakter.']]);
         }
-        if (OrderLabDetail::findOne($detailId) === null) {
+        $existing = OrderLabDetail::findOne($detailId);
+        if ($existing === null) {
             throw new NotFoundHttpException('Detail order laboratorium tidak ditemukan.');
+        }
+        if (OrderLab::find()->where(['id' => $existing->order_id, 'status' => OrderLab::STATUS_SELESAI])->exists()) {
+            throw new ConflictHttpException('Order laboratorium sudah selesai, hasil tidak dapat diubah.');
         }
 
         try {
@@ -161,7 +169,8 @@ class OrderLabService
 
                 $detail->hasil = $hasil;
                 $detail->flag = self::hitungFlag($hasil, $detail->nilai_rujukan);
-                $detail->idempotency_key = $key;
+                // Simpan dari UI (tanpa key) tidak boleh menghapus key kiriman eksternal sebelumnya.
+                $detail->idempotency_key = $key ?? $detail->idempotency_key;
                 $detail->diinput_oleh = Yii::$app->has('user') ? Yii::$app->user->id : null;
                 $detail->diinput_at = new Expression('CURRENT_TIMESTAMP');
                 $detail->save(false);

@@ -7,6 +7,8 @@
  * Cara menjalankan: node tests/concurrency/stok-obat.mjs (data uji dibuat lewat API di database dev).
  */
 
+import { freePrefix } from './free-prefix.mjs';
+
 const BASE_URL = process.env.YII_URL ?? 'http://localhost:8080';
 
 async function api(method, path, body, token) {
@@ -47,7 +49,7 @@ async function main() {
   const poli = await api(
     'POST',
     '/master/poli',
-    { kode: `POLI-S${sfx}`, nama: `Poli Stok ${sfx}`, tarif_pendaftaran: 25000 },
+    { kode: `POLI-S${sfx}`, nama: `Poli Stok ${sfx}`, tarif_pendaftaran: 25000, prefix_antrean: await freePrefix(api, token) },
     token,
   );
   const jadwal = await api(

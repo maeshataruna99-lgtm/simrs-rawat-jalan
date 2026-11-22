@@ -148,6 +148,11 @@ class PemeriksaanServiceTest extends TestCase
         $detail = $service->detail($kunjunganId, null);
         $this->assertCount(1, $detail['diagnosis']);
         $this->assertSame($icd[2], $detail['diagnosis'][0]['icd10_id']);
+
+        // Kunjungan selesai: diagnosis terkunci.
+        \Yii::$app->db->createCommand()->update('t_kunjungan', ['status' => 'selesai'], ['id' => $kunjunganId])->execute();
+        $this->expectException(\yii\web\ConflictHttpException::class);
+        $service->simpanDiagnosis($kunjunganId, [['icd10_id' => $icd[0], 'jenis' => 'utama']], null);
     }
 
     public function testRiwayatMedisBerisiPemeriksaanDanDiagnosisPerKunjungan(): void

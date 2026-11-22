@@ -17,7 +17,7 @@ class SequenceService
      *
      * Dipakai di: nextFormatted(), PendaftaranService.
      */
-    public static function next(string $kode, string $periode = 'ALL'): int
+    public static function next(string $kode, string $periode = 'ALL', int $floor = 0): int
     {
         $db = Yii::$app->db;
         $userId = Yii::$app->has('user') ? Yii::$app->user->id : null;
@@ -34,7 +34,8 @@ class SequenceService
             [':kode' => $kode, ':periode' => $periode]
         )->queryScalar();
 
-        $next = $current + 1;
+        // $floor = nilai terbesar yang sudah dipakai di tabel data, agar counter yang tertinggal (data impor/seed) tidak menerbitkan nomor ganda.
+        $next = max($current, $floor) + 1;
 
         $db->createCommand(
             'UPDATE t_sequence_counter

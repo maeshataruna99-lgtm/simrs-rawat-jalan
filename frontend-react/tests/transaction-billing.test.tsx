@@ -84,6 +84,7 @@ const pembayaranSatu: PembayaranRingkas = {
   metode: 'tunai',
   jumlah: 40000,
   no_referensi: null,
+  total_bayar_saat_itu: 40000,
   kasir_id: 6,
   dibayar_at: '2026-11-22 09:10:00',
   created_at: '2026-11-22 09:10:00',

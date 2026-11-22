@@ -60,6 +60,8 @@ export function InvoiceDetailDialog({ open, invoice, canPay, onOpenChange, onPay
     let cancelled = false;
     void (async () => {
       await Promise.resolve();
+      // Kosongkan dulu agar audit log invoice sebelumnya tidak tampil saat menunggu respons.
+      if (!cancelled) setAuditLogs([]);
       try {
         const logs = await pembayaranApi.getAuditLogInvoice(invoice.id);
         if (!cancelled) {

@@ -9,11 +9,13 @@ use app\modules\master\lab\PemeriksaanLabService;
 use app\modules\master\pasien\PasienService;
 use app\modules\master\poli\PoliService;
 use app\modules\transaction\lab\OrderLab;
+use app\modules\transaction\lab\OrderLabDetail;
 use app\modules\transaction\lab\OrderLabService;
 use app\modules\transaction\pemeriksaan\PemeriksaanService;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use app\modules\transaction\pendaftaran\PendaftaranService;
 use app\tests\TestCase;
+use yii\web\ConflictHttpException;
 use yii\web\ForbiddenHttpException;
 
 /**
@@ -82,13 +84,30 @@ class OrderLabServiceTest extends TestCase
         $this->assertSame('tinggi', $first['detail']->flag);
         $this->assertSame('diproses', OrderLab::findOne($order['id'])->status);
 
-        // Key sama dikirim ulang dengan isi berbeda: data lama dikembalikan, tidak diubah.
-        $ulang = $service->simpanHasil($gula['id'], ['hasil' => '999'], 'kunci-1');
+        // Key sama dikirim ulang dengan isi sama: data lama dikembalikan.
+        $ulang = $service->simpanHasil($gula['id'], ['hasil' => '180'], 'kunci-1');
         $this->assertTrue($ulang['duplikat']);
         $this->assertSame('180', $ulang['detail']->hasil);
 
+        // Key sama dengan isi berbeda ditolak, data tidak berubah.
+        try {
+            $service->simpanHasil($gula['id'], ['hasil' => '999'], 'kunci-1');
+            $this->fail('Key sama dengan isi berbeda seharusnya ditolak');
+        } catch (ConflictHttpException) {
+        }
+        $this->assertSame('180', OrderLabDetail::findOne($gula['id'])->hasil);
+
         $service->simpanHasil($hb['id'], ['hasil' => '13'], null);
         $this->assertSame('selesai', OrderLab::findOne($order['id'])->status);
+        // Simpan tanpa key tidak menghapus key kiriman sebelumnya.
+        $this->assertSame('kunci-1', OrderLabDetail::findOne($gula['id'])->idempotency_key);
+
+        // Order selesai: hasil terkunci.
+        try {
+            $service->simpanHasil($hb['id'], ['hasil' => '14'], null);
+            $this->fail('Hasil order selesai seharusnya tidak bisa diubah');
+        } catch (ConflictHttpException) {
+        }
 
         // Hasil tampil di riwayat rekam medis kunjungan tersebut.
         $pasienId = Kunjungan::findOne($d['kunjungan'])->pasien_id;

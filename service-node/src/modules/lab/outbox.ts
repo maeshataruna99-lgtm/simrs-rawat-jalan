@@ -46,7 +46,11 @@ export async function enqueue(input: LabResultInput): Promise<OutboxRow> {
     'SELECT id, idempotency_key, status, percobaan, payload FROM t_integration_outbox WHERE idempotency_key = $1',
     [input.idempotency_key],
   );
-  return existing.rows[0];
+  const row = existing.rows[0];
+  if (row && (row.payload.detail_id !== input.detail_id || row.payload.hasil !== input.hasil)) {
+    throw new AppError(409, 'Idempotency-Key sudah digunakan untuk hasil dengan isi berbeda.');
+  }
+  return row;
 }
 
 /**

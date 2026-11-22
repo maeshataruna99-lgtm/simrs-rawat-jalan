@@ -105,7 +105,7 @@ class PendaftaranService
 
         try {
             /** @var Kunjungan $kunjungan */
-            $kunjungan = Yii::$app->db->transaction(function () use ($pasien, $jadwal, $tglKunjungan) {
+            $kunjungan = Yii::$app->db->transaction(function () use ($pasien, $jadwal, $tglKunjungan, $data) {
                 $db = Yii::$app->db;
 
                 // Kunci baris jadwal agar pengecekan kuota dan penerbitan antrean pada jadwal yang sama berjalan serial.
@@ -143,9 +143,17 @@ class PendaftaranService
                     ]);
                 }
 
+                $maxAntrean = (int) Kunjungan::find()
+                    ->where([
+                        'poli_id' => $jadwal->poli_id,
+                        'dokter_id' => $jadwal->dokter_id,
+                        'tgl_kunjungan' => $tglKunjungan,
+                    ])
+                    ->max('no_antrean');
                 $noAntrean = SequenceService::next(
                     "ANTREAN:{$jadwal->poli_id}:{$jadwal->dokter_id}",
-                    $tglKunjungan
+                    $tglKunjungan,
+                    $maxAntrean
                 );
                 $ymd = str_replace('-', '', $tglKunjungan);
                 $noKunjungan = SequenceService::nextFormatted('KUNJUNGAN', $ymd, "RJ{$ymd}", 4);
@@ -182,10 +190,14 @@ class PendaftaranService
 
                 return $model;
             });
-        } catch (IntegrityException) {
-            throw new ConflictHttpException(
-                'Pasien sudah memiliki kunjungan aktif pada poli dan tanggal yang sama.'
-            );
+        } catch (IntegrityException $e) {
+            if (str_contains($e->getMessage(), 'uq_t_kunjungan_pasien_poli_tgl_aktif')) {
+                throw new ConflictHttpException(
+                    'Pasien sudah memiliki kunjungan aktif pada poli dan tanggal yang sama.'
+                );
+            }
+            Yii::error($e->getMessage(), __METHOD__);
+            throw new ConflictHttpException('Pendaftaran bentrok dengan transaksi lain, silakan coba lagi.');
         }
 
         return $kunjungan;

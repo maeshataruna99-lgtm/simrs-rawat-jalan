@@ -136,4 +136,18 @@ class PembayaranServiceTest extends TestCase
         $this->expectException(ConflictHttpException::class);
         $svc->bayar(['invoice_id' => $f['invoice'] + 99999, 'metode' => 'tunai', 'jumlah' => 25000], $f['kasir'], 'idem-uji-84-beda');
     }
+
+    public function testTolakIdempotencyKeySamaDenganIsiBerbedaDanKwitansiMemakaiSaldoSaatItu(): void
+    {
+        $f = $this->siapkan();
+        $svc = new PembayaranService();
+        $pertama = $svc->bayar(['invoice_id' => $f['invoice'], 'metode' => 'tunai', 'jumlah' => 25000], $f['kasir'], 'idem-isi-1');
+        $svc->bayar(['invoice_id' => $f['invoice'], 'metode' => 'tunai', 'jumlah' => 10000], $f['kasir'], 'idem-isi-2');
+
+        // Kwitansi cicilan pertama tetap menunjukkan akumulasi sampai cicilan itu saja.
+        $this->assertSame(25000.0, $svc->detail($pertama['pembayaran']->id)->toArray()['total_bayar_saat_itu']);
+
+        $this->expectException(ConflictHttpException::class);
+        $svc->bayar(['invoice_id' => $f['invoice'], 'metode' => 'non_tunai', 'jumlah' => 1], $f['kasir'], 'idem-isi-1');
+    }
 }

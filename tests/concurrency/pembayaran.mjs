@@ -8,6 +8,8 @@
  */
 import crypto from 'node:crypto';
 
+import { freePrefix } from './free-prefix.mjs';
+
 const BASE_URL = process.env.YII_URL ?? 'http://localhost:8080';
 
 async function api(method, path, body, token, extraHeaders = {}) {
@@ -43,7 +45,7 @@ async function main() {
   const poli = await api(
     'POST',
     '/master/poli',
-    { kode: `POLI-P${sfx}`, nama: `Poli Bayar ${sfx}`, tarif_pendaftaran: 25000 },
+    { kode: `POLI-P${sfx}`, nama: `Poli Bayar ${sfx}`, tarif_pendaftaran: 25000, prefix_antrean: await freePrefix(api, adminToken) },
     adminToken,
   );
   const dokter = await api(

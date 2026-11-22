@@ -116,23 +116,28 @@ export default function PemeriksaanPage() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: toFormValues(null) });
 
-  const load = useCallback(async () => {
-    try {
-      const data = await pemeriksaanApi.detailPemeriksaan(kunjunganId);
-      setDetail(data);
-      reset(toFormValues(data.pemeriksaan));
-      setDiagnosis(
-        data.diagnosis.map((d) => ({
-          icd10_id: d.icd10_id,
-          kode: d.icd10?.kode ?? '',
-          nama: d.icd10?.nama ?? '',
-          jenis: d.jenis,
-        })),
-      );
-    } catch (err) {
-      setLoadError(errorMessage(err, t('common.loadFailed')));
-    }
-  }, [kunjunganId, reset, t]);
+  // syncDiagnosis=false dipakai setelah simpan pemeriksaan: muat ulang yang datang terlambat tidak boleh menimpa diagnosis yang sedang diisi.
+  const load = useCallback(
+    async (syncDiagnosis = true) => {
+      try {
+        const data = await pemeriksaanApi.detailPemeriksaan(kunjunganId);
+        setDetail(data);
+        reset(toFormValues(data.pemeriksaan));
+        if (!syncDiagnosis) return;
+        setDiagnosis(
+          data.diagnosis.map((d) => ({
+            icd10_id: d.icd10_id,
+            kode: d.icd10?.kode ?? '',
+            nama: d.icd10?.nama ?? '',
+            jenis: d.jenis,
+          })),
+        );
+      } catch (err) {
+        setLoadError(errorMessage(err, t('common.loadFailed')));
+      }
+    },
+    [kunjunganId, reset, t],
+  );
 
   useEffect(() => {
     void (async () => {
@@ -161,7 +166,7 @@ export default function PemeriksaanPage() {
     try {
       await pemeriksaanApi.simpanPemeriksaan(kunjunganId, payload);
       toast.success(t('transaction.pemeriksaan.saved'));
-      await load();
+      await load(false);
     } catch (err) {
       const fields = fieldErrors(err);
       Object.entries(fields).forEach(([key, msgs]) =>

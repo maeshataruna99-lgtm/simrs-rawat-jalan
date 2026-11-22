@@ -3,7 +3,7 @@
  *
  * Dipakai di: halaman master sistem (UserPage, RolePage, ModulePage, MenuPage) dan master data.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { errorMessage } from '@/lib/api-client';
 
@@ -41,8 +41,12 @@ export function useCrud<TItem, TFilter extends Record<string, unknown>>(
 
   const filterKey = JSON.stringify(filter);
 
+  // Nomor request terakhir: respons yang datang terlambat dari pencarian lama diabaikan agar tabel tidak menampilkan hasil basi.
+  const requestSeq = useRef(0);
+
   const reload = useCallback(async () => {
     await Promise.resolve();
+    const seq = ++requestSeq.current;
     setLoading(true);
     setError(null);
     try {
@@ -52,12 +56,14 @@ export function useCrud<TItem, TFilter extends Record<string, unknown>>(
         page,
         per_page: perPage,
       });
+      if (seq !== requestSeq.current) return;
       setItems(result.items);
       setTotal(result.meta?.total ?? result.items.length);
     } catch (err) {
+      if (seq !== requestSeq.current) return;
       setError(errorMessage(err, t('common.loadFailed')));
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
   }, [fetcher, filterKey, page, perPage, t]);
 

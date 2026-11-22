@@ -80,6 +80,11 @@ class PasienService extends CrudService
         return $pasien;
     }
 
+    protected function beforeDelete(ActiveRecord $model): void
+    {
+        $this->assertNotUsed('t_kunjungan', ['and', ['pasien_id' => $model->id], ['status' => ['menunggu', 'diperiksa']]], 'Pasien masih memiliki kunjungan yang belum selesai.');
+    }
+
     private function assertUniqueNik(string $nik, ?int $ignoreId = null): void
     {
         $query = Pasien::findActive()->andWhere(['nik' => $nik]);

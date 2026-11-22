@@ -36,9 +36,11 @@ class TindakanKunjunganServiceTest extends TestCase
         $masterService = new TindakanService();
         $injeksi = $masterService->create(['kode' => 'TND01', 'nama' => 'Injeksi', 'tarif' => 50000]);
         $nebu = $masterService->create(['kode' => 'TND02', 'nama' => 'Nebulizer', 'tarif' => 75000]);
+        $poliGigi = (new PoliService())->create(['kode' => 'POLI-GIGI', 'nama' => 'Poli Gigi', 'prefix_antrean' => 'G', 'tarif_pendaftaran' => 25000]);
+        $tambal = $masterService->create(['kode' => 'TND03', 'nama' => 'Tambal Gigi', 'tarif' => 150000, 'poli_id' => $poliGigi->id]);
 
         $service = new TindakanKunjunganService();
-        foreach ([['tindakan_id' => $injeksi->id, 'qty' => 0], ['tindakan_id' => 999999]] as $salah) {
+        foreach ([['tindakan_id' => $injeksi->id, 'qty' => 0], ['tindakan_id' => 999999], ['tindakan_id' => $tambal->id]] as $salah) {
             try {
                 $service->tambah($kunjungan->id, $salah, $dokter->id);
                 $this->fail('Input tindakan tidak valid seharusnya ditolak');

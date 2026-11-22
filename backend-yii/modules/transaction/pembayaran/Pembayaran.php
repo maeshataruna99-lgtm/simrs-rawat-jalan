@@ -55,6 +55,11 @@ class Pembayaran extends ActiveRecord
     {
         $fields = parent::fields();
         $fields['jumlah'] = fn () => (float) $this->jumlah;
+        // Akumulasi pembayaran invoice sampai transaksi ini, agar kwitansi cicilan lama tidak menampilkan saldo terkini.
+        $fields['total_bayar_saat_itu'] = fn () => (float) self::find()
+            ->where(['invoice_id' => $this->invoice_id])
+            ->andWhere(['<=', 'id', $this->id])
+            ->sum('jumlah');
         $fields['kasir'] = fn () => $this->kasir ? [
             'id' => $this->kasir->id,
             'username' => $this->kasir->username,

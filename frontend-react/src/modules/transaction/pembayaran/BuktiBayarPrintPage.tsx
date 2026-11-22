@@ -137,11 +137,17 @@ export default function BuktiBayarPrintPage() {
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-200 pt-2 text-xs text-gray-600">
               <span>
                 {t('transaction.billing.totalTagihan')}: {formatRupiah(inv.total)} ·{' '}
-                {t('transaction.billing.sudahDibayar')}: {formatRupiah(inv.total_bayar)} ·{' '}
-                {t('transaction.billing.sisaTagihan')}: {formatRupiah(inv.sisa_tagihan)}
+                {t('transaction.billing.sudahDibayar')}:{' '}
+                {formatRupiah(pembayaran.total_bayar_saat_itu)} ·{' '}
+                {t('transaction.billing.sisaTagihan')}:{' '}
+                {formatRupiah(Math.max(inv.total - pembayaran.total_bayar_saat_itu, 0))}
               </span>
               <Badge variant="outline" className="border-gray-400 text-gray-900">
-                {t(`transaction.billing.statusLabel.${inv.status}`)}
+                {t(
+                  `transaction.billing.statusLabel.${
+                    pembayaran.total_bayar_saat_itu >= inv.total ? 'lunas' : 'dibayar_sebagian'
+                  }`,
+                )}
               </Badge>
             </div>
           )}

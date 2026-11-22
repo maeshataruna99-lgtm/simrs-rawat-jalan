@@ -33,6 +33,7 @@ export interface PembayaranRingkas {
   kasir_id: number;
   dibayar_at: string;
   created_at: string;
+  total_bayar_saat_itu: number;
   kasir: { id: number; username: string; nama: string } | null;
   invoice?: {
     id: number;

@@ -35,7 +35,7 @@ class PembayaranService
         $validated = $this->validasiInput($data);
 
         if (($lama = Pembayaran::findOne(['idempotency_key' => $key])) !== null) {
-            return $this->hasilIdempoten($lama, $validated['invoice_id']);
+            return $this->hasilIdempoten($lama, $validated);
         }
 
         $tx = Yii::$app->db->beginTransaction();
@@ -54,7 +54,7 @@ class PembayaranService
             if (($lama = Pembayaran::findOne(['idempotency_key' => $key])) !== null) {
                 $tx->rollBack();
 
-                return $this->hasilIdempoten($lama, $validated['invoice_id']);
+                return $this->hasilIdempoten($lama, $validated);
             }
 
             if ($row['status'] === Invoice::STATUS_LUNAS) {
@@ -110,7 +110,7 @@ class PembayaranService
             // Pengaman terakhir bila dua transaksi berbeda lolos bersamaan dengan idempotency_key sama.
             $lama = Pembayaran::findOne(['idempotency_key' => $key]);
             if ($lama !== null) {
-                return $this->hasilIdempoten($lama, $validated['invoice_id']);
+                return $this->hasilIdempoten($lama, $validated);
             }
             throw $e;
         } catch (\Throwable $e) {
@@ -222,10 +222,13 @@ class PembayaranService
      *
      * @throws ConflictHttpException
      */
-    private function hasilIdempoten(Pembayaran $lama, int $invoiceId): array
+    private function hasilIdempoten(Pembayaran $lama, array $validated): array
     {
-        if ((int) $lama->invoice_id !== $invoiceId) {
+        if ((int) $lama->invoice_id !== $validated['invoice_id']) {
             throw new ConflictHttpException('Idempotency-Key sudah digunakan untuk invoice lain.');
+        }
+        if ($lama->metode !== $validated['metode'] || round((float) $lama->jumlah, 2) !== round($validated['jumlah'], 2)) {
+            throw new ConflictHttpException('Idempotency-Key sudah digunakan untuk pembayaran dengan isi berbeda.');
         }
 
         return [

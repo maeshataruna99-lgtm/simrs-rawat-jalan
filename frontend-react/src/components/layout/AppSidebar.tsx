@@ -6,7 +6,7 @@
  * Dipakai di: components/layout/AppLayout.tsx.
  */
 import { Check, ChevronDown, Hospital, LayoutGrid, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useLocation } from 'react-router';
 import { AppIcon } from '@/components/AppIcon';
@@ -25,6 +25,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarSeparator,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/lib/auth-store';
 import { isPathActive } from '@/lib/menu';
@@ -46,6 +47,12 @@ export function AppSidebar({ activeModule, onSelectModule }: Props) {
   const logout = useAuthStore((s) => s.logout);
   const modules = user?.modules ?? [];
   const [pickerOpen, setPickerOpen] = useState(false);
+  const { setOpenMobile } = useSidebar();
+
+  // Drawer mobile ditutup setiap pindah halaman agar konten tujuan langsung terlihat.
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [pathname, setOpenMobile]);
 
   return (
     <Sidebar collapsible="icon" className="print:hidden">

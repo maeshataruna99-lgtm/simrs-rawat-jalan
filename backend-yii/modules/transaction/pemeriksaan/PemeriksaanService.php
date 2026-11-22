@@ -117,8 +117,8 @@ class PemeriksaanService
     public function simpanDiagnosis(int $kunjunganId, mixed $items, ?int $dokterId): array
     {
         $kunjungan = $this->kunjunganMilik($kunjunganId, $dokterId);
-        if ($kunjungan->status === Kunjungan::STATUS_BATAL) {
-            throw new ConflictHttpException('Kunjungan batal tidak dapat diberi diagnosis.');
+        if (!in_array($kunjungan->status, [Kunjungan::STATUS_MENUNGGU, Kunjungan::STATUS_DIPERIKSA], true)) {
+            throw new ConflictHttpException("Kunjungan berstatus {$kunjungan->status} tidak dapat diubah diagnosisnya.");
         }
 
         $items = is_array($items) ? array_values($items) : [];

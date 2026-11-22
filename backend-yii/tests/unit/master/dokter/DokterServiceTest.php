@@ -41,6 +41,25 @@ class DokterServiceTest extends TestCase
         $this->assertSame(1, $service->list(['spesialis' => 'Penyakit Dalam'])->getTotalCount());
     }
 
+    public function testDokterDanPoliYangMasihPunyaJadwalTidakBisaDihapus(): void
+    {
+        $dokter = (new DokterService())->create(['kode' => 'DR010', 'nama' => 'dr. Jadwal', 'sip' => 'SIP/010', 'jenis_tenaga' => 'dokter']);
+        $poli = (new \app\modules\master\poli\PoliService())->create(['kode' => 'POLI-J', 'nama' => 'Poli Jadwal', 'prefix_antrean' => 'J', 'tarif_pendaftaran' => 0]);
+        (new \app\modules\master\jadwal\JadwalDokterService())->create([
+            'dokter_id' => $dokter->id, 'poli_id' => $poli->id, 'hari' => 1,
+            'jam_mulai' => '08:00', 'jam_selesai' => '12:00', 'kuota' => 5,
+        ]);
+
+        foreach ([[new DokterService(), $dokter->id], [new \app\modules\master\poli\PoliService(), $poli->id]] as [$svc, $id]) {
+            try {
+                $svc->delete($id);
+                $this->fail('Data yang masih dipakai jadwal seharusnya tidak bisa dihapus');
+            } catch (\yii\web\ConflictHttpException) {
+            }
+        }
+        $this->assertNotNull((new DokterService())->find($dokter->id));
+    }
+
     public function testKodeAtauSipGandaDitolak(): void
     {
         $service = new DokterService();

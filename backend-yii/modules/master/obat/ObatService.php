@@ -140,4 +140,13 @@ class ObatService extends CrudService
 
         return array_map(fn (StokMutasi $row) => $row->toArray(), $rows);
     }
+
+    protected function beforeDelete(ActiveRecord $model): void
+    {
+        $this->assertNotUsed(
+            't_resep_detail',
+            ['and', ['obat_id' => $model->id], ['resep_id' => (new \yii\db\Query())->select('id')->from('t_resep')->where(['status' => ['baru', 'diproses']])]],
+            'Obat masih dipakai pada resep yang belum diserahkan.'
+        );
+    }
 }

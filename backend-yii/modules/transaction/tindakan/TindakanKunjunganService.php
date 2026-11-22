@@ -61,6 +61,8 @@ class TindakanKunjunganService
             : Tindakan::findActive()->andWhere(['id' => $tindakanId, 'is_active' => true])->one();
         if ($tindakan === null) {
             $errors['tindakan_id'] = ['Tindakan tidak ditemukan atau nonaktif.'];
+        } elseif ($tindakan->poli_id !== null && (int) $tindakan->poli_id !== (int) $kunjungan->poli_id) {
+            $errors['tindakan_id'] = ['Tindakan tidak tersedia untuk poli kunjungan ini.'];
         }
         if ($errors !== []) {
             throw new ValidationException($errors);

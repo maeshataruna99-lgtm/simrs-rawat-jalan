@@ -54,6 +54,23 @@ class PasienServiceTest extends TestCase
         ]);
     }
 
+    public function testTanggalLahirMasaDepanDanNoHpBukanAngkaDitolak(): void
+    {
+        foreach ([['tgl_lahir' => '2999-01-01'], ['no_hp' => 'abc']] as $salah) {
+            try {
+                (new PasienService())->create(array_merge([
+                    'nik' => '3201010101900099',
+                    'nama' => 'Data Salah',
+                    'tgl_lahir' => '1990-01-01',
+                    'jenis_kelamin' => 'L',
+                ], $salah));
+                $this->fail('Data tidak valid seharusnya ditolak: ' . json_encode($salah));
+            } catch (ValidationException) {
+            }
+        }
+        $this->assertFalse(\app\modules\master\pasien\Pasien::find()->where(['nik' => '3201010101900099'])->exists());
+    }
+
     public function testFormatNikTidakValidDitolak422(): void
     {
         $this->expectException(ValidationException::class);
