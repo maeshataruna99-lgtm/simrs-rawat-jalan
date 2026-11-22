@@ -134,4 +134,11 @@ describe('DashboardPage (poin 9.4)', () => {
       });
     });
   });
+  it('beranda (/) langsung menampilkan dashboard untuk role dengan izin dashboard', async () => {
+    renderAt('/');
+
+    expect(await screen.findByRole('heading', { name: 'Dashboard & Laporan' })).toBeInTheDocument();
+    expect(await screen.findByText('RJ202611220001')).toBeInTheDocument();
+    expect(screen.getByTestId('kpi-kunjungan')).toHaveTextContent('12');
+  });
 });

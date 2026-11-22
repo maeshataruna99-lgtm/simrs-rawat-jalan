@@ -2,7 +2,7 @@
  * Komponen empty state bersama untuk tabel, grafik, dan daftar yang belum memiliki data.
  * Mendukung tema terang/gelap serta tata letak ringkas maupun penuh.
  *
- * Dipakai di: AppDataTable.tsx, DashboardCharts.tsx, HomePage.tsx, tests/components.test.tsx.
+ * Dipakai di: AppDataTable.tsx, DashboardCharts.tsx, tests/components.test.tsx.
  */
 import { Inbox } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -19,7 +19,7 @@ interface Props {
 /**
  * Merender tampilan kosong yang informatif dan responsif.
  *
- * Dipakai di: AppDataTable.tsx, DashboardCharts.tsx, HomePage.tsx.
+ * Dipakai di: AppDataTable.tsx, DashboardCharts.tsx.
  */
 export function AppEmptyState({ title, description, action, compact = false, className }: Props) {
   return (

@@ -331,125 +331,137 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('dashboard.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('dashboard.subtitle')}</p>
+          <p className="text-sm text-muted-foreground">
+            {t('dashboard.subtitle')} · {periode.from} s/d {periode.to}
+          </p>
         </div>
-
-        <form onSubmit={handleApplyPeriode} className="flex flex-wrap items-end gap-2">
-          <div className="space-y-1">
-            <Label htmlFor="dash-from" className="text-xs">
-              {t('dashboard.fromDate')}
-            </Label>
-            <Input
-              id="dash-from"
-              type="date"
-              value={fromInput}
-              onChange={(e) => setFromInput(e.target.value)}
-              className="w-40"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="dash-to" className="text-xs">
-              {t('dashboard.toDate')}
-            </Label>
-            <Input
-              id="dash-to"
-              type="date"
-              value={toInput}
-              onChange={(e) => setToInput(e.target.value)}
-              className="w-40"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="dash-dokter" className="text-xs">
-              {t('dashboard.filterDokter')}
-            </Label>
-            <select
-              id="dash-dokter"
-              className={selectClassName}
-              value={dokterInput}
-              onChange={(e) => setDokterInput(e.target.value)}
-            >
-              <option value="">{t('common.all')}</option>
-              {filterOptions.dokter.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nama}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="dash-penjamin" className="text-xs">
-              {t('dashboard.filterPenjamin')}
-            </Label>
-            <select
-              id="dash-penjamin"
-              className={selectClassName}
-              value={penjaminInput}
-              onChange={(e) => setPenjaminInput(e.target.value as PenjaminType | '')}
-            >
-              <option value="">{t('common.all')}</option>
-              {filterOptions.penjamin.map((p) => (
-                <option key={p} value={p}>
-                  {t(`dashboard.penjaminLabel.${p}`)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <Button type="submit">{t('dashboard.applyFilter')}</Button>
-          <div className="flex gap-1">
-            <Button type="button" variant="outline" size="sm" onClick={() => applyPreset(1)}>
-              {t('dashboard.presetToday')}
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => applyPreset(7)}>
-              {t('dashboard.preset7d')}
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => applyPreset(30)}>
-              {t('dashboard.preset30d')}
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => applyPreset('month')}>
-              {t('dashboard.presetMonth')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                exportDashboardPdf({
-                  from: periode.from,
-                  to: periode.to,
-                  summary,
-                  perPoli,
-                  tindakan,
-                  obat,
-                })
-              }
-            >
-              <FileDown className="mr-1 size-3.5" />
-              {t('common.exportPdf')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                exportDashboardExcel({
-                  from: periode.from,
-                  to: periode.to,
-                  summary,
-                  perPoli,
-                  tindakan,
-                  pendapatan,
-                  obat,
-                  pembayaran,
-                })
-              }
-            >
-              <FileSpreadsheet className="mr-1 size-3.5" />
-              {t('common.exportExcel')}
-            </Button>
-          </div>
-        </form>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              exportDashboardPdf({
+                from: periode.from,
+                to: periode.to,
+                summary,
+                perPoli,
+                tindakan,
+                obat,
+              })
+            }
+          >
+            <FileDown className="mr-1 size-3.5" />
+            {t('common.exportPdf')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              exportDashboardExcel({
+                from: periode.from,
+                to: periode.to,
+                summary,
+                perPoli,
+                tindakan,
+                pendapatan,
+                obat,
+                pembayaran,
+              })
+            }
+          >
+            <FileSpreadsheet className="mr-1 size-3.5" />
+            {t('common.exportExcel')}
+          </Button>
+        </div>
       </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <form
+            onSubmit={handleApplyPeriode}
+            aria-label={t('dashboard.filterTitle')}
+            className="flex flex-wrap items-end gap-3"
+          >
+            <div className="space-y-1">
+              <Label htmlFor="dash-from" className="text-xs">
+                {t('dashboard.fromDate')}
+              </Label>
+              <Input
+                id="dash-from"
+                type="date"
+                value={fromInput}
+                onChange={(e) => setFromInput(e.target.value)}
+                className="w-40"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="dash-to" className="text-xs">
+                {t('dashboard.toDate')}
+              </Label>
+              <Input
+                id="dash-to"
+                type="date"
+                value={toInput}
+                onChange={(e) => setToInput(e.target.value)}
+                className="w-40"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="dash-dokter" className="text-xs">
+                {t('dashboard.filterDokter')}
+              </Label>
+              <select
+                id="dash-dokter"
+                className={selectClassName}
+                value={dokterInput}
+                onChange={(e) => setDokterInput(e.target.value)}
+              >
+                <option value="">{t('common.all')}</option>
+                {filterOptions.dokter.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.nama}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="dash-penjamin" className="text-xs">
+                {t('dashboard.filterPenjamin')}
+              </Label>
+              <select
+                id="dash-penjamin"
+                className={selectClassName}
+                value={penjaminInput}
+                onChange={(e) => setPenjaminInput(e.target.value as PenjaminType | '')}
+              >
+                <option value="">{t('common.all')}</option>
+                {filterOptions.penjamin.map((p) => (
+                  <option key={p} value={p}>
+                    {t(`dashboard.penjaminLabel.${p}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button type="submit">{t('dashboard.applyFilter')}</Button>
+            <div className="flex flex-wrap gap-1 lg:ml-auto">
+              <Button type="button" variant="ghost" size="sm" onClick={() => applyPreset(1)}>
+                {t('dashboard.presetToday')}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => applyPreset(7)}>
+                {t('dashboard.preset7d')}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => applyPreset(30)}>
+                {t('dashboard.preset30d')}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => applyPreset('month')}>
+                {t('dashboard.presetMonth')}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -520,6 +532,7 @@ export default function DashboardPage() {
       </div>
 
       <DashboardCharts
+        periode={periode}
         perPoli={perPoli}
         tindakan={tindakan}
         pendapatan={pendapatan}

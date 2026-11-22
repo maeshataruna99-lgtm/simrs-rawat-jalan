@@ -627,13 +627,13 @@
     "invoiceBreakdown": "Partial: {{sebagian}} · Unpaid: {{belum}}",
     "chartPoliTitle": "Visits per Clinic",
     "chartPoliDesc": "Distribution of non-cancelled outpatient visits by clinic",
-    "chartPendapatanTitle": "Revenue & Charge Composition",
-    "chartPendapatanDesc": "Daily payment collection trend and billed value by charge source",
-    "komposisiSumber": "Composition by Charge Source",
+    "chartPendapatanTitle": "Daily Collection Trend",
+    "chartPendapatanDesc": "Total payments received per day in the selected period",
+    "komposisiSumber": "Billing Composition by Charge Source",
     "chartTindakanTitle": "Top Procedures",
     "chartTindakanDesc": "Most frequently performed active medical procedures",
-    "chartObatBayarTitle": "Medicine Usage & Payment Methods",
-    "chartObatBayarDesc": "Top dispensed medicines and payment method share",
+    "chartObatBayarTitle": "Top Medicines",
+    "chartObatBayarDesc": "Medicines ranked by prescribed value (units differ per medicine)",
     "metodePembayaran": "Collection by Payment Method",
     "detailTitle": "Period Data Breakdown",
     "tabKunjungan": "Visits",
@@ -647,6 +647,11 @@
     "colTindakan": "Procedure",
     "colNoResep": "Prescription No.",
     "colObat": "Medicine",
-    "colJumlah": "Quantity"
+    "colJumlah": "Quantity",
+    "komposisiSumberDesc": "Active billed value grouped by charge source",
+    "kunjunganCount": "Visits: {{n}}",
+    "transaksiCount": "Transactions: {{n}}",
+    "totalLabel": "Total",
+    "filterTitle": "Report Filters"
   }
 }

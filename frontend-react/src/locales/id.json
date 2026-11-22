@@ -627,13 +627,13 @@
     "invoiceBreakdown": "Sebagian: {{sebagian}} · Belum dibayar: {{belum}}",
     "chartPoliTitle": "Kunjungan per Poli",
     "chartPoliDesc": "Distribusi kunjungan rawat jalan non-batal per poliklinik",
-    "chartPendapatanTitle": "Pendapatan & Komposisi Sumber",
-    "chartPendapatanDesc": "Tren penerimaan pembayaran harian dan nilai tagihan per sumber biaya",
-    "komposisiSumber": "Komposisi per Sumber Biaya",
+    "chartPendapatanTitle": "Tren Penerimaan Harian",
+    "chartPendapatanDesc": "Total pembayaran yang diterima per hari selama periode terpilih",
+    "komposisiSumber": "Komposisi Tagihan per Sumber Biaya",
     "chartTindakanTitle": "Tindakan Terbanyak",
     "chartTindakanDesc": "Tindakan medis aktif dengan frekuensi tertinggi",
-    "chartObatBayarTitle": "Penggunaan Obat & Metode Bayar",
-    "chartObatBayarDesc": "Rekap resep obat terbanyak dan proporsi metode pembayaran",
+    "chartObatBayarTitle": "Obat Terbanyak",
+    "chartObatBayarDesc": "Peringkat obat berdasarkan nilai resep (satuan obat berbeda-beda)",
     "metodePembayaran": "Penerimaan per Metode Pembayaran",
     "detailTitle": "Rincian Data Periode",
     "tabKunjungan": "Kunjungan",
@@ -647,6 +647,11 @@
     "colTindakan": "Tindakan",
     "colNoResep": "No. Resep",
     "colObat": "Obat",
-    "colJumlah": "Jumlah"
+    "colJumlah": "Jumlah",
+    "komposisiSumberDesc": "Nilai tagihan aktif dikelompokkan per sumber biaya",
+    "kunjunganCount": "{{n}} kunjungan",
+    "transaksiCount": "{{n}} transaksi",
+    "totalLabel": "Total",
+    "filterTitle": "Filter Laporan"
   }
 }
