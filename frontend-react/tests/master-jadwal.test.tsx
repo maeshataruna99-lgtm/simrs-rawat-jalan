@@ -66,6 +66,7 @@ beforeEach(() => {
         id: 20,
         kode: 'POLI-UMUM',
         nama: 'Poli Umum',
+        prefix_antrean: 'U',
         tarif_pendaftaran: 25000,
         is_active: true,
       },

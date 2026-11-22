@@ -222,11 +222,11 @@ class AntreanService
                 continue;
             }
 
-            $kodePoli = $grouped[$pid]['poli_kode'];
+            $prefix = $k->poli->prefix_antrean ?? 'X';
             $entry = [
                 'id' => (int) $k->id,
                 'no_antrean' => (int) $k->no_antrean,
-                'kode_antrean' => sprintf('%s-%03d', $kodePoli, (int) $k->no_antrean),
+                'kode_antrean' => sprintf('%s-%03d', $prefix, (int) $k->no_antrean),
                 'inisial_pasien' => self::maskNama($k->pasien->nama ?? ''),
                 'dokter_nama' => $k->dokter->nama ?? '-',
                 'status' => $k->status,

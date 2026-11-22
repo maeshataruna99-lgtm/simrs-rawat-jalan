@@ -80,6 +80,7 @@ class PendaftaranServiceTest extends TestCase
         $poli = (new PoliService())->create([
             'kode' => 'POLI-UMUM',
             'nama' => 'Poli Umum',
+            'prefix_antrean' => 'U',
             'tarif_pendaftaran' => 25000,
         ]);
 
@@ -135,6 +136,7 @@ class PendaftaranServiceTest extends TestCase
         $poli = (new PoliService())->create([
             'kode' => 'POLI-UMUM',
             'nama' => 'Poli Umum',
+            'prefix_antrean' => 'U',
             'tarif_pendaftaran' => 25000,
         ]);
         $jadwalSenin = (new JadwalDokterService())->create([
@@ -210,6 +212,7 @@ class PendaftaranServiceTest extends TestCase
         $poli = (new PoliService())->create([
             'kode' => 'POLI-UMUM',
             'nama' => 'Poli Umum',
+            'prefix_antrean' => 'U',
             'tarif_pendaftaran' => 25000,
         ]);
         $jadwal = (new JadwalDokterService())->create([

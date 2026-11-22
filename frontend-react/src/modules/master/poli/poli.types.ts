@@ -6,6 +6,7 @@ export interface PoliItem {
   id: number;
   kode: string;
   nama: string;
+  prefix_antrean: string;
   tarif_pendaftaran: number;
   is_active: boolean;
 }
@@ -13,6 +14,7 @@ export interface PoliItem {
 export interface PoliPayload {
   kode: string;
   nama: string;
+  prefix_antrean: string;
   tarif_pendaftaran: number;
   is_active: boolean;
 }

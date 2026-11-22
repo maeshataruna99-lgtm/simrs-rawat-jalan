@@ -24,7 +24,7 @@ function audioUrl(fileName: string) {
   return `${VOICE_BANK}/${encodeURIComponent(fileName)}.wav`;
 }
 
-/** Urutan file suara untuk satu nomor antrean, mis. "UMU-001" -> Nomor-Antrian U M U Nol Nol satu. */
+/** Urutan file suara untuk satu nomor antrean, dieja per karakter, mis. "U-001" -> Nomor-Antrian U Nol Nol satu. */
 export function getAnnouncementFiles(kodeAntrean: string): string[] {
   const files = ['Nomor-Antrian'];
   for (const character of kodeAntrean.trim().toUpperCase()) {

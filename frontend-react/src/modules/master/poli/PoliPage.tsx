@@ -48,6 +48,12 @@ export default function PoliPage() {
       sortValue: (row) => row.nama,
     },
     {
+      key: 'prefix_antrean',
+      header: t('master.poli.prefixAntrean'),
+      cell: (row) => <span className="font-mono">{row.prefix_antrean}</span>,
+      sortValue: (row) => row.prefix_antrean,
+    },
+    {
       key: 'tarif_pendaftaran',
       header: t('master.poli.tarifPendaftaran'),
       cell: (row) => formatRupiah(row.tarif_pendaftaran),

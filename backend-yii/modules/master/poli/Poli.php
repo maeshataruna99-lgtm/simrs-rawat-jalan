@@ -10,6 +10,7 @@ use app\common\ActiveRecord;
  * @property int $id
  * @property string $kode
  * @property string $nama
+ * @property string $prefix_antrean 1 huruf A-Z untuk kode antrean, mis. U pada U-001
  * @property float|string $tarif_pendaftaran
  * @property bool $is_active
  */
@@ -23,8 +24,11 @@ class Poli extends ActiveRecord
     public function rules(): array
     {
         return [
-            [['kode', 'nama', 'tarif_pendaftaran'], 'required'],
-            [['kode', 'nama'], 'trim'],
+            [['kode', 'nama', 'prefix_antrean', 'tarif_pendaftaran'], 'required'],
+            [['kode', 'nama', 'prefix_antrean'], 'trim'],
+            [['prefix_antrean'], 'filter', 'filter' => 'strtoupper'],
+            [['prefix_antrean'], 'match', 'pattern' => '/^[A-Z]$/', 'message' => 'Prefix antrean harus 1 huruf A-Z.'],
+            [['prefix_antrean'], 'unique', 'filter' => ['deleted_at' => null], 'message' => 'Prefix antrean sudah dipakai poli lain.'],
             [['kode'], 'string', 'max' => 30],
             [['kode'], 'unique', 'filter' => ['deleted_at' => null], 'message' => 'Kode sudah dipakai.'],
             [['nama'], 'string', 'max' => 100],
@@ -39,6 +43,7 @@ class Poli extends ActiveRecord
         return [
             'kode' => 'Kode',
             'nama' => 'Nama poli',
+            'prefix_antrean' => 'Prefix antrean',
             'tarif_pendaftaran' => 'Tarif pendaftaran',
             'is_active' => 'Status aktif',
         ];

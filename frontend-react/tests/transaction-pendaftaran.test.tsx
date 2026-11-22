@@ -71,7 +71,14 @@ beforeEach(() => {
 
   vi.mocked(poliApi.listPoli).mockResolvedValue({
     items: [
-      { id: 1, kode: 'POLI-UMUM', nama: 'Poli Umum', tarif_pendaftaran: 25000, is_active: true },
+      {
+        id: 1,
+        kode: 'POLI-UMUM',
+        nama: 'Poli Umum',
+        prefix_antrean: 'U',
+        tarif_pendaftaran: 25000,
+        is_active: true,
+      },
     ],
     meta: { page: 1, per_page: 100, total: 1 },
   });

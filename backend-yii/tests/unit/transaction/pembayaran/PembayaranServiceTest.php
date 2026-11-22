@@ -33,7 +33,7 @@ class PembayaranServiceTest extends TestCase
         $role = Fixtures::role('kasir_uji', 'Kasir Uji');
         $kasir = Fixtures::user($role, 'kasir_uji');
 
-        $poli = (new PoliService())->create(['kode' => 'POLI-PAY', 'nama' => 'Poli Bayar', 'tarif_pendaftaran' => 25000]);
+        $poli = (new PoliService())->create(['kode' => 'POLI-PAY', 'nama' => 'Poli Bayar', 'prefix_antrean' => 'B', 'tarif_pendaftaran' => 25000]);
         $dokter = (new DokterService())->create(['kode' => 'DR-PAY', 'nama' => 'dr. Bayar', 'sip' => 'SIP/PAY', 'jenis_tenaga' => 'dokter']);
         $jadwal = (new JadwalDokterService())->create([
             'dokter_id' => $dokter->id, 'poli_id' => $poli->id, 'hari' => 1,

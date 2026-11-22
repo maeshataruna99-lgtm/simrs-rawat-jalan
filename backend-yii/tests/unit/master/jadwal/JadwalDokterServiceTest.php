@@ -39,11 +39,13 @@ class JadwalDokterServiceTest extends TestCase
         $this->poliUmumId = $poliService->create([
             'kode' => 'POLI-UMUM',
             'nama' => 'Poli Umum',
+            'prefix_antrean' => 'U',
             'tarif_pendaftaran' => 25000,
         ])->id;
         $this->poliAnakId = $poliService->create([
             'kode' => 'POLI-ANAK',
             'nama' => 'Poli Anak',
+            'prefix_antrean' => 'A',
             'tarif_pendaftaran' => 30000,
         ])->id;
     }

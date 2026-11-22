@@ -17,6 +17,7 @@ class PoliServiceTest extends TestCase
         $poli = $service->create([
             'kode' => 'POLI-UMUM',
             'nama' => 'Poli Umum',
+            'prefix_antrean' => 'U',
             'tarif_pendaftaran' => 25000,
         ]);
 
@@ -26,7 +27,39 @@ class PoliServiceTest extends TestCase
         $service->create([
             'kode' => 'POLI-UMUM',
             'nama' => 'Poli Umum 2',
+            'prefix_antrean' => 'V',
             'tarif_pendaftaran' => 30000,
+        ]);
+    }
+
+    public function testPrefixAntreanDijadikanHurufBesarDanGandaDitolak(): void
+    {
+        $service = new PoliService();
+        $poli = $service->create([
+            'kode' => 'POLI-UMUM',
+            'nama' => 'Poli Umum',
+            'prefix_antrean' => 'u',
+            'tarif_pendaftaran' => 25000,
+        ]);
+        $this->assertSame('U', $poli->prefix_antrean);
+
+        $this->expectException(ValidationException::class);
+        $service->create([
+            'kode' => 'POLI-UROLOGI',
+            'nama' => 'Poli Urologi',
+            'prefix_antrean' => 'U',
+            'tarif_pendaftaran' => 30000,
+        ]);
+    }
+
+    public function testPrefixAntreanLebihDariSatuHurufDitolak(): void
+    {
+        $this->expectException(ValidationException::class);
+        (new PoliService())->create([
+            'kode' => 'POLI-GIGI',
+            'nama' => 'Poli Gigi',
+            'prefix_antrean' => 'G1',
+            'tarif_pendaftaran' => 35000,
         ]);
     }
 
@@ -36,6 +69,7 @@ class PoliServiceTest extends TestCase
         (new PoliService())->create([
             'kode' => 'POLI-GIGI',
             'nama' => 'Poli Gigi',
+            'prefix_antrean' => 'G',
             'tarif_pendaftaran' => -1000,
         ]);
     }

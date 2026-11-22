@@ -38,7 +38,7 @@ class BillingSyncServiceTest extends TestCase
         $role = Fixtures::role('kasir_sync', 'Kasir Sync');
         $kasir = Fixtures::user($role, 'kasir_sync');
 
-        $poli = (new PoliService())->create(['kode' => 'POLI-SYNC', 'nama' => 'Poli Sync', 'tarif_pendaftaran' => 25000]);
+        $poli = (new PoliService())->create(['kode' => 'POLI-SYNC', 'nama' => 'Poli Sync', 'prefix_antrean' => 'S', 'tarif_pendaftaran' => 25000]);
         $dokter = (new DokterService())->create(['kode' => 'DR-SYNC', 'nama' => 'dr. Sync', 'sip' => 'SIP/SYNC', 'jenis_tenaga' => 'dokter']);
         $jadwal = (new JadwalDokterService())->create([
             'dokter_id' => $dokter->id, 'poli_id' => $poli->id, 'hari' => 1,

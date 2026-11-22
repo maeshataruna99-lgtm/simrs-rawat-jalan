@@ -33,6 +33,7 @@ class AntreanServiceTest extends TestCase
         $poli = (new PoliService())->create([
             'kode' => 'POLI-UMUM',
             'nama' => 'Poli Umum',
+            'prefix_antrean' => 'U',
             'tarif_pendaftaran' => 25000,
         ]);
         $jadwal = (new JadwalDokterService())->create([
@@ -102,6 +103,7 @@ class AntreanServiceTest extends TestCase
         $poli = (new PoliService())->create([
             'kode' => 'UMU',
             'nama' => 'Poli Umum',
+            'prefix_antrean' => 'U',
             'tarif_pendaftaran' => 25000,
         ]);
         $jadwal = (new JadwalDokterService())->create([
@@ -135,12 +137,12 @@ class AntreanServiceTest extends TestCase
         $group = $display['poli'][0];
         $this->assertSame('UMU', $group['poli_kode']);
         $this->assertCount(1, $group['sedang_diperiksa']);
-        $this->assertSame('UMU-001', $group['sedang_diperiksa'][0]['kode_antrean']);
+        $this->assertSame('U-001', $group['sedang_diperiksa'][0]['kode_antrean']);
         $this->assertSame('B*** S***', $group['sedang_diperiksa'][0]['inisial_pasien']);
         $this->assertArrayNotHasKey('nik', $group['sedang_diperiksa'][0]);
 
         $this->assertCount(1, $group['menunggu']);
-        $this->assertSame('UMU-002', $group['menunggu'][0]['kode_antrean']);
+        $this->assertSame('U-002', $group['menunggu'][0]['kode_antrean']);
         $this->assertSame('S*** A***', $group['menunggu'][0]['inisial_pasien']);
         $this->assertSame(1, $group['total_menunggu']);
         $this->assertSame(0, $group['total_selesai']);

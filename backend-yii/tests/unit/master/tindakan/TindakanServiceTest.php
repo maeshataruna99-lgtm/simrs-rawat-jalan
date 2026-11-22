@@ -18,11 +18,13 @@ class TindakanServiceTest extends TestCase
         $poliGigi = $poliService->create([
             'kode' => 'POLI-GIGI',
             'nama' => 'Poli Gigi',
+            'prefix_antrean' => 'G',
             'tarif_pendaftaran' => 30000,
         ]);
         $poliUmum = $poliService->create([
             'kode' => 'POLI-UMUM',
             'nama' => 'Poli Umum',
+            'prefix_antrean' => 'U',
             'tarif_pendaftaran' => 25000,
         ]);
 

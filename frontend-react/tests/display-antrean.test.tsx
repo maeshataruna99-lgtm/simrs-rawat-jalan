@@ -78,14 +78,7 @@ describe('DisplayAntreanPage (/display-antrean)', () => {
   });
 
   it('menyusun urutan file suara dari kode antrean', () => {
-    expect(getAnnouncementFiles('umu-010')).toEqual([
-      'Nomor-Antrian',
-      'U',
-      'M',
-      'U',
-      'Nol',
-      'satu',
-      'Nol',
-    ]);
+    expect(getAnnouncementFiles('U-001')).toEqual(['Nomor-Antrian', 'U', 'Nol', 'Nol', 'satu']);
+    expect(getAnnouncementFiles('g-120')).toEqual(['Nomor-Antrian', 'G', 'satu', 'dua', 'Nol']);
   });
 });

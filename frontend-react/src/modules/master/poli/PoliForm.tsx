@@ -22,6 +22,11 @@ import type { PoliItem } from './poli.types';
 const schema = z.object({
   kode: z.string().trim().min(1, 'master.poli.kodeRequired'),
   nama: z.string().trim().min(1, 'master.poli.namaRequired'),
+  prefix_antrean: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]$/, 'master.poli.prefixAntreanInvalid'),
   tarif_pendaftaran: z.number().min(0, 'master.poli.tarifMin'),
   is_active: z.boolean(),
 });
@@ -56,12 +61,14 @@ export function PoliForm({ open, onOpenChange, editing, onSaved }: Props) {
       ? {
           kode: editing.kode,
           nama: editing.nama,
+          prefix_antrean: editing.prefix_antrean,
           tarif_pendaftaran: editing.tarif_pendaftaran,
           is_active: editing.is_active,
         }
       : {
           kode: '',
           nama: '',
+          prefix_antrean: '',
           tarif_pendaftaran: 0,
           is_active: true,
         },
@@ -120,6 +127,27 @@ export function PoliForm({ open, onOpenChange, editing, onSaved }: Props) {
           {errors.nama && (
             <p className="text-sm text-destructive">
               {t(errors.nama.message ?? '', { defaultValue: errors.nama.message })}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="poli-prefix">{t('master.poli.prefixAntrean')}</Label>
+          <Input
+            id="poli-prefix"
+            maxLength={1}
+            className="w-20 font-mono uppercase"
+            aria-describedby="poli-prefix-hint"
+            {...register('prefix_antrean')}
+          />
+          <p id="poli-prefix-hint" className="text-xs text-muted-foreground">
+            {t('master.poli.prefixAntreanHint')}
+          </p>
+          {errors.prefix_antrean && (
+            <p className="text-sm text-destructive">
+              {t(errors.prefix_antrean.message ?? '', {
+                defaultValue: errors.prefix_antrean.message,
+              })}
             </p>
           )}
         </div>

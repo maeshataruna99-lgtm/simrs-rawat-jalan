@@ -117,6 +117,7 @@ erDiagram
         int id PK
         varchar kode UK
         varchar nama
+        char prefix_antrean UK
         numeric tarif_pendaftaran
     }
     m_jadwal_dokter {

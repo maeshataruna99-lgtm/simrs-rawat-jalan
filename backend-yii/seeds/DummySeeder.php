@@ -41,10 +41,10 @@ class DummySeeder
     private function seedPoli(): array
     {
         $rows = [
-            ['kode' => 'POLI-UMUM', 'nama' => 'Poli Umum', 'tarif_pendaftaran' => 25000],
-            ['kode' => 'POLI-GIGI', 'nama' => 'Poli Gigi', 'tarif_pendaftaran' => 35000],
-            ['kode' => 'POLI-ANAK', 'nama' => 'Poli Anak', 'tarif_pendaftaran' => 40000],
-            ['kode' => 'POLI-PD', 'nama' => 'Poli Penyakit Dalam', 'tarif_pendaftaran' => 50000],
+            ['kode' => 'POLI-UMUM', 'nama' => 'Poli Umum', 'prefix_antrean' => 'U', 'tarif_pendaftaran' => 25000],
+            ['kode' => 'POLI-GIGI', 'nama' => 'Poli Gigi', 'prefix_antrean' => 'G', 'tarif_pendaftaran' => 35000],
+            ['kode' => 'POLI-ANAK', 'nama' => 'Poli Anak', 'prefix_antrean' => 'A', 'tarif_pendaftaran' => 40000],
+            ['kode' => 'POLI-PD', 'nama' => 'Poli Penyakit Dalam', 'prefix_antrean' => 'P', 'tarif_pendaftaran' => 50000],
         ];
         $ids = [];
         foreach ($rows as $row) {

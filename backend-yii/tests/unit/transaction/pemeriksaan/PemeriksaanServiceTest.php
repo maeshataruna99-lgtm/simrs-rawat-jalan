@@ -29,7 +29,7 @@ class PemeriksaanServiceTest extends TestCase
      */
     private function siapkanKunjungan(): array
     {
-        $poli = (new PoliService())->create(['kode' => 'POLI-UMUM', 'nama' => 'Poli Umum', 'tarif_pendaftaran' => 25000]);
+        $poli = (new PoliService())->create(['kode' => 'POLI-UMUM', 'nama' => 'Poli Umum', 'prefix_antrean' => 'U', 'tarif_pendaftaran' => 25000]);
         $jadwal = [];
         $dokter = [];
         foreach ([1, 2] as $i) {

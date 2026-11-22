@@ -401,6 +401,8 @@ CREATE TABLE public.m_poli (
     created_by integer,
     updated_by integer,
     deleted_at timestamp(0) without time zone,
+    prefix_antrean character(1) NOT NULL,
+    CONSTRAINT chk_m_poli_prefix_antrean CHECK ((prefix_antrean ~ '^[A-Z]$'::text)),
     CONSTRAINT chk_m_poli_tarif CHECK ((tarif_pendaftaran >= (0)::numeric))
 );
 
@@ -1946,6 +1948,13 @@ CREATE UNIQUE INDEX uq_m_pemeriksaan_lab_kode ON public.m_pemeriksaan_lab USING 
 --
 
 CREATE UNIQUE INDEX uq_m_poli_kode ON public.m_poli USING btree (kode) WHERE (deleted_at IS NULL);
+
+
+--
+-- Name: uq_m_poli_prefix_antrean; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uq_m_poli_prefix_antrean ON public.m_poli USING btree (prefix_antrean) WHERE (deleted_at IS NULL);
 
 
 --

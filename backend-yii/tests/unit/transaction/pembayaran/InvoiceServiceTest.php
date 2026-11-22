@@ -31,7 +31,7 @@ class InvoiceServiceTest extends TestCase
      */
     private function siapkan(): array
     {
-        $poli = (new PoliService())->create(['kode' => 'POLI-INV', 'nama' => 'Poli Umum', 'tarif_pendaftaran' => 25000]);
+        $poli = (new PoliService())->create(['kode' => 'POLI-INV', 'nama' => 'Poli Umum', 'prefix_antrean' => 'U', 'tarif_pendaftaran' => 25000]);
         $dokter = (new DokterService())->create(['kode' => 'DR-INV', 'nama' => 'dr. Tagih', 'sip' => 'SIP/INV', 'jenis_tenaga' => 'dokter']);
         $jadwal = (new JadwalDokterService())->create([
             'dokter_id' => $dokter->id, 'poli_id' => $poli->id, 'hari' => 1,

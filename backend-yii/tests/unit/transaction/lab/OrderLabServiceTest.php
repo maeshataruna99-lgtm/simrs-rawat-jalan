@@ -26,7 +26,7 @@ class OrderLabServiceTest extends TestCase
      */
     private function siapkan(): array
     {
-        $poli = (new PoliService())->create(['kode' => 'POLI-UMUM', 'nama' => 'Poli Umum', 'tarif_pendaftaran' => 25000]);
+        $poli = (new PoliService())->create(['kode' => 'POLI-UMUM', 'nama' => 'Poli Umum', 'prefix_antrean' => 'U', 'tarif_pendaftaran' => 25000]);
         $dokter = (new DokterService())->create(['kode' => 'DR001', 'nama' => 'dr. Uji', 'sip' => 'SIP/001', 'jenis_tenaga' => 'dokter']);
         $jadwal = (new JadwalDokterService())->create([
             'dokter_id' => $dokter->id, 'poli_id' => $poli->id, 'hari' => 1,

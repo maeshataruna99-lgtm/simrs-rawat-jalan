@@ -54,6 +54,7 @@ beforeEach(() => {
         id: 1,
         kode: 'POLI-UMUM',
         nama: 'Poli Umum',
+        prefix_antrean: 'U',
         tarif_pendaftaran: 25000,
         is_active: true,
       },
@@ -100,6 +101,7 @@ describe('DokterPage dan PoliPage (poin 2.11)', () => {
       id: 2,
       kode: 'POLI-GIGI',
       nama: 'Poli Gigi',
+      prefix_antrean: 'G',
       tarif_pendaftaran: 30000,
       is_active: true,
     });
@@ -112,12 +114,14 @@ describe('DokterPage dan PoliPage (poin 2.11)', () => {
     const dialog = await screen.findByRole('dialog');
     await userEvent.type(within(dialog).getByLabelText('Kode'), 'POLI-GIGI');
     await userEvent.type(within(dialog).getByLabelText('Nama'), 'Poli Gigi');
+    await userEvent.type(within(dialog).getByLabelText('Prefix Antrean'), 'g');
     await userEvent.type(within(dialog).getByLabelText('Tarif Pendaftaran'), '30000');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Simpan' }));
 
     expect(poliApi.createPoli).toHaveBeenCalledWith({
       kode: 'POLI-GIGI',
       nama: 'Poli Gigi',
+      prefix_antrean: 'G',
       tarif_pendaftaran: 30000,
       is_active: true,
     });
