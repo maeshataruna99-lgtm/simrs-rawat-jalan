@@ -376,7 +376,7 @@ export function DashboardCharts({
           {perSumber.length === 0 ? (
             <AppEmptyState title={t('common.emptyData')} compact />
           ) : (
-            <div className="flex flex-col items-center gap-4 sm:flex-row">
+            <div className="flex flex-col items-center gap-4 xl:flex-row">
               <div className="relative size-44 shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -434,13 +434,13 @@ export function DashboardCharts({
                         backgroundColor: SUMBER_COLORS[s.sumber] ?? 'hsl(var(--muted-foreground))',
                       }}
                     />
-                    <span className="flex-1">
+                    <span className="min-w-0 flex-1 truncate">
                       {t(`transaction.billing.sumberLabel.${s.sumber}`, s.sumber)}
                     </span>
                     <span className="tabular-nums text-muted-foreground">
                       {((s.total_nilai / totalSumber) * 100).toFixed(1)}%
                     </span>
-                    <span className="w-28 text-right font-medium tabular-nums">
+                    <span className="shrink-0 text-right font-medium tabular-nums">
                       {formatRupiah(s.total_nilai)}
                     </span>
                   </li>
