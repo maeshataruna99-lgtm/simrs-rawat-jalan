@@ -36,6 +36,10 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = initialLocale;
+}
+
 /**
  * Mengubah bahasa aktif aplikasi, menyimpannya ke localStorage, dan memperbarui atribut lang HTML.
  *
