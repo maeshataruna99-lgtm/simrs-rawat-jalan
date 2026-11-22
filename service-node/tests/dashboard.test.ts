@@ -16,7 +16,9 @@ const TO = '2026-08-11';
 interface SeedIds {
   roleAllow: number;
   roleDeny: number;
+  roleOps: number;
   menuDash: number;
+  menuKeu: number;
   userId: number;
   poliA: number;
   poliB: number;
@@ -78,6 +80,28 @@ beforeAll(async () => {
     `INSERT INTO m_role_access (role_id, menu_id, can_read, can_create, can_update, can_delete)
      VALUES ($1, $2, true, false, false, false)`,
     [ids.roleAllow, ids.menuDash],
+  );
+
+  // Izin data pendapatan (dashboard-keuangan) untuk roleAllow; roleOps hanya dashboard tanpa keuangan.
+  const menuKeu = await pool.query<{ id: number }>(
+    `SELECT id FROM m_menu WHERE kode = 'dashboard-keuangan' AND deleted_at IS NULL LIMIT 1`,
+  );
+  ids.menuKeu = menuKeu.rowCount
+    ? menuKeu.rows[0].id
+    : (
+        await pool.query<{ id: number }>(
+          `INSERT INTO m_menu (kode, nama) VALUES ('dashboard-keuangan', 'Data Keuangan Dashboard') RETURNING id`,
+        )
+      ).rows[0].id;
+  const roleOps = await pool.query<{ id: number }>(
+    `INSERT INTO m_role (kode, nama) VALUES ($1, 'Role Ops') RETURNING id`,
+    [`role_ops_${SFX}`],
+  );
+  ids.roleOps = roleOps.rows[0].id;
+  await pool.query(
+    `INSERT INTO m_role_access (role_id, menu_id, can_read, can_create, can_update, can_delete)
+     VALUES ($1, $2, true, false, false, false), ($3, $4, true, false, false, false)`,
+    [ids.roleAllow, ids.menuKeu, ids.roleOps, ids.menuDash],
   );
 
   const user = await pool.query<{ id: number }>(
@@ -262,13 +286,15 @@ afterAll(async () => {
   await pool.query(`DELETE FROM m_dokter WHERE id = $1`, [ids.dokter ?? 0]);
   await pool.query(`DELETE FROM m_poli WHERE id IN ($1, $2)`, [ids.poliA ?? 0, ids.poliB ?? 0]);
   await pool.query(`DELETE FROM m_user WHERE id = $1`, [ids.userId ?? 0]);
-  await pool.query(`DELETE FROM m_role_access WHERE role_id IN ($1, $2)`, [
+  await pool.query(`DELETE FROM m_role_access WHERE role_id IN ($1, $2, $3)`, [
     ids.roleAllow ?? 0,
     ids.roleDeny ?? 0,
+    ids.roleOps ?? 0,
   ]);
-  await pool.query(`DELETE FROM m_role WHERE id IN ($1, $2)`, [
+  await pool.query(`DELETE FROM m_role WHERE id IN ($1, $2, $3)`, [
     ids.roleAllow ?? 0,
     ids.roleDeny ?? 0,
+    ids.roleOps ?? 0,
   ]);
   await closeDb();
 });
@@ -285,6 +311,27 @@ describe('API Dashboard (poin 9.1)', () => {
       .get(`/api/dashboard/summary?from=${FROM}&to=${TO}`)
       .set('Authorization', `Bearer ${denyTok}`);
     expect(r403.status).toBe(403);
+  });
+
+  it('role tanpa izin dashboard-keuangan tidak menerima data pendapatan dan pembayaran', async () => {
+    const tok = makeToken(`role_ops_${SFX}`, ids.userId);
+    const qs = `?from=${FROM}&to=${TO}`;
+    const get = (path: string) =>
+      request(app).get(`/api/dashboard${path}`).set('Authorization', `Bearer ${tok}`);
+
+    const summary = await get(`/summary${qs}`);
+    expect(summary.status).toBe(200);
+    expect(summary.body.data.total_kunjungan).toBeGreaterThanOrEqual(0);
+    expect(summary.body.data.total_pendapatan).toBeNull();
+    expect(summary.body.data.total_tagihan).toBeNull();
+    expect(summary.body.data.invoice_per_status).toBeNull();
+
+    expect((await get(`/pendapatan${qs}`)).status).toBe(403);
+    expect((await get(`/pembayaran${qs}`)).status).toBe(403);
+    expect((await get(`/detail/pendapatan${qs}`)).status).toBe(403);
+    expect((await get(`/detail/pembayaran${qs}`)).status).toBe(403);
+    expect((await get(`/detail/kunjungan${qs}`)).status).toBe(200);
+    expect((await get(`/kunjungan-per-poli${qs}`)).status).toBe(200);
   });
 
   it('mengembalikan angka agregasi yang tepat pada keenam endpoint dashboard', async () => {

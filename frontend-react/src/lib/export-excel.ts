@@ -89,11 +89,15 @@ export function createDashboardExcelXml(params: {
         ['Periode', `${from} s/d ${to}`],
         ['Total Kunjungan', summary?.total_kunjungan ?? 0],
         ['Total Tindakan', summary?.total_tindakan ?? 0],
-        ['Pendapatan Diterima', summary?.total_pendapatan ?? 0],
-        ['Total Tagihan', summary?.total_tagihan ?? 0],
-        ['Invoice Lunas', summary?.invoice_per_status.lunas ?? 0],
-        ['Invoice Dibayar Sebagian', summary?.invoice_per_status.dibayar_sebagian ?? 0],
-        ['Invoice Belum Dibayar', summary?.invoice_per_status.belum_dibayar ?? 0],
+        ...(summary?.invoice_per_status
+          ? [
+              ['Pendapatan Diterima', summary.total_pendapatan ?? 0],
+              ['Total Tagihan', summary.total_tagihan ?? 0],
+              ['Invoice Lunas', summary.invoice_per_status.lunas],
+              ['Invoice Dibayar Sebagian', summary.invoice_per_status.dibayar_sebagian],
+              ['Invoice Belum Dibayar', summary.invoice_per_status.belum_dibayar],
+            ]
+          : []),
       ],
     },
     {
@@ -131,7 +135,16 @@ export function createDashboardExcelXml(params: {
     },
   ];
 
-  return buildSpreadsheetXml(sheets);
+  // Sheet pendapatan dan pembayaran dibuang untuk role tanpa izin keuangan (datanya null).
+  return buildSpreadsheetXml(
+    sheets.filter(
+      (s) =>
+        !(
+          (s.name === 'Pendapatan Harian' && !pendapatan) ||
+          (s.name === 'Pembayaran' && !pembayaran)
+        ),
+    ),
+  );
 }
 
 /**

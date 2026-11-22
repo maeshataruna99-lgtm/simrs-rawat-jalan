@@ -32,6 +32,8 @@ return [
     // [kode menu, nama, path, icon, kode modul]
     'menus' => [
         ['dashboard', 'Dashboard', '/dashboard', 'layout-dashboard', 'dashboard'],
+        // Menu izin tanpa path (tidak tampil di sidebar): membuka data pendapatan dan pembayaran di dashboard.
+        ['dashboard-keuangan', 'Data Keuangan Dashboard', null, 'wallet', 'dashboard'],
         ['pendaftaran', 'Pendaftaran Kunjungan', '/transaction/pendaftaran', 'user-plus', 'pendaftaran'],
         ['antrean', 'Antrean Poli', '/transaction/antrean', 'list-ordered', 'pendaftaran'],
         ['pemeriksaan', 'Pemeriksaan Pasien', '/transaction/pemeriksaan', 'stethoscope', 'pelayanan'],
@@ -87,6 +89,7 @@ return [
         ],
         'kasir' => [
             'dashboard' => 'R',
+            'dashboard-keuangan' => 'R',
             'billing' => 'CRU',
         ],
     ],

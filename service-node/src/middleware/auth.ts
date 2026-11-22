@@ -71,23 +71,13 @@ const ACTION_COLUMN: Record<PermissionAction, string> = {
  * Dipakai di: modules/dashboard/dashboard.routes.ts.
  */
 export function requirePermission(menuCode: string, action: PermissionAction = 'read') {
-  const column = ACTION_COLUMN[action];
   return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     const roleKode = req.user?.role;
     if (!roleKode) {
       return next(new AppError(401, 'Sesi tidak valid atau sudah berakhir, silakan login ulang.'));
     }
     try {
-      const { rowCount } = await readDb().query(
-        `SELECT 1
-         FROM m_role_access ra
-         JOIN m_role r ON r.id = ra.role_id AND r.deleted_at IS NULL
-         JOIN m_menu m ON m.id = ra.menu_id AND m.deleted_at IS NULL
-         WHERE r.kode = $1 AND m.kode = $2 AND ra.${column} = true
-         LIMIT 1`,
-        [roleKode, menuCode],
-      );
-      if (!rowCount) {
+      if (!(await hasPermission(roleKode, menuCode, action))) {
         return next(new AppError(403, 'Anda tidak memiliki akses ke fitur ini.'));
       }
       next();
@@ -95,6 +85,28 @@ export function requirePermission(menuCode: string, action: PermissionAction = '
       next(err);
     }
   };
+}
+
+/**
+ * Cek izin menu:aksi untuk satu role tanpa menolak request.
+ *
+ * Dipakai di: requirePermission(), dashboard.routes.ts (menyaring data keuangan).
+ */
+export async function hasPermission(
+  roleKode: string,
+  menuCode: string,
+  action: PermissionAction = 'read',
+): Promise<boolean> {
+  const { rowCount } = await readDb().query(
+    `SELECT 1
+     FROM m_role_access ra
+     JOIN m_role r ON r.id = ra.role_id AND r.deleted_at IS NULL
+     JOIN m_menu m ON m.id = ra.menu_id AND m.deleted_at IS NULL
+     WHERE r.kode = $1 AND m.kode = $2 AND ra.${ACTION_COLUMN[action]} = true
+     LIMIT 1`,
+    [roleKode, menuCode],
+  );
+  return Boolean(rowCount);
 }
 
 /**

@@ -256,102 +256,104 @@ export function DashboardCharts({
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card className="lg:col-span-2">
-        <CardHeader className="flex flex-col gap-2 space-y-0 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1.5">
-            <CardTitle className="text-base">{t('dashboard.chartPendapatanTitle')}</CardTitle>
-            <CardDescription>{t('dashboard.chartPendapatanDesc')}</CardDescription>
-          </div>
-          <div className="sm:text-right">
-            <p className="text-xl font-semibold tabular-nums">{formatRupiah(totalPenerimaan)}</p>
-            <p className="text-xs text-muted-foreground">
-              {t('dashboard.transaksiCount', { n: totalTransaksi })}
-            </p>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!hasDaily ? (
-            <AppEmptyState title={t('common.emptyData')} compact />
-          ) : (
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={daily} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                  <defs>
-                    <linearGradient id="fill-penerimaan" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid vertical={false} stroke={GRID_STROKE} strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="tanggal"
-                    tickFormatter={fmt.shortDate}
-                    tick={AXIS_TICK}
-                    tickLine={false}
-                    axisLine={{ stroke: GRID_STROKE }}
-                    minTickGap={24}
-                  />
-                  <YAxis
-                    tickFormatter={fmt.compactRupiah}
-                    tick={AXIS_TICK}
-                    tickLine={false}
-                    axisLine={false}
-                    width={72}
-                    allowDecimals={false}
-                  />
-                  <Tooltip
-                    cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeDasharray: '3 3' }}
-                    content={({ active, payload }) => {
-                      const p = active
-                        ? (payload?.[0]?.payload as DailyPoint | undefined)
-                        : undefined;
-                      if (!p) return null;
-                      return (
-                        <div className={TOOLTIP_CLASS}>
-                          <p className="font-medium">{fmt.longDate(p.tanggal)}</p>
-                          <p className="tabular-nums">{formatRupiah(p.total)}</p>
-                          <p className="text-muted-foreground">
-                            {t('dashboard.transaksiCount', { n: p.transaksi })}
-                          </p>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    stroke="hsl(var(--chart-1))"
-                    strokeWidth={2}
-                    fill="url(#fill-penerimaan)"
-                    dot={false}
-                    activeDot={{ r: 4, strokeWidth: 2, stroke: 'hsl(var(--card))' }}
-                    isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+      {pendapatan && (
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-col gap-2 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1.5">
+              <CardTitle className="text-base">{t('dashboard.chartPendapatanTitle')}</CardTitle>
+              <CardDescription>{t('dashboard.chartPendapatanDesc')}</CardDescription>
             </div>
-          )}
-
-          {pembayaran && pembayaran.per_metode.length > 0 && (
-            <div className="border-t pt-3">
-              <p className="mb-2 text-xs font-medium text-muted-foreground">
-                {t('dashboard.metodePembayaran')}
+            <div className="sm:text-right">
+              <p className="text-xl font-semibold tabular-nums">{formatRupiah(totalPenerimaan)}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('dashboard.transaksiCount', { n: totalTransaksi })}
               </p>
-              <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-                {pembayaran.per_metode.map((m) => (
-                  <div key={m.metode} className="rounded-md border bg-muted/30 p-2.5">
-                    <p className="text-xs text-muted-foreground">
-                      {t(`transaction.billing.metodeLabel.${m.metode}`, m.metode)} (
-                      {m.jumlah_transaksi}x)
-                    </p>
-                    <p className="font-semibold tabular-nums">{formatRupiah(m.total_bayar)}</p>
-                  </div>
-                ))}
-              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!hasDaily ? (
+              <AppEmptyState title={t('common.emptyData')} compact />
+            ) : (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={daily} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                    <defs>
+                      <linearGradient id="fill-penerimaan" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.25} />
+                        <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} stroke={GRID_STROKE} strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="tanggal"
+                      tickFormatter={fmt.shortDate}
+                      tick={AXIS_TICK}
+                      tickLine={false}
+                      axisLine={{ stroke: GRID_STROKE }}
+                      minTickGap={24}
+                    />
+                    <YAxis
+                      tickFormatter={fmt.compactRupiah}
+                      tick={AXIS_TICK}
+                      tickLine={false}
+                      axisLine={false}
+                      width={72}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeDasharray: '3 3' }}
+                      content={({ active, payload }) => {
+                        const p = active
+                          ? (payload?.[0]?.payload as DailyPoint | undefined)
+                          : undefined;
+                        if (!p) return null;
+                        return (
+                          <div className={TOOLTIP_CLASS}>
+                            <p className="font-medium">{fmt.longDate(p.tanggal)}</p>
+                            <p className="tabular-nums">{formatRupiah(p.total)}</p>
+                            <p className="text-muted-foreground">
+                              {t('dashboard.transaksiCount', { n: p.transaksi })}
+                            </p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      stroke="hsl(var(--chart-1))"
+                      strokeWidth={2}
+                      fill="url(#fill-penerimaan)"
+                      dot={false}
+                      activeDot={{ r: 4, strokeWidth: 2, stroke: 'hsl(var(--card))' }}
+                      isAnimationActive={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {pembayaran && pembayaran.per_metode.length > 0 && (
+              <div className="border-t pt-3">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                  {t('dashboard.metodePembayaran')}
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                  {pembayaran.per_metode.map((m) => (
+                    <div key={m.metode} className="rounded-md border bg-muted/30 p-2.5">
+                      <p className="text-xs text-muted-foreground">
+                        {t(`transaction.billing.metodeLabel.${m.metode}`, m.metode)} (
+                        {m.jumlah_transaksi}x)
+                      </p>
+                      <p className="font-semibold tabular-nums">{formatRupiah(m.total_bayar)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -367,90 +369,92 @@ export function DashboardCharts({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t('dashboard.komposisiSumber')}</CardTitle>
-          <CardDescription>{t('dashboard.komposisiSumberDesc')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {perSumber.length === 0 ? (
-            <AppEmptyState title={t('common.emptyData')} compact />
-          ) : (
-            <div className="flex flex-col items-center gap-4 xl:flex-row">
-              <div className="relative size-44 shrink-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={perSumber}
-                      dataKey="total_nilai"
-                      nameKey="sumber"
-                      innerRadius="62%"
-                      outerRadius="100%"
-                      stroke="hsl(var(--card))"
-                      strokeWidth={2}
-                      isAnimationActive={false}
-                    >
-                      {perSumber.map((s) => (
-                        <Cell
-                          key={s.sumber}
-                          fill={SUMBER_COLORS[s.sumber] ?? 'hsl(var(--muted-foreground))'}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        const p = active
-                          ? (payload?.[0]?.payload as
-                              { sumber: string; total_nilai: number } | undefined)
-                          : undefined;
-                        if (!p) return null;
-                        return (
-                          <div className={TOOLTIP_CLASS}>
-                            <p className="font-medium">
-                              {t(`transaction.billing.sumberLabel.${p.sumber}`, p.sumber)}
-                            </p>
-                            <p className="tabular-nums">{formatRupiah(p.total_nilai)}</p>
-                          </div>
-                        );
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {t('dashboard.totalLabel')}
-                  </span>
-                  <span className="text-sm font-semibold tabular-nums">
-                    {fmt.compactRupiah(totalSumber)}
-                  </span>
+      {pendapatan && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t('dashboard.komposisiSumber')}</CardTitle>
+            <CardDescription>{t('dashboard.komposisiSumberDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {perSumber.length === 0 ? (
+              <AppEmptyState title={t('common.emptyData')} compact />
+            ) : (
+              <div className="flex flex-col items-center gap-4 xl:flex-row">
+                <div className="relative size-44 shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={perSumber}
+                        dataKey="total_nilai"
+                        nameKey="sumber"
+                        innerRadius="62%"
+                        outerRadius="100%"
+                        stroke="hsl(var(--card))"
+                        strokeWidth={2}
+                        isAnimationActive={false}
+                      >
+                        {perSumber.map((s) => (
+                          <Cell
+                            key={s.sumber}
+                            fill={SUMBER_COLORS[s.sumber] ?? 'hsl(var(--muted-foreground))'}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          const p = active
+                            ? (payload?.[0]?.payload as
+                                { sumber: string; total_nilai: number } | undefined)
+                            : undefined;
+                          if (!p) return null;
+                          return (
+                            <div className={TOOLTIP_CLASS}>
+                              <p className="font-medium">
+                                {t(`transaction.billing.sumberLabel.${p.sumber}`, p.sumber)}
+                              </p>
+                              <p className="tabular-nums">{formatRupiah(p.total_nilai)}</p>
+                            </div>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      {t('dashboard.totalLabel')}
+                    </span>
+                    <span className="text-sm font-semibold tabular-nums">
+                      {fmt.compactRupiah(totalSumber)}
+                    </span>
+                  </div>
                 </div>
+                <ul className="w-full space-y-2">
+                  {perSumber.map((s) => (
+                    <li key={s.sumber} className="flex items-center gap-2 text-sm">
+                      <span
+                        className="size-2.5 shrink-0 rounded-sm"
+                        style={{
+                          backgroundColor:
+                            SUMBER_COLORS[s.sumber] ?? 'hsl(var(--muted-foreground))',
+                        }}
+                      />
+                      <span className="min-w-0 flex-1 truncate">
+                        {t(`transaction.billing.sumberLabel.${s.sumber}`, s.sumber)}
+                      </span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {((s.total_nilai / totalSumber) * 100).toFixed(1)}%
+                      </span>
+                      <span className="shrink-0 text-right font-medium tabular-nums">
+                        {formatRupiah(s.total_nilai)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="w-full space-y-2">
-                {perSumber.map((s) => (
-                  <li key={s.sumber} className="flex items-center gap-2 text-sm">
-                    <span
-                      className="size-2.5 shrink-0 rounded-sm"
-                      style={{
-                        backgroundColor: SUMBER_COLORS[s.sumber] ?? 'hsl(var(--muted-foreground))',
-                      }}
-                    />
-                    <span className="min-w-0 flex-1 truncate">
-                      {t(`transaction.billing.sumberLabel.${s.sumber}`, s.sumber)}
-                    </span>
-                    <span className="tabular-nums text-muted-foreground">
-                      {((s.total_nilai / totalSumber) * 100).toFixed(1)}%
-                    </span>
-                    <span className="shrink-0 text-right font-medium tabular-nums">
-                      {formatRupiah(s.total_nilai)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
+            )}
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t('dashboard.chartTindakanTitle')}</CardTitle>

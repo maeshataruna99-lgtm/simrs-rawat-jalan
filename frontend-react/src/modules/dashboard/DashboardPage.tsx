@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { errorMessage } from '@/lib/api-client';
+import { useAuthStore } from '@/lib/auth-store';
 import { exportDashboardExcel } from '@/lib/export-excel';
 import { exportDashboardPdf } from '@/lib/export-pdf';
 import { formatRupiah } from '@/lib/format';
@@ -53,6 +54,8 @@ function defaultRange(): PeriodeFilter {
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  // Data pendapatan, tagihan, dan pembayaran hanya untuk role dengan izin dashboard-keuangan (bawaan admin dan kasir).
+  const keuangan = useAuthStore((s) => s.can)('dashboard-keuangan');
   const initial = defaultRange();
 
   const [fromInput, setFromInput] = useState(initial.from);
@@ -86,9 +89,9 @@ export default function DashboardPage() {
         dashboardApi.getSummary(periode),
         dashboardApi.getKunjunganPerPoli(periode),
         dashboardApi.getTindakan(periode),
-        dashboardApi.getPendapatan(periode),
+        keuangan ? dashboardApi.getPendapatan(periode) : Promise.resolve(null),
         dashboardApi.getObat(periode),
-        dashboardApi.getPembayaran(periode),
+        keuangan ? dashboardApi.getPembayaran(periode) : Promise.resolve(null),
       ]);
       setSummary(s);
       setPerPoli(p);
@@ -101,7 +104,7 @@ export default function DashboardPage() {
     } finally {
       setLoadingStats(false);
     }
-  }, [periode, t]);
+  }, [keuangan, periode, t]);
 
   const loadDetail = useCallback(async () => {
     setLoadingDetail(true);
@@ -492,43 +495,49 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('dashboard.cardPendapatan')}</CardTitle>
-            <CreditCard className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" data-testid="kpi-pendapatan">
-              {loadingStats ? '...' : formatRupiah(summary?.total_pendapatan ?? 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t('dashboard.totalTagihanLabel', {
-                total: formatRupiah(summary?.total_tagihan ?? 0),
-              })}
-            </p>
-          </CardContent>
-        </Card>
+        {keuangan && (
+          <>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {t('dashboard.cardPendapatan')}
+                </CardTitle>
+                <CreditCard className="size-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold" data-testid="kpi-pendapatan">
+                  {loadingStats ? '...' : formatRupiah(summary?.total_pendapatan ?? 0)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('dashboard.totalTagihanLabel', {
+                    total: formatRupiah(summary?.total_tagihan ?? 0),
+                  })}
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('dashboard.cardInvoice')}</CardTitle>
-            <Activity className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" data-testid="kpi-lunas">
-              {loadingStats ? '...' : (summary?.invoice_per_status.lunas ?? 0)}{' '}
-              <span className="text-sm font-normal text-muted-foreground">
-                {t('transaction.billing.statusLabel.lunas')}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t('dashboard.invoiceBreakdown', {
-                sebagian: summary?.invoice_per_status.dibayar_sebagian ?? 0,
-                belum: summary?.invoice_per_status.belum_dibayar ?? 0,
-              })}
-            </p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t('dashboard.cardInvoice')}</CardTitle>
+                <Activity className="size-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold" data-testid="kpi-lunas">
+                  {loadingStats ? '...' : (summary?.invoice_per_status?.lunas ?? 0)}{' '}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {t('transaction.billing.statusLabel.lunas')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('dashboard.invoiceBreakdown', {
+                    sebagian: summary?.invoice_per_status?.dibayar_sebagian ?? 0,
+                    belum: summary?.invoice_per_status?.belum_dibayar ?? 0,
+                  })}
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       <DashboardCharts
@@ -555,9 +564,13 @@ export default function DashboardPage() {
             <TabsList>
               <TabsTrigger value="kunjungan">{t('dashboard.tabKunjungan')}</TabsTrigger>
               <TabsTrigger value="tindakan">{t('dashboard.tabTindakan')}</TabsTrigger>
-              <TabsTrigger value="pendapatan">{t('dashboard.tabPendapatan')}</TabsTrigger>
+              {keuangan && (
+                <TabsTrigger value="pendapatan">{t('dashboard.tabPendapatan')}</TabsTrigger>
+              )}
               <TabsTrigger value="obat">{t('dashboard.tabObat')}</TabsTrigger>
-              <TabsTrigger value="pembayaran">{t('dashboard.tabPembayaran')}</TabsTrigger>
+              {keuangan && (
+                <TabsTrigger value="pembayaran">{t('dashboard.tabPembayaran')}</TabsTrigger>
+              )}
             </TabsList>
           </Tabs>
         </CardHeader>

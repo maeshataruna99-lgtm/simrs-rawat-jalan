@@ -148,9 +148,11 @@ export function AppSidebar({ activeModule, onSelectModule }: Props) {
             <SidebarGroupLabel>{activeModule.nama}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {activeModule.menus.map((menu) => (
-                  <MenuEntry key={menu.kode} menu={menu} pathname={pathname} />
-                ))}
+                {activeModule.menus
+                  .filter((menu) => menu.path || menu.children.length > 0)
+                  .map((menu) => (
+                    <MenuEntry key={menu.kode} menu={menu} pathname={pathname} />
+                  ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

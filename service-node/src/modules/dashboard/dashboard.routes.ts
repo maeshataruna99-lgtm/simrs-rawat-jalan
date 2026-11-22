@@ -6,8 +6,9 @@
  */
 import { Router, type Request } from 'express';
 import { z } from 'zod';
+import { AppError } from '../../lib/app-error.js';
 import { success } from '../../lib/response.js';
-import { authenticate, requirePermission } from '../../middleware/auth.js';
+import { authenticate, hasPermission, requirePermission } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
 import {
   getDetail,
@@ -23,6 +24,13 @@ import {
 } from './dashboard.service.js';
 
 export const dashboardRoutes = Router();
+
+/** Izin menu khusus data pendapatan (pendapatan, tagihan, pembayaran). Bawaan: admin dan kasir. */
+const MENU_KEUANGAN = 'dashboard-keuangan';
+
+function bolehKeuangan(req: Request): Promise<boolean> {
+  return hasPermission(req.user?.role ?? '', MENU_KEUANGAN, 'read');
+}
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -112,7 +120,14 @@ dashboardRoutes.get('/filters', async (_req, res, next) => {
 
 dashboardRoutes.get('/summary', validate({ query: periodeQuerySchema }), async (req, res, next) => {
   try {
-    res.json(success(await getSummary(filterDariValidated(req))));
+    const summary = await getSummary(filterDariValidated(req));
+    res.json(
+      success(
+        (await bolehKeuangan(req))
+          ? summary
+          : { ...summary, total_pendapatan: null, total_tagihan: null, invoice_per_status: null },
+      ),
+    );
   } catch (err) {
     next(err);
   }
@@ -144,6 +159,7 @@ dashboardRoutes.get(
 
 dashboardRoutes.get(
   '/pendapatan',
+  requirePermission(MENU_KEUANGAN),
   validate({ query: periodeQuerySchema }),
   async (req, res, next) => {
     try {
@@ -164,6 +180,7 @@ dashboardRoutes.get('/obat', validate({ query: periodeQuerySchema }), async (req
 
 dashboardRoutes.get(
   '/pembayaran',
+  requirePermission(MENU_KEUANGAN),
   validate({ query: periodeQuerySchema }),
   async (req, res, next) => {
     try {
@@ -181,6 +198,9 @@ dashboardRoutes.get(
     try {
       const { jenis } = req.validated?.params as { jenis: DetailJenis };
       const q = req.validated?.query as DetailQuery;
+      if ((jenis === 'pendapatan' || jenis === 'pembayaran') && !(await bolehKeuangan(req))) {
+        throw new AppError(403, 'Anda tidak memiliki akses ke fitur ini.');
+      }
       const filter = resolvePeriode(q.from, q.to, {
         dokter_id: q.dokter_id,
         penjamin: q.penjamin,

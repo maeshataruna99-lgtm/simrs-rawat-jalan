@@ -50,7 +50,7 @@ class RoleAccessServiceTest extends TestCase
         $billing = array_values(array_filter($menus, fn ($m) => $m['kode'] === 'billing'))[0];
         $pasien = array_values(array_filter($menus, fn ($m) => $m['kode'] === 'master-pasien'))[0];
 
-        $this->assertCount(21, $menus);
+        $this->assertCount(22, $menus);
         $this->assertTrue($billing['can_create']);
         $this->assertFalse($billing['can_delete']);
         $this->assertFalse($pasien['can_read']);

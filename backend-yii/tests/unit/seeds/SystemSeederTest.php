@@ -36,7 +36,7 @@ class SystemSeederTest extends TestCase
 
         $this->assertSame(6, $this->countRows('m_role'));
         $this->assertSame(6, $this->countRows('m_user'));
-        $this->assertSame(21, $this->countRows('m_menu'));
+        $this->assertSame(22, $this->countRows('m_menu'));
         $this->assertSame($this->countRows('m_menu'), $this->countRows('m_module_menu'));
     }
 
@@ -70,7 +70,7 @@ class SystemSeederTest extends TestCase
         $menus = array_keys($access);
         sort($menus);
 
-        $this->assertSame(['billing', 'dashboard'], $menus);
+        $this->assertSame(['billing', 'dashboard', 'dashboard-keuangan'], $menus);
         $this->assertTrue($access['billing']['can_create']);
         $this->assertFalse($access['billing']['can_delete']);
         $this->assertFalse($access['dashboard']['can_create']);

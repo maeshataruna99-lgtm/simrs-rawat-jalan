@@ -18,7 +18,10 @@ const adminUser: UserProfile = {
   dokter_id: null,
   role: { id: 1, kode: 'admin', nama: 'Administrator' },
   modules: [],
-  permissions: { dashboard: { read: true, create: true, update: true, delete: true } },
+  permissions: {
+    dashboard: { read: true, create: true, update: true, delete: true },
+    'dashboard-keuangan': { read: true, create: false, update: false, delete: false },
+  },
 };
 
 beforeEach(() => {
@@ -140,5 +143,25 @@ describe('DashboardPage (poin 9.4)', () => {
     expect(await screen.findByRole('heading', { name: 'Dashboard & Laporan' })).toBeInTheDocument();
     expect(await screen.findByText('RJ202611220001')).toBeInTheDocument();
     expect(screen.getByTestId('kpi-kunjungan')).toHaveTextContent('12');
+  });
+
+  it('role tanpa izin dashboard-keuangan tidak melihat dan tidak meminta data pendapatan', async () => {
+    useAuthStore.setState({
+      status: 'authenticated',
+      user: {
+        ...adminUser,
+        role: { id: 3, kode: 'dokter', nama: 'Dokter' },
+        permissions: { dashboard: { read: true, create: false, update: false, delete: false } },
+      },
+    });
+    renderAt('/dashboard');
+
+    expect(await screen.findByText('RJ202611220001')).toBeInTheDocument();
+    expect(screen.getByTestId('kpi-kunjungan')).toHaveTextContent('12');
+    expect(screen.queryByTestId('kpi-pendapatan')).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Pendapatan' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Pembayaran' })).not.toBeInTheDocument();
+    expect(dashboardApi.getPendapatan).not.toHaveBeenCalled();
+    expect(dashboardApi.getPembayaran).not.toHaveBeenCalled();
   });
 });

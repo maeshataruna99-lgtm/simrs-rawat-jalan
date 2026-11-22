@@ -22,13 +22,14 @@ export interface DashboardSummary {
   periode: PeriodeFilter;
   total_kunjungan: number;
   total_tindakan: number;
-  total_pendapatan: number;
-  total_tagihan: number;
+  // null untuk role tanpa izin dashboard-keuangan.
+  total_pendapatan: number | null;
+  total_tagihan: number | null;
   invoice_per_status: {
     belum_dibayar: number;
     dibayar_sebagian: number;
     lunas: number;
-  };
+  } | null;
 }
 
 export interface KunjunganPerPoliItem {

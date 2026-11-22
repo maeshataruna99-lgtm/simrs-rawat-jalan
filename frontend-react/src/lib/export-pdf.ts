@@ -210,11 +210,16 @@ export function createDashboardPdfBytes(params: {
     { text: 'RINGKASAN UTAMA', bold: true },
     { text: `Total Kunjungan     : ${summary?.total_kunjungan ?? 0}` },
     { text: `Total Tindakan      : ${summary?.total_tindakan ?? 0}` },
-    { text: `Pendapatan Diterima : ${formatRupiah(summary?.total_pendapatan ?? 0)}` },
-    { text: `Total Tagihan       : ${formatRupiah(summary?.total_tagihan ?? 0)}` },
-    {
-      text: `Status Invoice      : Lunas ${summary?.invoice_per_status.lunas ?? 0} | Sebagian ${summary?.invoice_per_status.dibayar_sebagian ?? 0} | Belum ${summary?.invoice_per_status.belum_dibayar ?? 0}`,
-    },
+    // Baris keuangan hanya ada bila role berizin (server mengirim null untuk role lain).
+    ...(summary?.invoice_per_status
+      ? [
+          { text: `Pendapatan Diterima : ${formatRupiah(summary.total_pendapatan ?? 0)}` },
+          { text: `Total Tagihan       : ${formatRupiah(summary.total_tagihan ?? 0)}` },
+          {
+            text: `Status Invoice      : Lunas ${summary.invoice_per_status.lunas} | Sebagian ${summary.invoice_per_status.dibayar_sebagian} | Belum ${summary.invoice_per_status.belum_dibayar}`,
+          },
+        ]
+      : []),
     { text: 'KUNJUNGAN PER POLI', bold: true, gapBefore: 10 },
     ...(perPoli.length > 0
       ? perPoli.map((p) => ({ text: `- ${p.nama} (${p.kode}): ${p.jumlah_kunjungan} kunjungan` }))

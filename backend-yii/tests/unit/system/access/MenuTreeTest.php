@@ -40,7 +40,7 @@ class MenuTreeTest extends TestCase
         $tree = (new AccessService())->menuTreeFor($this->roleId('kasir'));
 
         $this->assertSame(['dashboard', 'billing'], array_column($tree, 'kode'));
-        $this->assertSame(['dashboard', 'billing'], $this->menuKodes($tree));
+        $this->assertSame(['dashboard', 'dashboard-keuangan', 'billing'], $this->menuKodes($tree));
     }
 
     public function testDokterMelihatMenuPelayananDanMasterYangBolehDibaca(): void
