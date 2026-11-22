@@ -11,6 +11,30 @@ use app\tests\TestCase;
  */
 class PoliServiceTest extends TestCase
 {
+    public function testKodeHurufKecilNamaGandaFilterBooleanDanAuditLog(): void
+    {
+        $service = new PoliService();
+        $poli = $service->create(['kode' => 'poli-a', 'nama' => 'Poli A', 'prefix_antrean' => 'A', 'tarif_pendaftaran' => 0]);
+        $this->assertSame('POLI-A', $poli->kode);
+        $this->assertIsString($poli->toArray()['updated_at'] ?? '');
+
+        foreach ([['kode' => 'Poli-A', 'nama' => 'Poli Lain'], ['kode' => 'POLI-B', 'nama' => 'Poli A']] as $salah) {
+            try {
+                $service->create($salah + ['prefix_antrean' => 'B', 'tarif_pendaftaran' => 0]);
+                $this->fail('Kode beda huruf atau nama ganda seharusnya ditolak');
+            } catch (ValidationException) {
+            }
+        }
+
+        $this->assertSame(1, $service->list(['is_active' => 'true'])->getTotalCount());
+        $this->assertSame(0, $service->list(['is_active' => 'false'])->getTotalCount());
+
+        $service->delete($poli->id);
+        $aksi = (new \yii\db\Query())->select('aksi')->from('t_audit_log')
+            ->where(['tabel' => 'm_poli', 'record_id' => $poli->id])->orderBy('id')->column();
+        $this->assertSame(['insert', 'delete'], $aksi);
+    }
+
     public function testTambahPoliDanKodeGandaDitolak(): void
     {
         $service = new PoliService();

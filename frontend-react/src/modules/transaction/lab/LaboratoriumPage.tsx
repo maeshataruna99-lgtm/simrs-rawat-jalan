@@ -118,7 +118,10 @@ export default function LaboratoriumPage() {
         aria-label={t('system.common.status')}
         className={selectClassName}
         value={status}
-        onChange={(e) => setStatus(e.target.value)}
+        onChange={(e) => {
+          setOrders(null);
+          setStatus(e.target.value);
+        }}
       >
         {STATUS_OPTIONS.map((s) => (
           <option key={s} value={s}>

@@ -29,7 +29,7 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
                 'createdByAttribute' => 'created_by',
                 'updatedByAttribute' => 'updated_by',
             ],
-        ];
+        ] + (static::class === AuditLog::class ? [] : ['auditLog' => AuditLogBehavior::class]);
     }
 
     /**
@@ -53,6 +53,10 @@ abstract class ActiveRecord extends \yii\db\ActiveRecord
             'deleted_at' => new Expression('CURRENT_TIMESTAMP'),
             'updated_by' => \Yii::$app->has('user') ? \Yii::$app->user->id : null,
         ]);
+        // updateAttributes() tidak memicu event behavior, jadi soft delete dicatat manual ke audit log.
+        if ($this->getBehavior('auditLog') !== null) {
+            AuditLog::catat(static::tableName(), (int) $this->getPrimaryKey(), 'delete', ['id' => $this->getPrimaryKey()], null);
+        }
     }
 
     /**

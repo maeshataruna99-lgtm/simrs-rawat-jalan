@@ -4,6 +4,7 @@
  *
  * Dipakai di: BillingPage.tsx.
  */
+import axios from 'axios';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -85,6 +86,9 @@ export function BayarDialog({ open, invoice, idempotencyKey, onOpenChange, onSuc
       const fe = fieldErrors(err);
       if (Object.keys(fe).length > 0) {
         setErrors(fe);
+      } else if (axios.isAxiosError(err) && !err.response) {
+        // Respons tidak sampai: pembayaran mungkin sudah tersimpan, ulangi aman karena Idempotency-Key sama.
+        toast.error(t('transaction.billing.networkRetry'));
       } else {
         toast.error(errorMessage(err, t('common.saveFailed')));
       }

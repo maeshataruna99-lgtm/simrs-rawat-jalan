@@ -25,6 +25,7 @@ class Icd10 extends ActiveRecord
             [['kode', 'nama'], 'required'],
             [['kode', 'nama'], 'trim'],
             [['kode'], 'string', 'max' => 20],
+            [['kode'], 'filter', 'filter' => 'mb_strtoupper'],
             [['kode'], 'unique', 'filter' => ['deleted_at' => null], 'message' => 'Kode ICD-10 sudah dipakai.'],
             [['nama'], 'string', 'max' => 200],
             [['is_active'], 'boolean'],

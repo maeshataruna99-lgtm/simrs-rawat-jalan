@@ -147,7 +147,6 @@ paths:
       tags: [Integrasi Lab]
       security:
         - apiKeyAuth: []
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -167,8 +166,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
+        '400':
+          description: Body request bukan JSON yang valid
         '401':
-          description: API key atau JWT tidak valid
+          description: API key tidak valid atau tidak dikirim
+        '404':
+          description: Detail order tidak ditemukan di Yii (baris outbox ditandai gagal)
+        '409':
+          description: Idempotency-Key sudah dipakai dengan detail_id atau hasil berbeda, atau order sudah selesai
         '422':
           description: Validasi payload gagal
           content:

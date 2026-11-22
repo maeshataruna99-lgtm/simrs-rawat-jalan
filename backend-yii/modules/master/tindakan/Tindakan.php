@@ -30,6 +30,7 @@ class Tindakan extends ActiveRecord
             [['kode', 'nama', 'tarif'], 'required'],
             [['kode', 'nama'], 'trim'],
             [['kode'], 'string', 'max' => 30],
+            [['kode'], 'filter', 'filter' => 'mb_strtoupper'],
             [['kode'], 'unique', 'filter' => ['deleted_at' => null], 'message' => 'Kode sudah dipakai.'],
             [['nama'], 'string', 'max' => 150],
             [['tarif'], 'number', 'min' => 0, 'message' => 'Tarif harus berupa angka.', 'tooSmall' => 'Tarif tidak boleh kurang dari 0.'],

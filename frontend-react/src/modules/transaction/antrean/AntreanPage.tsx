@@ -45,7 +45,8 @@ export default function AntreanPage() {
   const [poliList, setPoliList] = useState<PoliItem[]>([]);
   const [q, setQ] = useState('');
   const [poliId, setPoliId] = useState<number | ''>('');
-  const [tanggal, setTanggal] = useState<string>('');
+  // Bawaan hari ini agar daftar tidak memuat seluruh antrean lintas tanggal.
+  const [tanggal, setTanggal] = useState<string>(() => new Date().toLocaleDateString('sv-SE'));
   const [status, setStatus] = useState<KunjunganStatus | ''>('');
 
   const [rows, setRows] = useState<KunjunganItem[]>([]);
@@ -106,7 +107,11 @@ export default function AntreanPage() {
     {
       key: 'no_antrean',
       header: t('transaction.pendaftaran.queueNumber'),
-      cell: (row) => <span className="font-mono text-base font-bold">#{row.no_antrean}</span>,
+      cell: (row) => (
+        <span className="font-mono text-base font-bold">
+          {row.kode_antrean ?? `#${row.no_antrean}`}
+        </span>
+      ),
       sortValue: (row) => row.no_antrean,
     },
     {

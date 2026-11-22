@@ -59,6 +59,7 @@ describe('ObatPage (/master/obat)', () => {
         stok_sesudah: 80,
         referensi: 'Opname gudang',
         created_at: '2026-11-21 10:00:00',
+        petugas: 'Dewi Apoteker',
       },
     ]);
 

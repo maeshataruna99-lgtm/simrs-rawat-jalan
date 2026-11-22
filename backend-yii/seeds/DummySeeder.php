@@ -442,14 +442,15 @@ class DummySeeder
                         'catatan_klinis' => 'Pemeriksaan penunjang rutin',
                     ])->execute();
                     $orderId = (int) Yii::$app->db->getLastInsertID('t_order_lab_id_seq');
+                    $hasilLab = ['LAB002' => '96', 'LAB005' => '7500'][$labKode] ?? '13.5';
                     Yii::$app->db->createCommand()->insert('t_order_lab_detail', [
                         'order_id' => $orderId,
                         'pemeriksaan_lab_id' => $lab['id'],
                         'tarif' => $lab['tarif'],
-                        'hasil' => $labKode === 'LAB002' ? '96' : '13.5',
+                        'hasil' => $hasilLab,
                         'satuan' => $lab['satuan'],
                         'nilai_rujukan' => $lab['rujukan'],
-                        'flag' => 'normal',
+                        'flag' => \app\modules\transaction\lab\OrderLabService::hitungFlag($hasilLab, $lab['rujukan']),
                         'idempotency_key' => "seed-lab-{$noOrder}",
                         'diinput_oleh' => $labUserId,
                         'diinput_at' => "{$tgl} 09:45:00",

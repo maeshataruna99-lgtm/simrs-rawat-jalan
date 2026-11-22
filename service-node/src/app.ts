@@ -5,6 +5,7 @@
  * Dipakai di: server.ts, tests/.
  */
 import express from 'express';
+import { fileURLToPath } from 'node:url';
 import { errorHandler, notFound } from './middleware/error-handler.js';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
@@ -30,6 +31,12 @@ export function createApp() {
   });
   app.use(express.json({ limit: '1mb' }));
 
+  // Spesifikasi OpenAPI disajikan apa adanya agar bisa dibuka di Swagger Editor / Postman.
+  app.get('/openapi.yaml', (_req, res) => {
+    res
+      .type('application/yaml')
+      .sendFile(fileURLToPath(new URL('../openapi.yaml', import.meta.url)));
+  });
   app.use('/health', healthRoutes);
   app.use('/api/lab', labRoutes);
   app.use('/api/dashboard', dashboardRoutes);

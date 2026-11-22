@@ -109,7 +109,7 @@ npx newman run postman/simrs.collection.json -e postman/local.environment.json -
 - **Pembagian Tanggung Jawab Yii vs Node**: [`docs/yii-vs-node.md`](docs/yii-vs-node.md)
 - **Analisis & Bukti Skenario Teknis (D.1–D.6)**: [`docs/technical-scenarios.md`](docs/technical-scenarios.md)
 - **Optimasi Query Dashboard (`EXPLAIN ANALYZE`)**: [`docs/performance.md`](docs/performance.md)
-- **Dokumentasi API**: [`docs/api/yii.md`](docs/api/yii.md), [`service-node/openapi.yaml`](service-node/openapi.yaml)
+- **Dokumentasi API**: [`docs/api/yii.md`](docs/api/yii.md), [`docs/api/node.md`](docs/api/node.md), [`service-node/openapi.yaml`](service-node/openapi.yaml) (juga disajikan di `http://localhost:3000/openapi.yaml`)
 - **Postman & Hasil Newman**: [`postman/simrs.collection.json`](postman/simrs.collection.json), [`postman/local.environment.json`](postman/local.environment.json), [`postman/newman-report.txt`](postman/newman-report.txt)
 - **Daftar Test Case & Galeri Screenshot**: [`docs/test-cases.md`](docs/test-cases.md), [`docs/screenshots/README.md`](docs/screenshots/README.md)
 - **Chatbot Bantuan (bonus, tanpa LLM)**: [`docs/chatbot.md`](docs/chatbot.md)

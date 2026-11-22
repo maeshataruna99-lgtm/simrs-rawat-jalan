@@ -47,7 +47,11 @@ export function authenticate(...methods: AuthMethod[]) {
       return next();
     }
 
-    next(new AppError(401, 'Sesi tidak valid atau sudah berakhir, silakan login ulang.'));
+    // Klien mesin (alat lab) tidak punya sesi login, jadi diberi pesan khusus API key.
+    const message = methods.includes('jwt')
+      ? 'Sesi tidak valid atau sudah berakhir, silakan login ulang.'
+      : 'API key tidak valid atau tidak dikirim (header X-Api-Key).';
+    next(new AppError(401, message));
   };
 }
 

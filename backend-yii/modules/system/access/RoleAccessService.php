@@ -93,8 +93,15 @@ class RoleAccessService
             $this->guardSelfAccess($rows);
         }
 
-        Yii::$app->db->transaction(function () use ($role, $rows) {
+        $lama = (new Query())
+            ->select(['menu_id', 'can_read', 'can_create', 'can_update', 'can_delete'])
+            ->from('m_role_access')
+            ->where(['role_id' => $role->id])
+            ->indexBy('menu_id')
+            ->all();
+        Yii::$app->db->transaction(function () use ($role, $rows, $lama) {
             $db = Yii::$app->db;
+            \app\common\AuditLog::catat('m_role_access', $role->id, 'update', ['akses' => $lama], ['akses' => $rows]);
             $db->createCommand()->delete('m_role_access', ['role_id' => $role->id])->execute();
             foreach ($rows as $menuId => $flags) {
                 if (in_array(true, $flags, true)) {

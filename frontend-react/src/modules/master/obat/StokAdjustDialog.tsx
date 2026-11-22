@@ -18,7 +18,7 @@ import * as obatApi from './obat.api';
 import type { ObatItem } from './obat.types';
 
 const schema = z.object({
-  stok_baru: z.number().int().min(0, 'master.obat.hargaMin'),
+  stok_baru: z.number().int().min(0, 'master.obat.stokMin'),
   referensi: z.string().trim().optional(),
 });
 

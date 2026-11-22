@@ -5,6 +5,7 @@
  *
  * Dipakai di: LoginPage, RequireAuth, PermissionGuard, usePermission, layout (poin 1.12).
  */
+import axios from 'axios';
 import { create } from 'zustand';
 import * as authApi from '@/modules/system/auth/auth.api';
 import type { PermissionAction, UserProfile } from '@/modules/system/auth/auth.types';
@@ -42,8 +43,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     try {
       set({ status: 'authenticated', user: await authApi.fetchProfile() });
-    } catch {
-      tokenStorage.clear();
+    } catch (err) {
+      // Token hanya dibuang bila server menolaknya (401); timeout/jaringan lambat tidak boleh membuat user ter-logout.
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        tokenStorage.clear();
+      }
       set({ status: 'guest', user: null });
     }
   },

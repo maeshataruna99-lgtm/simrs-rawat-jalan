@@ -89,6 +89,8 @@ class Kunjungan extends ActiveRecord
     {
         $fields = parent::fields();
         $fields['no_antrean'] = fn () => (int) $this->no_antrean;
+        // Format sama dengan layar antrean publik (contoh U-002) agar tiket pasien cocok dengan panggilan.
+        $fields['kode_antrean'] = fn () => sprintf('%s-%03d', $this->poli?->prefix_antrean ?? '', (int) $this->no_antrean);
         $fields['pasien'] = fn () => $this->pasien ? [
             'id' => $this->pasien->id,
             'no_rm' => $this->pasien->no_rm,

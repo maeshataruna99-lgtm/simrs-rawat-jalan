@@ -32,11 +32,14 @@ export function AppHeader({ activeModule }: Props) {
   const modules = useAuthStore((s) => s.user?.modules ?? []);
   const location = findMenuByPath(modules, pathname);
 
+  // Path di luar menu user (bukan beranda) berarti halaman akses ditolak, jangan tampilkan modul aktif.
   const crumbs = location
     ? [location.module.nama, ...location.trail.map((menu) => menu.nama)]
-    : activeModule
-      ? [t('layout.home'), activeModule.nama]
-      : [t('layout.home')];
+    : pathname !== '/'
+      ? [t('layout.home'), t('error.forbidden')]
+      : activeModule
+        ? [t('layout.home'), activeModule.nama]
+        : [t('layout.home')];
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4 print:hidden">

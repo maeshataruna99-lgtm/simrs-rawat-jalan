@@ -28,6 +28,7 @@ class PemeriksaanLab extends ActiveRecord
             [['kode', 'nama', 'tarif'], 'required'],
             [['kode', 'nama', 'satuan', 'nilai_rujukan'], 'trim'],
             [['kode', 'satuan'], 'string', 'max' => 30],
+            [['kode'], 'filter', 'filter' => 'mb_strtoupper'],
             [['kode'], 'unique', 'filter' => ['deleted_at' => null], 'message' => 'Kode sudah dipakai.'],
             [['nama'], 'string', 'max' => 150],
             [['nilai_rujukan'], 'string', 'max' => 100],

@@ -63,7 +63,7 @@ class JadwalDokter extends ActiveRecord
             [['dokter_id', 'poli_id', 'hari', 'kuota'], 'integer'],
             [['dokter_id'], 'exist', 'targetClass' => Dokter::class, 'targetAttribute' => 'id', 'filter' => ['deleted_at' => null], 'message' => 'Dokter tidak ditemukan.'],
             [['poli_id'], 'exist', 'targetClass' => Poli::class, 'targetAttribute' => 'id', 'filter' => ['deleted_at' => null], 'message' => 'Poli tidak ditemukan.'],
-            [['hari'], 'integer', 'min' => 1, 'max' => 7, 'message' => 'Hari harus antara 1 (Senin) sampai 7 (Minggu).'],
+            [['hari'], 'integer', 'min' => 1, 'max' => 7, 'message' => 'Hari harus antara 1 (Senin) sampai 7 (Minggu).', 'tooSmall' => 'Hari harus antara 1 (Senin) sampai 7 (Minggu).', 'tooBig' => 'Hari harus antara 1 (Senin) sampai 7 (Minggu).'],
             [['jam_mulai', 'jam_selesai'], 'match', 'pattern' => '/^(?:[01]\d|2[0-3]):[0-5]\d$/', 'message' => 'Format jam harus HH:MM (contoh 08:00).'],
             [['jam_selesai'], 'validateUrutanJam'],
             [['jam_mulai'], 'validateBentrok'],

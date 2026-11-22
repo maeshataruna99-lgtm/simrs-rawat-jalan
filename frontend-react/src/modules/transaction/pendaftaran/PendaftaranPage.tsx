@@ -357,7 +357,7 @@ export default function PendaftaranPage() {
                 data-testid="ticket-no-antrean"
                 className="font-mono text-3xl font-bold text-primary"
               >
-                #{ticket.no_antrean}
+                {ticket.kode_antrean ?? `#${ticket.no_antrean}`}
               </div>
             </div>
           </CardContent>
@@ -395,7 +395,9 @@ export default function PendaftaranPage() {
                       <TableCell>{r.tgl_kunjungan}</TableCell>
                       <TableCell>{r.poli?.nama ?? '-'}</TableCell>
                       <TableCell>{r.dokter?.nama ?? '-'}</TableCell>
-                      <TableCell className="font-mono font-semibold">#{r.no_antrean}</TableCell>
+                      <TableCell className="font-mono font-semibold">
+                        {r.kode_antrean ?? `#${r.no_antrean}`}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline">
                           {t(`transaction.antrean.status.${r.status}`)}

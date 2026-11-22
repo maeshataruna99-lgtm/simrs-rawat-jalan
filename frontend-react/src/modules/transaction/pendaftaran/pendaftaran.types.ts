@@ -22,6 +22,7 @@ export interface KunjunganItem {
   jadwal_id: number;
   tgl_kunjungan: string;
   no_antrean: number;
+  kode_antrean?: string;
   status: KunjunganStatus;
   pasien: {
     id: number;

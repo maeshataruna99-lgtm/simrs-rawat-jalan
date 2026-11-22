@@ -63,29 +63,32 @@ export function StokMutasiDialog({ target, onOpenChange }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>{t('master.obat.colWaktu')}</TableHead>
               <TableHead>{t('master.obat.colJenis')}</TableHead>
               <TableHead>{t('master.obat.colQty')}</TableHead>
               <TableHead>{t('master.obat.colSebelum')}</TableHead>
               <TableHead>{t('master.obat.colSesudah')}</TableHead>
               <TableHead>{t('master.obat.colReferensi')}</TableHead>
+              <TableHead>{t('master.obat.colPetugas')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="h-20 text-center text-muted-foreground">
                   {t('common.loading')}
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="h-20 text-center text-muted-foreground">
                   {t('common.emptyData')}
                 </TableCell>
               </TableRow>
             ) : (
               rows.map((row) => (
                 <TableRow key={row.id}>
+                  <TableCell className="whitespace-nowrap text-xs">{row.created_at}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{row.jenis}</Badge>
                   </TableCell>
@@ -95,6 +98,7 @@ export function StokMutasiDialog({ target, onOpenChange }: Props) {
                   <TableCell className="font-mono">{row.stok_sebelum}</TableCell>
                   <TableCell className="font-mono font-semibold">{row.stok_sesudah}</TableCell>
                   <TableCell>{row.referensi ?? '-'}</TableCell>
+                  <TableCell>{row.petugas ?? '-'}</TableCell>
                 </TableRow>
               ))
             )}

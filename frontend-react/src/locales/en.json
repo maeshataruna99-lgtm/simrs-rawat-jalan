@@ -304,6 +304,7 @@
       "namaRequired": "Medicine name is required.",
       "satuanRequired": "Medicine unit is required.",
       "hargaMin": "Price cannot be less than 0.",
+      "stokMin": "Stock cannot be less than 0.",
       "adjustButton": "Adjust Stock",
       "adjustTitle": "Medicine Stock Adjustment",
       "adjustDescription": "Adjust physical stock for {{nama}} (current stock: {{stok}}).",
@@ -314,6 +315,7 @@
       "historyTitle": "Stock Movement History",
       "historyDescription": "Stock change ledger for {{nama}}.",
       "colWaktu": "Timestamp",
+      "colPetugas": "Officer",
       "colJenis": "Type",
       "colQty": "Change",
       "colSebelum": "Before",
@@ -535,6 +537,7 @@
       "noReferensiPlaceholder": "Optional (transfer / QRIS / EDC ref)",
       "submitPay": "Submit Payment",
       "paymentSaved": "Payment recorded successfully.",
+      "networkRetry": "Connection lost before the response arrived. The payment may already be recorded; press Save again to confirm, it will not be recorded twice.",
       "validationJumlahMin": "Payment amount must be greater than 0.",
       "validationJumlahMax": "Payment amount cannot exceed balance due.",
       "statusLabel": {

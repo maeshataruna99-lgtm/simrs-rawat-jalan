@@ -34,4 +34,5 @@ export interface StokMutasiItem {
   stok_sesudah: number;
   referensi: string | null;
   created_at: string;
+  petugas: string | null;
 }

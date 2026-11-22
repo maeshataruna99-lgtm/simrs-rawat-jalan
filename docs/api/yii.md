@@ -15,7 +15,7 @@ Seluruh endpoint mengembalikan format JSON seragam:
 - Header wajib (kecuali `/health` dan `/system/auth/login`): `Authorization: Bearer <JWT>`.
 - Hak akses diperiksa per `menu:aksi` (`read`, `create`, `update`, `delete`). Gagal izin membalas `403`.
 - Kode status: `200` OK, `201` Created, `401` Unauthorized, `403` Forbidden, `404` Not Found, `409` Conflict (duplikasi / aturan status / kuota / stok / invoice lunas), `422` Unprocessable Entity (validasi field).
-- Parameter boolean query dikirim sebagai `1` atau `0`.
+- Parameter boolean query dikirim sebagai `1`/`0` atau `true`/`false`.
 - Endpoint CRUD standar menyediakan: `GET /x?q=&page=&per_page=`, `GET /x/{id}`, `POST /x`, `PUT /x/{id}`, `DELETE /x/{id}` (soft delete).
 
 ---

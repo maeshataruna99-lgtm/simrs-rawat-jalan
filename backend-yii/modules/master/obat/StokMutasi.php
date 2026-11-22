@@ -34,6 +34,8 @@ class StokMutasi extends ActiveRecord
             'stok_sesudah' => fn () => (int) $this->stok_sesudah,
             'referensi' => 'referensi',
             'created_at' => 'created_at',
+            'petugas' => fn () => $this->created_by === null ? null
+                : (new \yii\db\Query())->select('nama')->from('m_user')->where(['id' => $this->created_by])->scalar(),
         ];
     }
 }

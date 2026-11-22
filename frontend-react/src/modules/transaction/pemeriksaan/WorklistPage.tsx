@@ -32,7 +32,11 @@ export default function WorklistPage() {
     {
       key: 'no_antrean',
       header: t('transaction.pendaftaran.queueNumber'),
-      cell: (row) => <span className="font-mono text-base font-bold">#{row.no_antrean}</span>,
+      cell: (row) => (
+        <span className="font-mono text-base font-bold">
+          {row.kode_antrean ?? `#${row.no_antrean}`}
+        </span>
+      ),
       sortValue: (row) => row.no_antrean,
     },
     {

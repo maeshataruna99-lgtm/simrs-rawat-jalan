@@ -15,7 +15,7 @@ use yii\db\BaseActiveRecord;
 class AuditLogBehavior extends Behavior
 {
     /** Kolom audit teknis yang tidak perlu dicatat sebagai perubahan bisnis. */
-    private const IGNORED_ATTRIBUTES = ['created_at', 'updated_at', 'created_by', 'updated_by'];
+    private const IGNORED_ATTRIBUTES = ['created_at', 'updated_at', 'created_by', 'updated_by', 'password_hash'];
 
     public function events(): array
     {

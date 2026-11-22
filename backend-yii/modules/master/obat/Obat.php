@@ -30,6 +30,7 @@ class Obat extends ActiveRecord
             [['kode', 'nama', 'satuan', 'harga'], 'required'],
             [['kode', 'nama', 'satuan'], 'trim'],
             [['kode', 'satuan'], 'string', 'max' => 30],
+            [['kode'], 'filter', 'filter' => 'mb_strtoupper'],
             [['kode'], 'unique', 'filter' => ['deleted_at' => null], 'message' => 'Kode sudah dipakai.'],
             [['nama'], 'string', 'max' => 150],
             [['harga'], 'number', 'min' => 0, 'message' => 'Harga harus berupa angka.', 'tooSmall' => 'Harga tidak boleh kurang dari 0.'],

@@ -96,7 +96,7 @@ class ObatService extends CrudService
             }
 
             if ($stokSesudah < 0) {
-                throw new ValidationException(['qty' => ['Stok obat tidak boleh kurang dari 0.']]);
+                throw new ValidationException([$hasStokBaru ? 'stok_baru' : 'qty' => ['Stok obat tidak boleh kurang dari 0.']]);
             }
 
             $userId = Yii::$app->has('user') ? Yii::$app->user->id : null;

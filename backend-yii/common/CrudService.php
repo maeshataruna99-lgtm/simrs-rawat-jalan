@@ -115,6 +115,8 @@ abstract class CrudService
             }
             $this->afterSave($model);
         });
+        // Ambil ulang nilai kolom dari DB agar response tidak berisi objek Expression (contoh updated_at).
+        $model->refresh();
     }
 
     /** Hook setelah data tersimpan, masih di dalam transaksi. */

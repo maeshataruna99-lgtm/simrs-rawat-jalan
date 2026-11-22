@@ -21,6 +21,9 @@ class ObatSearch extends Model
     {
         return [
             [['q'], 'string', 'max' => 100],
+            [['is_active'], 'filter', 'filter' => fn ($v) => match (strtolower((string) $v)) {
+                'true' => '1', 'false' => '0', default => $v
+            }],
             [['is_active'], 'boolean'],
             [['page'], 'integer', 'min' => 1],
             [['per_page'], 'integer', 'min' => 1, 'max' => 100],

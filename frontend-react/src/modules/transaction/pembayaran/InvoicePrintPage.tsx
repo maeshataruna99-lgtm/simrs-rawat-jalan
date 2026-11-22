@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { errorMessage } from '@/lib/api-client';
 import { exportInvoicePdf } from '@/lib/export-pdf';
 import { formatRupiah } from '@/lib/format';
+import { useAuthStore } from '@/lib/auth-store';
 import * as pembayaranApi from './pembayaran.api';
 import type { Invoice } from './pembayaran.types';
 
@@ -21,6 +22,7 @@ export default function InvoicePrintPage() {
   const { id } = useParams();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
+  const kasirNama = useAuthStore((s) => s.user?.nama);
 
   useEffect(() => {
     const invoiceId = Number(id);
@@ -121,7 +123,11 @@ export default function InvoicePrintPage() {
             </div>
             <div className="flex gap-2">
               <dt className="w-28 text-gray-600">{t('transaction.billing.print.nik')}</dt>
-              <dd className="font-mono">{invoice.pasien?.nik ?? '-'}</dd>
+              <dd className="font-mono">
+                {invoice.pasien?.nik
+                  ? `${invoice.pasien.nik.slice(0, 6)}******${invoice.pasien.nik.slice(-4)}`
+                  : '-'}
+              </dd>
             </div>
           </dl>
           <dl className="space-y-1">
@@ -254,7 +260,7 @@ export default function InvoicePrintPage() {
           <div>
             <p>{t('transaction.billing.print.kasirTtd')}</p>
             <div className="mt-14 border-t border-gray-400 pt-1">
-              {t('transaction.billing.print.petugasKasir')}
+              {kasirNama ?? t('transaction.billing.print.petugasKasir')}
             </div>
           </div>
         </footer>

@@ -30,6 +30,7 @@ class Dokter extends ActiveRecord
             [['kode', 'nama', 'sip', 'jenis_tenaga'], 'required'],
             [['kode', 'nama', 'sip', 'spesialis'], 'trim'],
             [['kode'], 'string', 'max' => 30],
+            [['kode'], 'filter', 'filter' => 'mb_strtoupper'],
             [['kode'], 'unique', 'filter' => ['deleted_at' => null], 'message' => 'Kode sudah dipakai.'],
             [['nama', 'spesialis'], 'string', 'max' => 100],
             [['sip'], 'string', 'max' => 50],

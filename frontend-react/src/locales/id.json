@@ -304,6 +304,7 @@
       "namaRequired": "Nama obat wajib diisi.",
       "satuanRequired": "Satuan obat wajib diisi.",
       "hargaMin": "Harga tidak boleh kurang dari 0.",
+      "stokMin": "Stok tidak boleh kurang dari 0.",
       "adjustButton": "Sesuaikan Stok",
       "adjustTitle": "Penyesuaian Stok Obat",
       "adjustDescription": "Sesuaikan stok fisik untuk {{nama}} (stok saat ini: {{stok}}).",
@@ -314,6 +315,7 @@
       "historyTitle": "Riwayat Mutasi Stok",
       "historyDescription": "Catatan perubahan stok untuk {{nama}}.",
       "colWaktu": "Waktu",
+      "colPetugas": "Petugas",
       "colJenis": "Jenis",
       "colQty": "Perubahan",
       "colSebelum": "Stok Sebelum",
@@ -535,6 +537,7 @@
       "noReferensiPlaceholder": "Opsional (no. transfer / QRIS / EDC)",
       "submitPay": "Proses Pembayaran",
       "paymentSaved": "Pembayaran berhasil dicatat.",
+      "networkRetry": "Koneksi terputus sebelum respons diterima. Pembayaran mungkin sudah tercatat; tekan Simpan lagi untuk memastikan, sistem tidak akan mencatat dua kali.",
       "validationJumlahMin": "Jumlah pembayaran harus lebih dari 0.",
       "validationJumlahMax": "Jumlah pembayaran tidak boleh melebihi sisa tagihan.",
       "statusLabel": {
