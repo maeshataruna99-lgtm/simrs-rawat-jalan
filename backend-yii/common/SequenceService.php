@@ -22,20 +22,27 @@ class SequenceService
         $db = Yii::$app->db;
         $userId = Yii::$app->has('user') ? Yii::$app->user->id : null;
 
-        $db->createCommand(
-            'INSERT INTO t_sequence_counter (kode, periode, nilai_terakhir, created_by)
-             VALUES (:kode, :periode, 0, :user)
-             ON CONFLICT (kode, periode) DO NOTHING',
-            [':kode' => $kode, ':periode' => $periode, ':user' => $userId]
-        )->execute();
-
-        $current = (int) $db->createCommand(
+        $current = $db->createCommand(
             'SELECT nilai_terakhir FROM t_sequence_counter WHERE kode = :kode AND periode = :periode FOR UPDATE',
             [':kode' => $kode, ':periode' => $periode]
         )->queryScalar();
 
+        if ($current === false) {
+            $db->createCommand(
+                'INSERT INTO t_sequence_counter (kode, periode, nilai_terakhir, created_by)
+                 VALUES (:kode, :periode, 0, :user)
+                 ON CONFLICT (kode, periode) DO NOTHING',
+                [':kode' => $kode, ':periode' => $periode, ':user' => $userId]
+            )->execute();
+
+            $current = $db->createCommand(
+                'SELECT nilai_terakhir FROM t_sequence_counter WHERE kode = :kode AND periode = :periode FOR UPDATE',
+                [':kode' => $kode, ':periode' => $periode]
+            )->queryScalar();
+        }
+
         // $floor = nilai terbesar yang sudah dipakai di tabel data, agar counter yang tertinggal (data impor/seed) tidak menerbitkan nomor ganda.
-        $next = max($current, $floor) + 1;
+        $next = max((int) $current, $floor) + 1;
 
         $db->createCommand(
             'UPDATE t_sequence_counter

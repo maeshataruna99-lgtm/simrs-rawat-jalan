@@ -64,6 +64,36 @@ const ACTION_COLUMN: Record<PermissionAction, string> = {
   delete: 'can_delete',
 };
 
+const DEFAULT_PERMISSION_CACHE_TTL_MS = 5_000;
+const MAX_PERMISSION_CACHE_ENTRIES = 500;
+
+interface PermissionCacheEntry {
+  allowed: boolean;
+  expiresAt: number;
+}
+
+const permissionCache = new Map<string, PermissionCacheEntry>();
+const permissionInFlight = new Map<string, Promise<boolean>>();
+
+function permissionCacheTtlMs(): number {
+  const raw = process.env.PERMISSION_CACHE_TTL_MS;
+  if (raw === undefined || raw.trim() === '') {
+    return DEFAULT_PERMISSION_CACHE_TTL_MS;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_PERMISSION_CACHE_TTL_MS;
+}
+
+/**
+ * Mengosongkan cache izin RBAC di memori.
+ *
+ * Dipakai di: tests/ dan saat perlu memaksa pembacaan ulang hak akses.
+ */
+export function clearPermissionCache(): void {
+  permissionCache.clear();
+  permissionInFlight.clear();
+}
+
 /**
  * Memastikan role pengguna pada JWT memiliki izin menu:aksi di m_role_access.
  * Ditolak 403 bila tidak memiliki izin.
@@ -89,6 +119,8 @@ export function requirePermission(menuCode: string, action: PermissionAction = '
 
 /**
  * Cek izin menu:aksi untuk satu role tanpa menolak request.
+ * Hasil di-cache singkat di memori (bawaan 5 detik, dapat diatur lewat PERMISSION_CACHE_TTL_MS)
+ * disertai deduplikasi query in-flight agar burst request paralel tidak membanjiri pool baca.
  *
  * Dipakai di: requirePermission(), dashboard.routes.ts (menyaring data keuangan).
  */
@@ -97,16 +129,52 @@ export async function hasPermission(
   menuCode: string,
   action: PermissionAction = 'read',
 ): Promise<boolean> {
-  const { rowCount } = await readDb().query(
-    `SELECT 1
-     FROM m_role_access ra
-     JOIN m_role r ON r.id = ra.role_id AND r.deleted_at IS NULL
-     JOIN m_menu m ON m.id = ra.menu_id AND m.deleted_at IS NULL
-     WHERE r.kode = $1 AND m.kode = $2 AND ra.${ACTION_COLUMN[action]} = true
-     LIMIT 1`,
-    [roleKode, menuCode],
-  );
-  return Boolean(rowCount);
+  const ttlMs = permissionCacheTtlMs();
+  const cacheKey = `${roleKode}:${menuCode}:${action}`;
+  const now = Date.now();
+
+  if (ttlMs > 0) {
+    const cached = permissionCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return cached.allowed;
+    }
+    const pending = permissionInFlight.get(cacheKey);
+    if (pending) {
+      return pending;
+    }
+  }
+
+  const queryPromise = (async () => {
+    const { rowCount } = await readDb().query(
+      `SELECT 1
+       FROM m_role_access ra
+       JOIN m_role r ON r.id = ra.role_id AND r.deleted_at IS NULL
+       JOIN m_menu m ON m.id = ra.menu_id AND m.deleted_at IS NULL
+       WHERE r.kode = $1 AND m.kode = $2 AND ra.${ACTION_COLUMN[action]} = true
+       LIMIT 1`,
+      [roleKode, menuCode],
+    );
+    const allowed = Boolean(rowCount);
+    if (ttlMs > 0) {
+      if (permissionCache.size >= MAX_PERMISSION_CACHE_ENTRIES) {
+        permissionCache.clear();
+      }
+      permissionCache.set(cacheKey, { allowed, expiresAt: Date.now() + ttlMs });
+    }
+    return allowed;
+  })();
+
+  if (ttlMs > 0) {
+    const tracked = queryPromise.finally(() => {
+      if (permissionInFlight.get(cacheKey) === tracked) {
+        permissionInFlight.delete(cacheKey);
+      }
+    });
+    permissionInFlight.set(cacheKey, tracked);
+    return tracked;
+  }
+
+  return queryPromise;
 }
 
 /**

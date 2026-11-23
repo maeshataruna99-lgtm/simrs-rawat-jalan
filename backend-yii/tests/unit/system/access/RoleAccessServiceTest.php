@@ -112,4 +112,26 @@ class RoleAccessServiceTest extends TestCase
         $this->expectException(NotFoundHttpException::class);
         $this->service->matrix(999999);
     }
+
+    public function testSimpanBerulangMenggantiAksesSecaraKonsisten(): void
+    {
+        $this->loginAs('admin');
+        $kasir = $this->roleId('kasir');
+        $dashId = $this->menuId('dashboard');
+        $billId = $this->menuId('billing');
+
+        $this->service->replace($kasir, [
+            ['menu_id' => $dashId, 'can_read' => true],
+            ['menu_id' => $billId, 'can_read' => true, 'can_create' => true],
+        ]);
+        $this->service->replace($kasir, [
+            ['menu_id' => $dashId, 'can_read' => true, 'can_update' => true],
+        ]);
+
+        $rows = (new Query())->from('m_role_access')->where(['role_id' => $kasir])->all();
+        $this->assertCount(1, $rows);
+        $this->assertSame($dashId, (int) $rows[0]['menu_id']);
+        $this->assertTrue($rows[0]['can_read']);
+        $this->assertTrue($rows[0]['can_update']);
+    }
 }

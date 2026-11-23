@@ -93,14 +93,22 @@ class RoleAccessService
             $this->guardSelfAccess($rows);
         }
 
-        $lama = (new Query())
-            ->select(['menu_id', 'can_read', 'can_create', 'can_update', 'can_delete'])
-            ->from('m_role_access')
-            ->where(['role_id' => $role->id])
-            ->indexBy('menu_id')
-            ->all();
-        Yii::$app->db->transaction(function () use ($role, $rows, $lama) {
+        Yii::$app->db->transaction(function () use ($role, $rows) {
             $db = Yii::$app->db;
+            // Kunci baris induk m_role agar pembaruan matriks hak akses paralel terserialisasi tanpa konflik PK.
+            $lockedRole = Role::findBySql(
+                'SELECT * FROM m_role WHERE id = :id AND deleted_at IS NULL FOR UPDATE',
+                [':id' => $role->id]
+            )->one();
+            if ($lockedRole === null) {
+                throw new NotFoundHttpException('Role tidak ditemukan.');
+            }
+            $lama = (new Query())
+                ->select(['menu_id', 'can_read', 'can_create', 'can_update', 'can_delete'])
+                ->from('m_role_access')
+                ->where(['role_id' => $role->id])
+                ->indexBy('menu_id')
+                ->all();
             \app\common\AuditLog::catat('m_role_access', $role->id, 'update', ['akses' => $lama], ['akses' => $rows]);
             $db->createCommand()->delete('m_role_access', ['role_id' => $role->id])->execute();
             foreach ($rows as $menuId => $flags) {

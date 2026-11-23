@@ -9,6 +9,7 @@ use app\modules\master\obat\Obat;
 use app\modules\master\obat\ObatService;
 use app\modules\master\pasien\PasienService;
 use app\modules\master\poli\PoliService;
+use app\modules\transaction\antrean\AntreanService;
 use app\modules\transaction\pemeriksaan\PemeriksaanService;
 use app\modules\transaction\pendaftaran\PendaftaranService;
 use app\modules\transaction\resep\FarmasiService;
@@ -163,5 +164,55 @@ class ResepServiceTest extends TestCase
 
         $medis = (new PemeriksaanService())->riwayatMedis($d['pasien']);
         $this->assertCount(1, $medis[0]['resep']);
+    }
+
+    public function testProsesDanSerahkanMenolakJikaKunjunganDibatalkan(): void
+    {
+        $d = $this->siapkan();
+        $resepSvc = new ResepService();
+        $farmasi = new FarmasiService();
+        $antrean = new AntreanService();
+        $item = fn (int $obatId, int $jumlah) => ['obat_id' => $obatId, 'dosis' => '1 tab', 'frekuensi' => '3x1', 'jumlah' => $jumlah];
+
+        $resep1 = $resepSvc->buat(['kunjungan_id' => $d['kunjungan'], 'items' => [$item($d['paracetamol'], 3)]], $d['dokter']);
+        $resep2 = $resepSvc->buat(['kunjungan_id' => $d['kunjungan'], 'items' => [$item($d['paracetamol'], 2)]], $d['dokter']);
+        $farmasi->proses($resep1->id);
+
+        // Kunjungan dibatalkan sebelum obat diserahkan.
+        $antrean->ubahStatus($d['kunjungan'], 'batal');
+
+        try {
+            $farmasi->serahkan($resep1->id);
+            $this->fail('Penyerahan obat pada kunjungan batal seharusnya ditolak 409');
+        } catch (ConflictHttpException $e) {
+            $this->assertStringContainsString('dibatalkan', strtolower($e->getMessage()));
+        }
+        $this->assertSame(10, (int) Obat::findOne($d['paracetamol'])->stok);
+        $this->assertSame(Resep::STATUS_DIPROSES, Resep::findOne($resep1->id)->status);
+
+        try {
+            $farmasi->proses($resep2->id);
+            $this->fail('Pemrosesan resep pada kunjungan batal seharusnya ditolak 409');
+        } catch (ConflictHttpException $e) {
+            $this->assertStringContainsString('dibatalkan', strtolower($e->getMessage()));
+        }
+        $this->assertSame(Resep::STATUS_BARU, Resep::findOne($resep2->id)->status);
+    }
+
+    public function testAntreanFilterTanggalMenggunakanRentangWaktu(): void
+    {
+        $d = $this->siapkan();
+        $resep = (new ResepService())->buat([
+            'kunjungan_id' => $d['kunjungan'],
+            'items' => [['obat_id' => $d['paracetamol'], 'dosis' => '1 tab', 'frekuensi' => '3x1', 'jumlah' => 1]],
+        ], $d['dokter']);
+        $farmasi = new FarmasiService();
+
+        $hariIni = date('Y-m-d');
+        $besok = date('Y-m-d', strtotime('+1 day'));
+
+        $this->assertSame([$resep->id], array_column($farmasi->antrean(['tanggal' => $hariIni]), 'id'));
+        $this->assertSame([], $farmasi->antrean(['tanggal' => $besok]));
+        $this->assertSame([], $farmasi->antrean(['tanggal' => 'bukan-tanggal']));
     }
 }

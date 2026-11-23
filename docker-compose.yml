@@ -38,7 +38,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_TTL: ${JWT_TTL}
       SEED_PASSWORD: ${SEED_PASSWORD:-simrs123}
-      PHP_CLI_SERVER_WORKERS: 8
+      PHP_CLI_SERVER_WORKERS: 16
       TZ: Asia/Jakarta
     ports:
       - "8080:8080"

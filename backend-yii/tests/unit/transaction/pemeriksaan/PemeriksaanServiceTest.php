@@ -177,4 +177,22 @@ class PemeriksaanServiceTest extends TestCase
         $this->expectException(NotFoundHttpException::class);
         $service->riwayatMedis(999999);
     }
+
+    public function testSimpanDanDiagnosisMenolakKunjunganBatal(): void
+    {
+        $data = $this->siapkanKunjungan();
+        $kunjunganId = $data['kunjungan'][0];
+        $icd = (new Icd10Service())->create(['kode' => 'TBTL', 'nama' => 'Uji Batal'])->id;
+        (new AntreanService())->ubahStatus($kunjunganId, 'batal');
+
+        $service = new PemeriksaanService();
+        try {
+            $service->simpan($kunjunganId, ['keluhan_utama' => 'Pusing'], $data['dokter1']);
+            $this->fail('Simpan pemeriksaan pada kunjungan batal seharusnya ditolak 409');
+        } catch (ConflictHttpException) {
+        }
+
+        $this->expectException(ConflictHttpException::class);
+        $service->simpanDiagnosis($kunjunganId, [['icd10_id' => $icd, 'jenis' => 'utama']], $data['dokter1']);
+    }
 }

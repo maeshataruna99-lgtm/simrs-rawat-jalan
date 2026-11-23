@@ -191,6 +191,29 @@ describe('POST /api/lab/results dengan outbox', () => {
     expect(rows[0].n).toBe(1);
   });
 
+  it('kiriman paralel bersamaan dengan idempotency_key sama hanya memanggil Yii sekali dan percobaan tetap 1', async () => {
+    const key = `${PREFIX}paralel-sama`;
+    let putCalls = 0;
+    fetchMock.mockImplementation(async (input) => {
+      if (String(input).endsWith('/login')) {
+        return login();
+      }
+      putCalls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      return json(200, { success: true, data: { id: 14, hasil: '12.5' } });
+    });
+
+    const responses = await Promise.all(
+      Array.from({ length: 8 }, () =>
+        kirim({ detail_id: 14, hasil: '12.5', idempotency_key: key }),
+      ),
+    );
+
+    expect(responses.every((r) => r.status === 200)).toBe(true);
+    expect(putCalls).toBe(1);
+    expect(await outboxRow(key)).toMatchObject({ status: 'terkirim', percobaan: 1 });
+  });
+
   it('ditolak Yii (4xx) diteruskan apa adanya dan outbox ditandai gagal tanpa retry', async () => {
     const key = `${PREFIX}tolak`;
     fetchMock

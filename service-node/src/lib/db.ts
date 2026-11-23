@@ -6,6 +6,12 @@ import pg from 'pg';
 let pool: pg.Pool | null = null;
 let readOnlyPool: pg.Pool | null = null;
 
+function parsePoolMax(raw: string | undefined, fallback: number): number {
+  if (!raw) return fallback;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
 /**
  * Pool koneksi utama (dipakai outbox integrasi lab dan utilitas test).
  *
@@ -18,7 +24,7 @@ export function db(): pg.Pool {
     database: process.env.DB_NAME,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    max: 5,
+    max: parsePoolMax(process.env.DB_POOL_MAX, 16),
   });
   return pool;
 }
@@ -36,7 +42,7 @@ export function readDb(): pg.Pool {
     database: process.env.DB_NAME,
     user: process.env.DB_READONLY_USER || process.env.DB_USER,
     password: process.env.DB_READONLY_PASSWORD || process.env.DB_PASSWORD,
-    max: 5,
+    max: parsePoolMax(process.env.DB_READONLY_POOL_MAX, 20),
   });
   return readOnlyPool;
 }

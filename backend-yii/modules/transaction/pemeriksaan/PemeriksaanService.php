@@ -86,18 +86,32 @@ class PemeriksaanService
             throw new ConflictHttpException("Kunjungan berstatus {$kunjungan->status} tidak dapat diubah.");
         }
 
-        $model = Pemeriksaan::findOne(['kunjungan_id' => $kunjunganId])
-            ?? new Pemeriksaan(['kunjungan_id' => $kunjunganId, 'dokter_id' => $kunjungan->dokter_id]);
-        $model->setAttributes(array_intersect_key($data, array_flip(Pemeriksaan::FORM_FIELDS)), false);
-        if (!$model->validate()) {
-            throw new ValidationException($model->getErrors());
-        }
+        $atribut = array_intersect_key($data, array_flip(Pemeriksaan::FORM_FIELDS));
 
-        Yii::$app->db->transaction(function () use ($model, $kunjungan) {
-            $model->save(false);
-            if ($kunjungan->status === Kunjungan::STATUS_MENUNGGU) {
-                (new AntreanService())->ubahStatus($kunjungan->id, Kunjungan::STATUS_DIPERIKSA);
+        /** @var Pemeriksaan $model */
+        $model = Yii::$app->db->transaction(function () use ($kunjunganId, $atribut) {
+            /** @var Kunjungan|null $locked */
+            $locked = Kunjungan::findBySql('SELECT * FROM t_kunjungan WHERE id = :id FOR UPDATE', [':id' => $kunjunganId])->one();
+            if ($locked === null) {
+                throw new NotFoundHttpException('Data kunjungan tidak ditemukan.');
             }
+            if (!in_array($locked->status, [Kunjungan::STATUS_MENUNGGU, Kunjungan::STATUS_DIPERIKSA], true)) {
+                throw new ConflictHttpException("Kunjungan berstatus {$locked->status} tidak dapat diubah.");
+            }
+
+            $model = Pemeriksaan::findOne(['kunjungan_id' => $kunjunganId])
+                ?? new Pemeriksaan(['kunjungan_id' => $kunjunganId, 'dokter_id' => $locked->dokter_id]);
+            $model->setAttributes($atribut, false);
+            if (!$model->validate()) {
+                throw new ValidationException($model->getErrors());
+            }
+
+            $model->save(false);
+            if ($locked->status === Kunjungan::STATUS_MENUNGGU) {
+                (new AntreanService())->ubahStatus($locked->id, Kunjungan::STATUS_DIPERIKSA);
+            }
+
+            return $model;
         });
 
         return $model;
@@ -144,9 +158,19 @@ class PemeriksaanService
             throw new ValidationException(['diagnosis' => ['Kode ICD-10 tidak ditemukan.']]);
         }
 
-        $sebelum = $this->daftarDiagnosis($kunjunganId);
+        /** @var array<int, array<string, mixed>> $sesudah */
+        $sesudah = Yii::$app->db->transaction(function () use ($kunjunganId, $items) {
+            // Kunci baris kunjungan induk agar penyimpanan diagnosis paralel terserialisasi tanpa konflik indeks unik.
+            /** @var Kunjungan|null $locked */
+            $locked = Kunjungan::findBySql('SELECT * FROM t_kunjungan WHERE id = :id FOR UPDATE', [':id' => $kunjunganId])->one();
+            if ($locked === null) {
+                throw new NotFoundHttpException('Data kunjungan tidak ditemukan.');
+            }
+            if (!in_array($locked->status, [Kunjungan::STATUS_MENUNGGU, Kunjungan::STATUS_DIPERIKSA], true)) {
+                throw new ConflictHttpException("Kunjungan berstatus {$locked->status} tidak dapat diubah diagnosisnya.");
+            }
 
-        Yii::$app->db->transaction(function () use ($kunjunganId, $items, $sebelum) {
+            $sebelum = $this->daftarDiagnosis($kunjunganId);
             Diagnosis::deleteAll(['kunjungan_id' => $kunjunganId]);
             foreach ($items as $item) {
                 (new Diagnosis([
@@ -158,9 +182,11 @@ class PemeriksaanService
             $sesudah = $this->daftarDiagnosis($kunjunganId);
             // Perubahan diagnosis tidak mengubah tagihan tetapi tetap dicatat di t_audit_log (D.4).
             AuditLog::catat('t_diagnosis', $kunjunganId, 'update', ['diagnosis' => $sebelum], ['diagnosis' => $sesudah]);
+
+            return $sesudah;
         });
 
-        return $this->daftarDiagnosis($kunjunganId);
+        return $sesudah;
     }
 
     /**

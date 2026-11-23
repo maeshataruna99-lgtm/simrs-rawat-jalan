@@ -4,8 +4,14 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
-import { beforeAll, describe, expect, it } from 'vitest';
-import { authenticate, type AuthMethod } from '../src/middleware/auth.js';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import * as dbLib from '../src/lib/db.js';
+import {
+  authenticate,
+  clearPermissionCache,
+  hasPermission,
+  type AuthMethod,
+} from '../src/middleware/auth.js';
 import { errorHandler } from '../src/middleware/error-handler.js';
 
 const SECRET = 'rahasia-khusus-test-minimal-32-karakter';
@@ -89,5 +95,53 @@ describe('authenticate apiKey', () => {
       .set('X-Api-Key', 'kunci-lab-satu');
 
     expect(res.status).toBe(200);
+  });
+});
+
+describe('hasPermission cache', () => {
+  afterEach(() => {
+    delete process.env.PERMISSION_CACHE_TTL_MS;
+    clearPermissionCache();
+    vi.restoreAllMocks();
+  });
+
+  it('men-cache hasil izin dalam TTL singkat dan mendeduplikasi query paralel', async () => {
+    const queryMock = vi.fn().mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      return { rowCount: 1 };
+    });
+    vi.spyOn(dbLib, 'readDb').mockReturnValue({ query: queryMock } as unknown as ReturnType<
+      typeof dbLib.readDb
+    >);
+
+    const parallel = await Promise.all([
+      hasPermission('admin', 'dashboard', 'read'),
+      hasPermission('admin', 'dashboard', 'read'),
+      hasPermission('admin', 'dashboard', 'read'),
+    ]);
+    expect(parallel).toEqual([true, true, true]);
+    expect(queryMock).toHaveBeenCalledTimes(1);
+
+    // Pemanggilan ulang dalam TTL membaca cache tanpa query DB.
+    expect(await hasPermission('admin', 'dashboard', 'read')).toBe(true);
+    expect(queryMock).toHaveBeenCalledTimes(1);
+
+    // Setelah clearPermissionCache(), query dijalankan ulang.
+    clearPermissionCache();
+    queryMock.mockResolvedValueOnce({ rowCount: 0 });
+    expect(await hasPermission('admin', 'dashboard', 'read')).toBe(false);
+    expect(queryMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('PERMISSION_CACHE_TTL_MS=0 menonaktifkan cache', async () => {
+    process.env.PERMISSION_CACHE_TTL_MS = '0';
+    const queryMock = vi.fn().mockResolvedValue({ rowCount: 1 });
+    vi.spyOn(dbLib, 'readDb').mockReturnValue({ query: queryMock } as unknown as ReturnType<
+      typeof dbLib.readDb
+    >);
+
+    await hasPermission('kasir', 'dashboard', 'read');
+    await hasPermission('kasir', 'dashboard', 'read');
+    expect(queryMock).toHaveBeenCalledTimes(2);
   });
 });

@@ -2,6 +2,8 @@
 
 namespace app\modules\transaction\resep;
 
+use app\modules\transaction\pendaftaran\Kunjungan;
+use DateTimeImmutable;
 use Yii;
 use yii\db\Expression;
 use yii\web\ConflictHttpException;
@@ -30,7 +32,14 @@ class FarmasiService
             ->orderBy(['id' => SORT_ASC]);
         $tanggal = trim((string) ($params['tanggal'] ?? ''));
         if ($tanggal !== '') {
-            $query->andWhere(['DATE(created_at)' => $tanggal]);
+            $mulai = DateTimeImmutable::createFromFormat('!Y-m-d', $tanggal);
+            if ($mulai !== false && $mulai->format('Y-m-d') === $tanggal) {
+                $besok = $mulai->modify('+1 day')->format('Y-m-d 00:00:00');
+                $query->andWhere(['>=', 'created_at', "{$tanggal} 00:00:00"])
+                    ->andWhere(['<', 'created_at', $besok]);
+            } else {
+                $query->andWhere('1 = 0');
+            }
         }
 
         return array_map(fn (Resep $r) => $r->toArray(), $query->all());
@@ -40,14 +49,14 @@ class FarmasiService
      * Menandai resep baru sebagai sedang diproses (disiapkan) oleh farmasi.
      *
      * @throws NotFoundHttpException
-     * @throws ConflictHttpException Bila resep bukan berstatus baru.
+     * @throws ConflictHttpException Bila kunjungan sudah batal atau resep bukan berstatus baru.
      *
      * Dipakai di: FarmasiController::actionProses().
      */
     public function proses(int $resepId): Resep
     {
         Yii::$app->db->transaction(function () use ($resepId) {
-            $resep = $this->kunci($resepId);
+            $resep = $this->kunciDenganKunjungan($resepId, 'diproses');
             if ($resep->status !== Resep::STATUS_BARU) {
                 throw new ConflictHttpException("Resep berstatus {$resep->status} tidak dapat diproses.");
             }
@@ -60,10 +69,11 @@ class FarmasiService
 
     /**
      * Menyerahkan obat: semua detail resep mengurangi stok dalam satu transaksi, gagal satu batal semua.
-     * Pengurangan memakai UPDATE bersyarat `stok >= jumlah`; baris resep dikunci agar resep yang sama tidak diserahkan dua kali.
+     * Pengurangan memakai UPDATE bersyarat `stok >= jumlah`; baris kunjungan dan resep dikunci agar konsisten
+     * terhadap pembatalan kunjungan serta mencegah penyerahan ganda.
      *
      * @throws NotFoundHttpException
-     * @throws ConflictHttpException Bila resep belum diproses/sudah diserahkan atau stok salah satu obat tidak cukup.
+     * @throws ConflictHttpException Bila kunjungan sudah batal, resep belum diproses/sudah diserahkan, atau stok obat tidak cukup.
      *
      * Dipakai di: FarmasiController::actionSerahkan().
      */
@@ -71,7 +81,7 @@ class FarmasiService
     {
         Yii::$app->db->transaction(function () use ($resepId) {
             $db = Yii::$app->db;
-            $resep = $this->kunci($resepId);
+            $resep = $this->kunciDenganKunjungan($resepId, 'diserahkan');
             if ($resep->status !== Resep::STATUS_DIPROSES) {
                 throw new ConflictHttpException("Resep berstatus {$resep->status} tidak dapat diserahkan.");
             }
@@ -106,6 +116,38 @@ class FarmasiService
         });
 
         return $this->muat($resepId);
+    }
+
+    /**
+     * Mengunci baris kunjungan induk terlebih dahulu (t_kunjungan -> t_resep) agar urutan lock
+     * konsisten dengan AntreanService::ubahStatus(), lalu memastikan kunjungan tidak berstatus batal.
+     *
+     * @throws NotFoundHttpException
+     * @throws ConflictHttpException Bila kunjungan sudah dibatalkan.
+     */
+    private function kunciDenganKunjungan(int $resepId, string $aksi): Resep
+    {
+        $kunjunganId = Yii::$app->db->createCommand(
+            'SELECT kunjungan_id FROM t_resep WHERE id = :id',
+            [':id' => $resepId]
+        )->queryScalar();
+        if ($kunjunganId === false) {
+            throw new NotFoundHttpException('Resep tidak ditemukan.');
+        }
+
+        /** @var Kunjungan|null $kunjungan */
+        $kunjungan = Kunjungan::findBySql(
+            'SELECT * FROM t_kunjungan WHERE id = :id FOR UPDATE',
+            [':id' => (int) $kunjunganId]
+        )->one();
+        if ($kunjungan === null) {
+            throw new NotFoundHttpException('Data kunjungan tidak ditemukan.');
+        }
+        if ($kunjungan->status === Kunjungan::STATUS_BATAL) {
+            throw new ConflictHttpException("Kunjungan sudah dibatalkan, resep tidak dapat {$aksi}.");
+        }
+
+        return $this->kunci($resepId);
     }
 
     /**
