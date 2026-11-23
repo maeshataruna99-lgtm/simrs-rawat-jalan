@@ -2,6 +2,7 @@
 
 namespace app\tests\unit\transaction\tindakan;
 
+use app\common\AuditLog;
 use app\common\ValidationException;
 use app\modules\master\dokter\DokterService;
 use app\modules\master\jadwal\JadwalDokterService;
@@ -75,5 +76,43 @@ class TindakanKunjunganServiceTest extends TestCase
         (new AntreanService())->ubahStatus($kunjungan->id, 'batal');
         $this->expectException(ConflictHttpException::class);
         $service->tambah($kunjungan->id, ['tindakan_id' => $nebu->id], $dokter->id);
+    }
+
+    public function testBatalGandaDitolakDanAuditLogHanyaTercatatSekali(): void
+    {
+        $poli = (new PoliService())->create(['kode' => 'POLI-TND2', 'nama' => 'Poli Umum', 'prefix_antrean' => 'U', 'tarif_pendaftaran' => 25000]);
+        $dokter = (new DokterService())->create(['kode' => 'DR-TND2', 'nama' => 'dr. Uji 2', 'sip' => 'SIP/TND2', 'jenis_tenaga' => 'dokter']);
+        $jadwal = (new JadwalDokterService())->create([
+            'dokter_id' => $dokter->id, 'poli_id' => $poli->id, 'hari' => 1,
+            'jam_mulai' => '08:00', 'jam_selesai' => '12:00', 'kuota' => 10,
+        ]);
+        $pasien = (new PasienService())->create(['nik' => '3201010101900099', 'nama' => 'Citra', 'tgl_lahir' => '1993-02-02', 'jenis_kelamin' => 'P']);
+        $kunjungan = (new PendaftaranService())->daftar([
+            'pasien_id' => $pasien->id, 'jadwal_id' => $jadwal->id, 'tgl_kunjungan' => self::seninDepan(),
+        ]);
+        $tindakan = (new TindakanService())->create(['kode' => 'TND99', 'nama' => 'EKG', 'tarif' => 80000]);
+
+        $service = new TindakanKunjunganService();
+        $item = $service->tambah($kunjungan->id, ['tindakan_id' => $tindakan->id], $dokter->id);
+
+        $dibatalkan = $service->batal($item->id, $dokter->id);
+        $this->assertSame('batal', $dibatalkan->status);
+
+        $logCount = (int) AuditLog::find()
+            ->where(['tabel' => 't_tindakan', 'record_id' => $item->id, 'aksi' => 'update'])
+            ->count();
+        $this->assertSame(1, $logCount);
+
+        try {
+            $service->batal($item->id, $dokter->id);
+            $this->fail('Pembatalan kedua seharusnya ditolak 409');
+        } catch (ConflictHttpException $e) {
+            $this->assertSame('Tindakan sudah dibatalkan.', $e->getMessage());
+        }
+
+        $logCountAfter = (int) AuditLog::find()
+            ->where(['tabel' => 't_tindakan', 'record_id' => $item->id, 'aksi' => 'update'])
+            ->count();
+        $this->assertSame(1, $logCountAfter);
     }
 }

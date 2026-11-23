@@ -10,6 +10,7 @@ import { useAuthStore } from '@/lib/auth-store';
 
 export function RequireAuth() {
   const status = useAuthStore((s) => s.status);
+  const suppressRedirect = useAuthStore((s) => s.suppressRedirect);
   const location = useLocation();
 
   if (status === 'checking') {
@@ -21,7 +22,13 @@ export function RequireAuth() {
   }
 
   if (status === 'guest') {
-    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={suppressRedirect ? null : { from: location.pathname + location.search }}
+      />
+    );
   }
 
   return <Outlet />;

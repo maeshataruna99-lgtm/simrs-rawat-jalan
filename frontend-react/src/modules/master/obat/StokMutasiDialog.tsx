@@ -58,18 +58,19 @@ export function StokMutasiDialog({ target, onOpenChange }: Props) {
       onOpenChange={onOpenChange}
       title={t('master.obat.historyTitle')}
       description={t('master.obat.historyDescription', { nama: target?.nama ?? '' })}
+      contentClassName="sm:max-w-3xl"
     >
-      <div className="max-h-80 overflow-y-auto rounded-md border">
+      <div className="max-h-80 overflow-auto rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('master.obat.colWaktu')}</TableHead>
-              <TableHead>{t('master.obat.colJenis')}</TableHead>
-              <TableHead>{t('master.obat.colQty')}</TableHead>
-              <TableHead>{t('master.obat.colSebelum')}</TableHead>
-              <TableHead>{t('master.obat.colSesudah')}</TableHead>
-              <TableHead>{t('master.obat.colReferensi')}</TableHead>
-              <TableHead>{t('master.obat.colPetugas')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('master.obat.colWaktu')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('master.obat.colJenis')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('master.obat.colQty')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('master.obat.colSebelum')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('master.obat.colSesudah')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('master.obat.colReferensi')}</TableHead>
+              <TableHead className="whitespace-nowrap">{t('master.obat.colPetugas')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

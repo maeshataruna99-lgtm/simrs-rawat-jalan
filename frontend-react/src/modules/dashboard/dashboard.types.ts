@@ -50,6 +50,10 @@ export interface TindakanTerbanyakItem {
 
 export interface PendapatanReport {
   periode: PeriodeFilter;
+  basis?: {
+    per_hari: 'kas_diterima_tanggal_bayar';
+    per_sumber: 'tagihan_aktif_tanggal_kunjungan';
+  };
   per_hari: Array<{
     tanggal: string;
     jumlah_transaksi: number;

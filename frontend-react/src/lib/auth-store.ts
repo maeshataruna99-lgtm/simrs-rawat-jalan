@@ -17,6 +17,8 @@ type AuthStatus = 'checking' | 'authenticated' | 'guest';
 interface AuthState {
   status: AuthStatus;
   user: UserProfile | null;
+  /** Menahan penyimpanan lokasi asal saat logout agar user berikutnya tidak diarahkan ke route sesi sebelumnya. */
+  suppressRedirect: boolean;
   /** Login lalu simpan token dan profil. Error dari API diteruskan ke pemanggil. */
   login: (username: string, password: string) => Promise<void>;
   /** Memuat profil dari token tersimpan; tanpa token atau token tidak sah menjadi guest. */
@@ -29,11 +31,12 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   status: tokenStorage.get() ? 'checking' : 'guest',
   user: null,
+  suppressRedirect: false,
 
   login: async (username, password) => {
     const result = await authApi.login(username, password);
     tokenStorage.set(result.token);
-    set({ status: 'authenticated', user: result.user });
+    set({ status: 'authenticated', user: result.user, suppressRedirect: false });
   },
 
   restoreSession: async () => {
@@ -42,7 +45,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
     try {
-      set({ status: 'authenticated', user: await authApi.fetchProfile() });
+      set({ status: 'authenticated', user: await authApi.fetchProfile(), suppressRedirect: false });
     } catch (err) {
       // Token hanya dibuang bila server menolaknya (401); timeout/jaringan lambat tidak boleh membuat user ter-logout.
       if (axios.isAxiosError(err) && err.response?.status === 401) {
@@ -54,7 +57,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: () => {
     tokenStorage.clear();
-    set({ status: 'guest', user: null });
+    set({ status: 'guest', user: null, suppressRedirect: true });
   },
 
   can: (menu, action = 'read') => get().user?.permissions[menu]?.[action] ?? false,

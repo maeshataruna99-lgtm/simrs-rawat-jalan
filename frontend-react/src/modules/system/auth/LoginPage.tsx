@@ -41,7 +41,8 @@ export default function LoginPage() {
   });
 
   if (status === 'authenticated') {
-    const from = (location.state as { from?: string } | null)?.from ?? '/';
+    const rawFrom = (location.state as { from?: string } | null)?.from;
+    const from = rawFrom && rawFrom !== '/login' && rawFrom !== '/403' ? rawFrom : '/';
     return <Navigate to={from} replace />;
   }
 

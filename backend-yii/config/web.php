@@ -38,6 +38,7 @@ return [
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
+            'cache' => false,
             'rules' => [
                 'GET health' => 'health/index',
                 // Tindakan per kunjungan: POST /transaction/tindakan/{kunjunganId}, DELETE /transaction/tindakan/item/{id}.

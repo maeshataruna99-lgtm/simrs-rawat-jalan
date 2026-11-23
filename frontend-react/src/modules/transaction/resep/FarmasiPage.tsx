@@ -64,6 +64,7 @@ export default function FarmasiPage() {
     {
       key: 'no_resep',
       header: t('transaction.farmasi.noResep'),
+      className: 'whitespace-nowrap',
       cell: (row) => <span className="font-mono text-xs">{row.no_resep}</span>,
     },
     {
@@ -89,20 +90,27 @@ export default function FarmasiPage() {
     {
       key: 'obat',
       header: t('transaction.resep.title'),
+      className: 'max-w-[240px]',
       cell: (row) => (
-        <ul className="space-y-0.5 text-sm">
+        <ul className="space-y-0.5 text-xs leading-snug">
           {row.details.map((d) => (
-            <li key={d.id}>
+            <li key={d.id} className="break-words">
               {d.obat?.nama} · {d.jumlah} {d.obat?.satuan} · {d.dosis} {d.frekuensi}
             </li>
           ))}
         </ul>
       ),
     },
-    { key: 'total', header: t('transaction.resep.total'), cell: (row) => formatRupiah(row.total) },
+    {
+      key: 'total',
+      header: t('transaction.resep.total'),
+      className: 'whitespace-nowrap text-right',
+      cell: (row) => formatRupiah(row.total),
+    },
     {
       key: 'status',
       header: t('system.common.status'),
+      className: 'whitespace-nowrap',
       cell: (row) => (
         <Badge variant={row.status === 'diserahkan' ? 'default' : 'outline'}>
           {t(`transaction.resep.status.${row.status}`)}

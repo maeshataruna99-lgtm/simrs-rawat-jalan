@@ -38,7 +38,7 @@ function apiError(status: number, data: object) {
 beforeEach(() => {
   vi.resetAllMocks();
   localStorage.clear();
-  useAuthStore.setState({ status: 'guest', user: null });
+  useAuthStore.setState({ status: 'guest', user: null, suppressRedirect: false });
 });
 
 describe('login', () => {
@@ -136,5 +136,41 @@ describe('PermissionGuard', () => {
   it('aksi tanpa izin pada menu yang boleh dibaca juga ditolak', () => {
     renderGuard('billing', 'delete');
     expect(screen.queryByText('Isi halaman')).not.toBeInTheDocument();
+  });
+
+  it('halaman 403 tidak merender elemen main bersarang', () => {
+    renderGuard('master-pasien');
+    expect(screen.getByRole('heading', { name: 'Akses ditolak' })).toBeInTheDocument();
+    expect(screen.queryByRole('main')).not.toBeInTheDocument();
+  });
+});
+
+describe('logout lintas user', () => {
+  it('logout dari halaman terproteksi tidak mengarahkan user berikutnya ke route user sebelumnya', async () => {
+    const labUser: UserProfile = {
+      id: 5,
+      username: 'laboratorium',
+      nama: 'Analis Lab',
+      dokter_id: null,
+      role: { id: 5, kode: 'laboratorium', nama: 'Petugas Lab' },
+      modules: [],
+      permissions: { 'master-lab': { read: true, create: true, update: true, delete: true } },
+    };
+    useAuthStore.setState({ status: 'authenticated', user: labUser, suppressRedirect: false });
+    vi.mocked(authApi.login).mockResolvedValue({ token: 'tok-kasir', expires_at: 0, user: kasir });
+
+    renderAt('/master/pemeriksaan-lab');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Keluar' }));
+    expect(await screen.findByRole('button', { name: 'Masuk' })).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText('Username'), 'kasir');
+    await userEvent.type(screen.getByLabelText('Password'), 'simrs123');
+    await userEvent.click(screen.getByRole('button', { name: 'Masuk' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Selamat datang, Sari Kasir' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Akses ditolak' })).not.toBeInTheDocument();
   });
 });

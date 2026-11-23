@@ -107,21 +107,32 @@ class TindakanKunjunganService
             throw new NotFoundHttpException('Data tindakan tidak ditemukan.');
         }
         $this->kunjunganTerbuka($item->kunjungan_id, $dokterId);
-        if ($item->status === TindakanKunjungan::STATUS_BATAL) {
-            throw new ConflictHttpException('Tindakan sudah dibatalkan.');
-        }
 
         $billing = new BillingSyncService();
         $billing->pastikanBelumLunas($item->kunjungan_id);
 
-        Yii::$app->db->transaction(function () use ($item, $billing) {
-            $item->status = TindakanKunjungan::STATUS_BATAL;
-            $item->save(false, ['status', 'updated_at', 'updated_by']);
-            $namaTindakan = $item->tindakan ? $item->tindakan->nama : "Tindakan #{$item->id}";
-            $billing->sinkronkan($item->kunjungan_id, 'Pembatalan tindakan medis: ' . $namaTindakan);
+        /** @var TindakanKunjungan $terkunci */
+        $terkunci = Yii::$app->db->transaction(function () use ($itemId, $dokterId, $billing) {
+            // Kunci baris tindakan agar pembatalan paralel diproses bergiliran dan tidak menggandakan audit log.
+            /** @var TindakanKunjungan|null $row */
+            $row = TindakanKunjungan::findBySql('SELECT * FROM t_tindakan WHERE id = :id FOR UPDATE', [':id' => $itemId])->one();
+            if ($row === null) {
+                throw new NotFoundHttpException('Data tindakan tidak ditemukan.');
+            }
+            $this->kunjunganTerbuka($row->kunjungan_id, $dokterId);
+            if ($row->status === TindakanKunjungan::STATUS_BATAL) {
+                throw new ConflictHttpException('Tindakan sudah dibatalkan.');
+            }
+
+            $row->status = TindakanKunjungan::STATUS_BATAL;
+            $row->save(false, ['status', 'updated_at', 'updated_by']);
+            $namaTindakan = $row->tindakan ? $row->tindakan->nama : "Tindakan #{$row->id}";
+            $billing->sinkronkan($row->kunjungan_id, 'Pembatalan tindakan medis: ' . $namaTindakan);
+
+            return $row;
         });
 
-        return $item;
+        return $terkunci;
     }
 
     /**

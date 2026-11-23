@@ -59,6 +59,13 @@ labRoutes.post(
         );
       return;
     }
-    res.json(success(result.data, 'Hasil laboratorium diterima.'));
+    res.json(
+      success(
+        result.data,
+        result.duplikat
+          ? 'Hasil laboratorium sudah diterima sebelumnya.'
+          : 'Hasil laboratorium diterima.',
+      ),
+    );
   },
 );

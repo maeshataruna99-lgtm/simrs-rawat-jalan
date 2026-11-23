@@ -38,7 +38,7 @@ export function AppLayout() {
       <AppSidebar activeModule={activeModule} onSelectModule={handleSelectModule} />
       <SidebarInset className="min-w-0">
         <AppHeader activeModule={activeModule} />
-        <div className="flex-1 p-4 md:p-6 print:p-0">
+        <div className="flex-1 p-4 pb-20 md:p-6 md:pb-24 print:p-0">
           <Outlet />
         </div>
       </SidebarInset>

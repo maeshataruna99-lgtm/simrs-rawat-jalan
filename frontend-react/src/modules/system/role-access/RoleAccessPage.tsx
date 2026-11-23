@@ -39,6 +39,7 @@ export default function RoleAccessPage() {
   const canUpdate = can(MENU, 'update');
 
   const [roles, setRoles] = useState<RoleItem[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(true);
   const [selectedRoleId, setSelectedRoleId] = useState<number>(0);
   const [matrix, setMatrix] = useState<RoleAccessMatrix | null>(null);
   const [flags, setFlags] = useState<Record<number, Record<ActionFlag, boolean>>>({});
@@ -92,6 +93,9 @@ export default function RoleAccessPage() {
       })
       .catch((err) => {
         setServerError(errorMessage(err, t('common.loadFailed')));
+      })
+      .finally(() => {
+        setLoadingRoles(false);
       });
   }, [loadRoleMatrix, t]);
 
@@ -160,8 +164,14 @@ export default function RoleAccessPage() {
             id="role-access-select"
             className={selectClassName}
             value={selectedRoleId}
+            disabled={roles.length === 0}
             onChange={(e) => handleRoleChange(Number(e.target.value))}
           >
+            {roles.length === 0 && (
+              <option value={0}>
+                {loadingRoles ? t('common.loading') : t('system.user.chooseRole')}
+              </option>
+            )}
             {roles.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.nama}
@@ -199,7 +209,7 @@ export default function RoleAccessPage() {
             {!matrix || matrix.modules.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  {loading ? t('common.loading') : t('common.emptyData')}
+                  {loading || loadingRoles ? t('common.loading') : t('common.emptyData')}
                 </TableCell>
               </TableRow>
             ) : (

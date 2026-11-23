@@ -164,4 +164,19 @@ describe('DashboardPage (poin 9.4)', () => {
     expect(dashboardApi.getPendapatan).not.toHaveBeenCalled();
     expect(dashboardApi.getPembayaran).not.toHaveBeenCalled();
   });
+
+  it('mode EN melokalisasi rentang tanggal dan badge status kunjungan tanpa kebocoran bahasa Indonesia', async () => {
+    const { default: i18n } = await import('@/lib/i18n');
+    await i18n.changeLanguage('en');
+    try {
+      renderAt('/dashboard');
+      expect(await screen.findByText('RJ202611220001')).toBeInTheDocument();
+      expect(screen.queryByText(/s\/d/)).not.toBeInTheDocument();
+      expect(screen.getAllByText(/2026-\d{2}-\d{2} to 2026-\d{2}-\d{2}/).length).toBeGreaterThan(0);
+      expect(screen.getByText('Completed')).toBeInTheDocument();
+      expect(screen.queryByText('selesai')).not.toBeInTheDocument();
+    } finally {
+      await i18n.changeLanguage('id');
+    }
+  });
 });

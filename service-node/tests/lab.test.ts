@@ -159,14 +159,30 @@ describe('POST /api/lab/results dengan outbox', () => {
     expect(await outboxRow(key)).toMatchObject({ status: 'terkirim', percobaan: 2 });
   });
 
-  it('kiriman ulang dengan key sama tidak membuat baris outbox baru', async () => {
+  it('kiriman ulang dengan key sama yang sudah terkirim tidak memanggil ulang Yii maupun menaikkan percobaan', async () => {
     const key = `${PREFIX}ganda`;
     fetchMock.mockImplementation(async (input) =>
       String(input).endsWith('/login') ? login() : json(200, { success: true, data: { id: 13 } }),
     );
 
-    await kirim({ detail_id: 13, hasil: '7', idempotency_key: key });
-    await kirim({ detail_id: 13, hasil: '7', idempotency_key: key });
+    const first = await kirim({ detail_id: 13, hasil: '7', idempotency_key: key });
+    expect(first.status).toBe(200);
+    const callsAfterFirst = fetchMock.mock.calls.filter(([url]) =>
+      String(url).includes('/transaction/hasil-lab/'),
+    ).length;
+    expect(callsAfterFirst).toBe(1);
+
+    const replay = await kirim({ detail_id: 13, hasil: '7', idempotency_key: key });
+    expect(replay.status).toBe(200);
+    const callsAfterReplay = fetchMock.mock.calls.filter(([url]) =>
+      String(url).includes('/transaction/hasil-lab/'),
+    ).length;
+    expect(callsAfterReplay).toBe(1);
+    expect(await outboxRow(key)).toMatchObject({ status: 'terkirim', percobaan: 1 });
+
+    // Payload berbeda dengan key sama tetap ditolak 409.
+    const conflict = await kirim({ detail_id: 13, hasil: '9', idempotency_key: key });
+    expect(conflict.status).toBe(409);
 
     const { rows } = await db().query(
       'SELECT count(*)::int AS n FROM t_integration_outbox WHERE idempotency_key = $1',

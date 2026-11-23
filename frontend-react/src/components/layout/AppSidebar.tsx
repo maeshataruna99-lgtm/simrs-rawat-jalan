@@ -8,7 +8,7 @@
 import { Check, ChevronDown, Hospital, LayoutGrid, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, useLocation } from 'react-router';
+import { NavLink, useLocation, useNavigate } from 'react-router';
 import { AppIcon } from '@/components/AppIcon';
 import {
   Sidebar,
@@ -43,11 +43,17 @@ interface Props {
 export function AppSidebar({ activeModule, onSelectModule }: Props) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const modules = user?.modules ?? [];
   const [pickerOpen, setPickerOpen] = useState(false);
   const { setOpenMobile } = useSidebar();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true, state: null });
+  };
 
   // Drawer mobile ditutup setiap pindah halaman agar konten tujuan langsung terlihat.
   useEffect(() => {
@@ -172,7 +178,7 @@ export function AppSidebar({ activeModule, onSelectModule }: Props) {
             </div>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={logout} tooltip={t('auth.logout')}>
+            <SidebarMenuButton onClick={handleLogout} tooltip={t('auth.logout')}>
               <LogOut />
               <span>{t('auth.logout')}</span>
             </SidebarMenuButton>

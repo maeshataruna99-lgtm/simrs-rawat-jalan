@@ -5,8 +5,12 @@ namespace app\modules\transaction\antrean;
 use app\common\ValidationException;
 use app\modules\master\pasien\Pasien;
 use app\modules\master\poli\Poli;
+use app\modules\transaction\pembayaran\Invoice;
 use app\modules\transaction\pendaftaran\Kunjungan;
+use app\modules\transaction\resep\Resep;
 use Yii;
+use yii\web\ConflictHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -65,12 +69,16 @@ class AntreanService
     /**
      * Mengubah status antrean kunjungan dan mencatat perubahan ke t_kunjungan_status_log.
      *
+     * @param int|null $dokterId dokter_id milik user login, null bila user tidak tertaut ke dokter.
+     *
      * @throws NotFoundHttpException
+     * @throws ForbiddenHttpException Bila user dokter mengubah kunjungan milik dokter lain.
+     * @throws ConflictHttpException Bila kunjungan akan dibatalkan padahal resep sudah diserahkan atau sudah memiliki invoice.
      * @throws ValidationException
      *
      * Dipakai di: AntreanController::actionStatus().
      */
-    public function ubahStatus(int $id, ?string $statusBaru): Kunjungan
+    public function ubahStatus(int $id, ?string $statusBaru, ?int $dokterId = null): Kunjungan
     {
         $target = trim((string) $statusBaru);
         if (!in_array($target, Kunjungan::STATUS_LIST, true)) {
@@ -87,11 +95,14 @@ class AntreanService
 
         // Baris dikunci lalu status dibaca ulang di dalam transaksi: perubahan paralel diproses bergiliran
         // sehingga transisi selalu dicek terhadap status terbaru (tidak ada lost update).
-        $kunjungan = Yii::$app->db->transaction(function () use ($id, $target, $transisi) {
+        $kunjungan = Yii::$app->db->transaction(function () use ($id, $target, $transisi, $dokterId) {
             /** @var Kunjungan|null $kunjungan */
             $kunjungan = Kunjungan::findBySql('SELECT * FROM t_kunjungan WHERE id = :id FOR UPDATE', [':id' => $id])->one();
             if ($kunjungan === null) {
                 throw new NotFoundHttpException('Data kunjungan tidak ditemukan.');
+            }
+            if ($dokterId !== null && (int) $kunjungan->dokter_id !== $dokterId) {
+                throw new ForbiddenHttpException('Kunjungan ini bukan pasien Anda.');
             }
             if ($kunjungan->status === $target) {
                 return $kunjungan;
@@ -100,6 +111,20 @@ class AntreanService
                 throw new ValidationException([
                     'status' => ["Status tidak dapat diubah dari {$kunjungan->status} menjadi {$target}."],
                 ]);
+            }
+            if ($target === Kunjungan::STATUS_BATAL) {
+                $adaResepDiserahkan = Resep::find()
+                    ->where(['kunjungan_id' => $kunjungan->id, 'status' => Resep::STATUS_DISERAHKAN])
+                    ->exists();
+                if ($adaResepDiserahkan) {
+                    throw new ConflictHttpException('Kunjungan tidak dapat dibatalkan karena resep obat sudah diserahkan.');
+                }
+                $adaInvoice = Invoice::find()
+                    ->where(['kunjungan_id' => $kunjungan->id])
+                    ->exists();
+                if ($adaInvoice) {
+                    throw new ConflictHttpException('Kunjungan tidak dapat dibatalkan karena sudah memiliki invoice.');
+                }
             }
 
             $statusLama = $kunjungan->status;

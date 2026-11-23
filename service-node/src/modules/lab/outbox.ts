@@ -16,7 +16,7 @@ export interface OutboxRow {
 }
 
 export type DeliveryResult =
-  | { status: 'terkirim'; data: unknown }
+  | { status: 'terkirim'; data: unknown; duplikat?: boolean }
   | { status: 'pending'; error: string }
   | { status: 'gagal'; error: AppError };
 
@@ -55,11 +55,25 @@ export async function enqueue(input: LabResultInput): Promise<OutboxRow> {
 
 /**
  * Mengirim satu baris outbox ke Yii lalu mencatat hasilnya:
+ * bila baris sudah berstatus `terkirim`, kembalikan sukses idempoten tanpa memanggil ulang Yii
+ * maupun menaikkan penghitung `percobaan`;
  * sukses -> terkirim; Yii tidak terjangkau -> tetap pending dengan jadwal ulang; ditolak Yii (4xx) -> gagal permanen.
  *
  * Dipakai di: lab.routes.ts, outbox.worker.ts.
  */
 export async function deliver(row: OutboxRow): Promise<DeliveryResult> {
+  if (row.status === 'terkirim') {
+    return {
+      status: 'terkirim',
+      duplikat: true,
+      data: {
+        id: row.payload.detail_id,
+        hasil: row.payload.hasil,
+        idempotency_key: row.idempotency_key,
+        status: 'terkirim',
+      },
+    };
+  }
   try {
     const data = await forwardResult(row.payload);
     await db().query(

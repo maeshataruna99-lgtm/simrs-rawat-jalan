@@ -107,17 +107,16 @@ export default function AntreanPage() {
     {
       key: 'no_antrean',
       header: t('transaction.pendaftaran.queueNumber'),
+      className: 'whitespace-nowrap',
       cell: (row) => (
-        <span className="font-mono text-base font-bold">
-          {row.kode_antrean ?? `#${row.no_antrean}`}
-        </span>
+        <div>
+          <div className="font-mono text-base font-bold">
+            {row.kode_antrean ?? `#${row.no_antrean}`}
+          </div>
+          <div className="font-mono text-xs text-muted-foreground">{row.no_kunjungan}</div>
+        </div>
       ),
       sortValue: (row) => row.no_antrean,
-    },
-    {
-      key: 'no_kunjungan',
-      header: t('transaction.pendaftaran.colNoKunjungan'),
-      cell: (row) => <span className="font-mono text-xs">{row.no_kunjungan}</span>,
     },
     {
       key: 'pasien',
@@ -131,23 +130,25 @@ export default function AntreanPage() {
       sortValue: (row) => row.pasien?.nama ?? '',
     },
     {
-      key: 'poli',
-      header: t('transaction.pendaftaran.poli'),
-      cell: (row) => row.poli?.nama ?? '-',
-    },
-    {
-      key: 'dokter',
-      header: t('master.jadwal.dokter'),
-      cell: (row) => row.dokter?.nama ?? '-',
+      key: 'poli_dokter',
+      header: t('transaction.billing.colPoliDokter'),
+      cell: (row) => (
+        <div>
+          <div>{row.poli?.nama ?? '-'}</div>
+          <div className="text-xs text-muted-foreground">{row.dokter?.nama ?? '-'}</div>
+        </div>
+      ),
     },
     {
       key: 'tgl_kunjungan',
       header: t('transaction.pendaftaran.tglKunjungan'),
+      className: 'whitespace-nowrap',
       cell: (row) => row.tgl_kunjungan,
     },
     {
       key: 'status',
       header: t('system.common.status'),
+      className: 'whitespace-nowrap',
       cell: (row) => (
         <Badge variant={STATUS_BADGE[row.status]}>
           {t(`transaction.antrean.status.${row.status}`)}

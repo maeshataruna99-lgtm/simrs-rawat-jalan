@@ -45,35 +45,39 @@ export default function ObatPage() {
     {
       key: 'kode',
       header: t('system.common.kode'),
-      cell: (row) => <span className="font-mono">{row.kode}</span>,
+      className: 'whitespace-nowrap',
+      cell: (row) => <span className="font-mono text-xs">{row.kode}</span>,
       sortValue: (row) => row.kode,
     },
     {
       key: 'nama',
       header: t('system.common.nama'),
-      cell: (row) => row.nama,
+      cell: (row) => (
+        <div>
+          <div className="font-medium">{row.nama}</div>
+          <div className="text-xs text-muted-foreground">{row.satuan}</div>
+        </div>
+      ),
       sortValue: (row) => row.nama,
-    },
-    {
-      key: 'satuan',
-      header: t('master.obat.satuan'),
-      cell: (row) => row.satuan,
     },
     {
       key: 'harga',
       header: t('master.obat.harga'),
+      className: 'whitespace-nowrap text-right',
       cell: (row) => formatRupiah(row.harga),
       sortValue: (row) => row.harga,
     },
     {
       key: 'stok',
       header: t('master.obat.stok'),
+      className: 'whitespace-nowrap text-right',
       cell: (row) => <span className="font-mono font-semibold">{row.stok}</span>,
       sortValue: (row) => row.stok,
     },
     {
       key: 'is_active',
       header: t('system.common.status'),
+      className: 'whitespace-nowrap',
       cell: (row) => (
         <Badge variant={row.is_active ? 'default' : 'secondary'}>
           {row.is_active ? t('system.common.active') : t('system.common.inactive')}
@@ -141,6 +145,7 @@ export default function ObatPage() {
               <Button
                 variant="ghost"
                 size="sm"
+                className="h-8 px-2"
                 onClick={() => setAdjustTarget(row)}
                 aria-label={t('master.obat.adjustButton')}
               >
@@ -151,6 +156,7 @@ export default function ObatPage() {
             <Button
               variant="ghost"
               size="sm"
+              className="h-8 px-2"
               onClick={() => setHistoryTarget(row)}
               aria-label={t('master.obat.historyButton')}
             >

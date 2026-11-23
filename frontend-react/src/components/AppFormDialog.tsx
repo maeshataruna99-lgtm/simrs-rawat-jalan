@@ -11,12 +11,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: string;
+  contentClassName?: string;
   children: ReactNode;
 }
 
@@ -25,10 +27,17 @@ interface Props {
  *
  * Dipakai di: halaman master sistem dan master data.
  */
-export function AppFormDialog({ open, onOpenChange, title, description, children }: Props) {
+export function AppFormDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  contentClassName,
+  children,
+}: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className={cn('max-h-[90dvh] overflow-y-auto sm:max-w-lg', contentClassName)}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className={description ? undefined : 'sr-only'}>

@@ -161,12 +161,30 @@ class OrderLabService
             throw new ConflictHttpException('Order laboratorium sudah selesai, hasil tidak dapat diubah.');
         }
 
+        $duplikat = null;
         try {
-            Yii::$app->db->transaction(function () use ($detailId, $hasil, $key) {
-                $detail = OrderLabDetail::findOne($detailId);
-                // Kunci order agar penentuan status selesai tidak balapan antar input hasil.
-                $order = OrderLab::findBySql('SELECT * FROM t_order_lab WHERE id = :id FOR UPDATE', [':id' => $detail->order_id])->one();
+            Yii::$app->db->transaction(function () use ($detailId, $existing, $hasil, $key, &$duplikat) {
+                // Kunci order agar penentuan status selesai dan pemeriksaan terkunci tidak balapan antar input hasil.
+                $order = OrderLab::findBySql('SELECT * FROM t_order_lab WHERE id = :id FOR UPDATE', [':id' => $existing->order_id])->one();
+                if ($order === null) {
+                    throw new NotFoundHttpException('Order laboratorium tidak ditemukan.');
+                }
+                if ($key !== null && ($lama = OrderLabDetail::findOne(['idempotency_key' => $key])) !== null) {
+                    if ((int) $lama->id !== $detailId || $lama->hasil !== $hasil) {
+                        throw new ConflictHttpException('Idempotency-Key sudah digunakan untuk hasil dengan isi berbeda.');
+                    }
+                    $duplikat = $lama;
 
+                    return;
+                }
+                if ($order->status === OrderLab::STATUS_SELESAI) {
+                    throw new ConflictHttpException('Order laboratorium sudah selesai, hasil tidak dapat diubah.');
+                }
+
+                $detail = OrderLabDetail::findOne($detailId);
+                if ($detail === null) {
+                    throw new NotFoundHttpException('Detail order laboratorium tidak ditemukan.');
+                }
                 $detail->hasil = $hasil;
                 $detail->flag = self::hitungFlag($hasil, $detail->nilai_rujukan);
                 // Simpan dari UI (tanpa key) tidak boleh menghapus key kiriman eksternal sebelumnya.
@@ -187,6 +205,10 @@ class OrderLabService
             }
 
             return ['detail' => $lama, 'duplikat' => true];
+        }
+
+        if ($duplikat !== null) {
+            return ['detail' => $duplikat, 'duplikat' => true];
         }
 
         return ['detail' => OrderLabDetail::findOne($detailId), 'duplikat' => false];

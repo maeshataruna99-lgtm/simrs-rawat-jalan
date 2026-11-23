@@ -55,7 +55,11 @@ class AntreanController extends BaseApiController
     {
         $status = Yii::$app->request->bodyParams['status'] ?? null;
         try {
-            $kunjungan = (new AntreanService())->ubahStatus($id, is_string($status) ? $status : null);
+            $kunjungan = (new AntreanService())->ubahStatus(
+                $id,
+                is_string($status) ? $status : null,
+                $this->dokterId()
+            );
         } catch (ValidationException $e) {
             Yii::$app->response->statusCode = 422;
 
@@ -63,5 +67,13 @@ class AntreanController extends BaseApiController
         }
 
         return ApiResponse::success($kunjungan->toArray(), 'Status antrean berhasil diperbarui.');
+    }
+
+    /** dokter_id user login, null bila user tidak tertaut ke dokter. */
+    private function dokterId(): ?int
+    {
+        $dokterId = Yii::$app->user->identity->dokter_id ?? null;
+
+        return $dokterId === null ? null : (int) $dokterId;
     }
 }

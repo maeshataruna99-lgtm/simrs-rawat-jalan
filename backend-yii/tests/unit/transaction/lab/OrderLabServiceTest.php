@@ -118,4 +118,34 @@ class OrderLabServiceTest extends TestCase
         $this->expectException(ValidationException::class);
         $service->simpanHasil($hb['id'], ['hasil' => ''], null);
     }
+
+    public function testSimpanHasilMenolakEditSetelahOrderSelesaiDanMenjagaIdempotensi(): void
+    {
+        $d = $this->siapkan();
+        $service = new OrderLabService();
+
+        $order = $service->buat([
+            'kunjungan_id' => $d['kunjungan'],
+            'pemeriksaan_lab_ids' => [$d['gula'], $d['hb']],
+        ], $d['dokter'])->toArray();
+        [$gula, $hb] = $order['details'];
+
+        $service->simpanHasil($gula['id'], ['hasil' => '95'], 'kunci-gula-1');
+        $service->simpanHasil($hb['id'], ['hasil' => '13.5'], 'kunci-hb-1');
+        $this->assertSame(OrderLab::STATUS_SELESAI, OrderLab::findOne($order['id'])->status);
+
+        // Replay dengan key dan isi identik pada order selesai tetap idempoten.
+        $replay = $service->simpanHasil($hb['id'], ['hasil' => '13.5'], 'kunci-hb-1');
+        $this->assertTrue($replay['duplikat']);
+        $this->assertSame('13.5', $replay['detail']->hasil);
+
+        // Key baru pada order yang sudah selesai harus ditolak 409 dan tidak menimpa hasil.
+        try {
+            $service->simpanHasil($gula['id'], ['hasil' => '199'], 'kunci-gula-baru');
+            $this->fail('Update dengan key baru setelah order selesai seharusnya ditolak');
+        } catch (ConflictHttpException $e) {
+            $this->assertStringContainsString('sudah selesai', $e->getMessage());
+        }
+        $this->assertSame('95', OrderLabDetail::findOne($gula['id'])->hasil);
+    }
 }

@@ -183,11 +183,13 @@ export default function DashboardPage() {
       {
         key: 'tgl',
         header: t('dashboard.colTanggal'),
+        className: 'whitespace-nowrap',
         cell: (r) => String(r.tgl_kunjungan ?? '-'),
       },
       {
         key: 'no',
         header: t('transaction.billing.colNoKunjungan'),
+        className: 'whitespace-nowrap',
         cell: (r) => <span className="font-mono text-xs">{String(r.no_kunjungan ?? '-')}</span>,
       },
       {
@@ -200,13 +202,24 @@ export default function DashboardPage() {
       {
         key: 'status',
         header: t('transaction.billing.colStatus'),
-        cell: (r) => <Badge variant="outline">{String(r.status ?? '-')}</Badge>,
+        className: 'whitespace-nowrap',
+        cell: (r) => {
+          const statusKey = String(r.status ?? '');
+          return (
+            <Badge variant="outline">
+              {statusKey
+                ? t(`transaction.antrean.status.${statusKey}`, { defaultValue: statusKey })
+                : '-'}
+            </Badge>
+          );
+        },
       },
     ],
     tindakan: [
       {
         key: 'tgl',
         header: t('dashboard.colTanggal'),
+        className: 'whitespace-nowrap',
         cell: (r) => String(r.tgl_kunjungan ?? '-'),
       },
       {
@@ -236,11 +249,13 @@ export default function DashboardPage() {
       {
         key: 'waktu',
         header: t('transaction.billing.print.waktuBayar'),
+        className: 'whitespace-nowrap',
         cell: (r) => String(r.dibayar_at ?? '-'),
       },
       {
         key: 'no',
         header: t('transaction.billing.colNoPembayaran'),
+        className: 'whitespace-nowrap',
         cell: (r) => <span className="font-mono text-xs">{String(r.no_pembayaran ?? '-')}</span>,
       },
       {
@@ -268,11 +283,13 @@ export default function DashboardPage() {
       {
         key: 'tgl',
         header: t('dashboard.colTanggal'),
+        className: 'whitespace-nowrap',
         cell: (r) => String(r.tgl_kunjungan ?? '-'),
       },
       {
         key: 'resep',
         header: t('dashboard.colNoResep'),
+        className: 'whitespace-nowrap',
         cell: (r) => <span className="font-mono text-xs">{String(r.no_resep ?? '-')}</span>,
       },
       { key: 'obat', header: t('dashboard.colObat'), cell: (r) => String(r.obat ?? '-') },
@@ -293,11 +310,13 @@ export default function DashboardPage() {
       {
         key: 'tgl',
         header: t('dashboard.colTanggal'),
+        className: 'whitespace-nowrap',
         cell: (r) => String(r.tgl_kunjungan ?? '-'),
       },
       {
         key: 'inv',
         header: t('transaction.billing.colNoInvoice'),
+        className: 'whitespace-nowrap',
         cell: (r) => <span className="font-mono text-xs">{String(r.no_invoice ?? '-')}</span>,
       },
       {
@@ -320,6 +339,7 @@ export default function DashboardPage() {
       {
         key: 'status',
         header: t('transaction.billing.colStatus'),
+        className: 'whitespace-nowrap',
         cell: (r) => (
           <Badge variant="outline">
             {t(`transaction.billing.statusLabel.${String(r.status ?? 'belum_dibayar')}`)}
@@ -335,7 +355,8 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('dashboard.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            {t('dashboard.subtitle')} · {periode.from} s/d {periode.to}
+            {t('dashboard.subtitle')} ·{' '}
+            {t('dashboard.dateRange', { from: periode.from, to: periode.to })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -477,7 +498,7 @@ export default function DashboardPage() {
               {loadingStats ? '...' : (summary?.total_kunjungan ?? 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {periode.from} s/d {periode.to}
+              {t('dashboard.dateRange', { from: periode.from, to: periode.to })}
             </p>
           </CardContent>
         </Card>

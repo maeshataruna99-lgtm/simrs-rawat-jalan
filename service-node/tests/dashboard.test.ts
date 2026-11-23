@@ -473,4 +473,70 @@ describe('API Dashboard (poin 9.1)', () => {
     expect(bpjsOnly.body.data.total_kunjungan).toBe(1);
     expect(bpjsOnly.body.data.total_pendapatan).toBe(15000);
   });
+
+  it('mengabaikan invoice dari kunjungan batal pada summary, pendapatan, pembayaran, dan detail', async () => {
+    const pool = db();
+    const tok = makeToken(`role_allow_${SFX}`, ids.userId);
+    const qs = `?from=${FROM}&to=${TO}`;
+
+    const kBatal = await pool.query<{ id: number }>(
+      `INSERT INTO t_kunjungan (no_kunjungan, pasien_id, poli_id, dokter_id, jadwal_id, tgl_kunjungan, no_antrean, status, penjamin)
+       VALUES ($1, $2, $3, $4, $5, $6, 9, 'batal', 'umum') RETURNING id`,
+      [`KJB_${SFX}`, ids.pasien1, ids.poliA, ids.dokter, ids.jadwalA, FROM],
+    );
+    const invBatal = await pool.query<{ id: number }>(
+      `INSERT INTO t_invoice (no_invoice, kunjungan_id, total, total_bayar, status)
+       VALUES ($1, $2, 99000, 0, 'belum_dibayar') RETURNING id`,
+      [`INVB_${SFX}`, kBatal.rows[0].id],
+    );
+    await pool.query(
+      `INSERT INTO t_invoice_item (invoice_id, sumber, referensi_id, deskripsi, qty, harga, subtotal, is_void)
+       VALUES ($1, 'pendaftaran', $2, 'Daftar Batal', 1, 99000, 99000, false)`,
+      [invBatal.rows[0].id, kBatal.rows[0].id],
+    );
+
+    try {
+      const summary = await request(app)
+        .get(`/api/dashboard/summary${qs}`)
+        .set('Authorization', `Bearer ${tok}`);
+      expect(summary.status).toBe(200);
+      expect(summary.body.data.total_tagihan).toBe(175000);
+      expect(summary.body.data.invoice_per_status).toEqual({
+        belum_dibayar: 0,
+        dibayar_sebagian: 1,
+        lunas: 1,
+      });
+
+      const pendapatan = await request(app)
+        .get(`/api/dashboard/pendapatan${qs}`)
+        .set('Authorization', `Bearer ${tok}`);
+      expect(pendapatan.status).toBe(200);
+      expect(pendapatan.body.data.basis).toEqual({
+        per_hari: 'kas_diterima_tanggal_bayar',
+        per_sumber: 'tagihan_aktif_tanggal_kunjungan',
+      });
+      expect(pendapatan.body.data.per_sumber).toEqual(
+        expect.arrayContaining([
+          { sumber: 'tindakan', total_nilai: 100000 },
+          { sumber: 'pendaftaran', total_nilai: 55000 },
+          { sumber: 'obat', total_nilai: 20000 },
+        ]),
+      );
+
+      const pembayaran = await request(app)
+        .get(`/api/dashboard/pembayaran${qs}`)
+        .set('Authorization', `Bearer ${tok}`);
+      expect(pembayaran.status).toBe(200);
+      expect(pembayaran.body.data.per_status.find((s: { status: string }) => s.status === 'belum_dibayar')).toBeUndefined();
+
+      const detailPembayaran = await request(app)
+        .get(`/api/dashboard/detail/pembayaran${qs}`)
+        .set('Authorization', `Bearer ${tok}`);
+      expect(detailPembayaran.status).toBe(200);
+      expect(detailPembayaran.body.meta.total).toBe(2);
+    } finally {
+      await pool.query(`DELETE FROM t_invoice WHERE id = $1`, [invBatal.rows[0].id]);
+      await pool.query(`DELETE FROM t_kunjungan WHERE id = $1`, [kBatal.rows[0].id]);
+    }
+  });
 });

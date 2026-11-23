@@ -51,6 +51,10 @@ export interface TindakanTerbanyakItem {
 
 export interface PendapatanReport {
   periode: { from: string; to: string };
+  basis: {
+    per_hari: 'kas_diterima_tanggal_bayar';
+    per_sumber: 'tagihan_aktif_tanggal_kunjungan';
+  };
   per_hari: Array<{
     tanggal: string;
     jumlah_transaksi: number;
@@ -168,11 +172,7 @@ export async function getSummary(filter: PeriodeFilter): Promise<DashboardSummar
   const fTnd = buildKunjunganFilter(filter, 'k', pTnd);
 
   const pPay: unknown[] = [filter.from, filter.to];
-  const hasKunjFilter = Boolean(filter.dokter_id || filter.penjamin);
-  const payJoin = hasKunjFilter
-    ? 'JOIN t_invoice i ON i.id = b.invoice_id JOIN t_kunjungan k ON k.id = i.kunjungan_id'
-    : '';
-  const fPay = hasKunjFilter ? buildKunjunganFilter(filter, 'k', pPay) : '';
+  const fPay = buildKunjunganFilter(filter, 'k', pPay);
 
   const pInv: unknown[] = [filter.from, filter.to];
   const fInv = buildKunjunganFilter(filter, 'k', pInv);
@@ -195,15 +195,18 @@ export async function getSummary(filter: PeriodeFilter): Promise<DashboardSummar
     pool.query<{ total: string }>(
       `SELECT COALESCE(SUM(b.jumlah), 0)::text AS total
        FROM t_pembayaran b
-       ${payJoin}
-       WHERE b.dibayar_at >= $1::date AND b.dibayar_at < ($2::date + INTERVAL '1 day')${fPay}`,
+       JOIN t_invoice i ON i.id = b.invoice_id
+       JOIN t_kunjungan k ON k.id = i.kunjungan_id
+       WHERE b.dibayar_at >= $1::date AND b.dibayar_at < ($2::date + INTERVAL '1 day')
+         AND k.status <> 'batal'${fPay}`,
       pPay,
     ),
     pool.query<{ status: string; jumlah: string; total_tagihan: string }>(
       `SELECT i.status, COUNT(*)::text AS jumlah, COALESCE(SUM(i.total), 0)::text AS total_tagihan
        FROM t_invoice i
        JOIN t_kunjungan k ON k.id = i.kunjungan_id
-       WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date${fInv}
+       WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date
+         AND k.status <> 'batal'${fInv}
        GROUP BY i.status`,
       pInv,
     ),
@@ -311,19 +314,17 @@ export async function getTindakanTerbanyak(
 }
 
 /**
- * Laporan pendapatan per hari (dari t_pembayaran) dan komposisi tagihan per sumber biaya aktif (dari t_invoice_item).
+ * Laporan pendapatan:
+ * - `per_hari`: kas diterima (t_pembayaran.jumlah) dikelompokkan berdasarkan tanggal pembayaran (`dibayar_at`), hanya untuk kunjungan non-batal.
+ * - `per_sumber`: komposisi tagihan aktif (t_invoice_item.subtotal, `is_void = false`) dikelompokkan berdasarkan tanggal kunjungan (`k.tgl_kunjungan`) non-batal.
  *
  * Dipakai di: dashboard.routes.ts (GET /api/dashboard/pendapatan).
  */
 export async function getPendapatan(filter: PeriodeFilter): Promise<PendapatanReport> {
   const pool = readDb();
-  const hasKunjFilter = Boolean(filter.dokter_id || filter.penjamin);
 
   const pHari: unknown[] = [filter.from, filter.to];
-  const hariJoin = hasKunjFilter
-    ? 'JOIN t_invoice i ON i.id = b.invoice_id JOIN t_kunjungan k ON k.id = i.kunjungan_id'
-    : '';
-  const fHari = hasKunjFilter ? buildKunjunganFilter(filter, 'k', pHari) : '';
+  const fHari = buildKunjunganFilter(filter, 'k', pHari);
 
   const pSumber: unknown[] = [filter.from, filter.to];
   const fSumber = buildKunjunganFilter(filter, 'k', pSumber);
@@ -334,8 +335,10 @@ export async function getPendapatan(filter: PeriodeFilter): Promise<PendapatanRe
               COUNT(*)::text AS jumlah_transaksi,
               COALESCE(SUM(b.jumlah), 0)::text AS total_pendapatan
        FROM t_pembayaran b
-       ${hariJoin}
-       WHERE b.dibayar_at >= $1::date AND b.dibayar_at < ($2::date + INTERVAL '1 day')${fHari}
+       JOIN t_invoice i ON i.id = b.invoice_id
+       JOIN t_kunjungan k ON k.id = i.kunjungan_id
+       WHERE b.dibayar_at >= $1::date AND b.dibayar_at < ($2::date + INTERVAL '1 day')
+         AND k.status <> 'batal'${fHari}
        GROUP BY b.dibayar_at::date
        ORDER BY b.dibayar_at::date ASC`,
       pHari,
@@ -346,7 +349,7 @@ export async function getPendapatan(filter: PeriodeFilter): Promise<PendapatanRe
        JOIN t_invoice i ON i.id = it.invoice_id
        JOIN t_kunjungan k ON k.id = i.kunjungan_id
        WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date
-         AND it.is_void = false${fSumber}
+         AND k.status <> 'batal' AND it.is_void = false${fSumber}
        GROUP BY it.sumber
        ORDER BY SUM(it.subtotal) DESC`,
       pSumber,
@@ -355,6 +358,10 @@ export async function getPendapatan(filter: PeriodeFilter): Promise<PendapatanRe
 
   return {
     periode: { from: filter.from, to: filter.to },
+    basis: {
+      per_hari: 'kas_diterima_tanggal_bayar',
+      per_sumber: 'tagihan_aktif_tanggal_kunjungan',
+    },
     per_hari: perHariRes.rows.map((r) => ({
       tanggal: r.tanggal,
       jumlah_transaksi: Number(r.jumlah_transaksi),
@@ -420,16 +427,12 @@ export async function getPenggunaanObat(
  */
 export async function getStatusPembayaran(filter: PeriodeFilter): Promise<PembayaranReport> {
   const pool = readDb();
-  const hasKunjFilter = Boolean(filter.dokter_id || filter.penjamin);
 
   const pStatus: unknown[] = [filter.from, filter.to];
   const fStatus = buildKunjunganFilter(filter, 'k', pStatus);
 
   const pMetode: unknown[] = [filter.from, filter.to];
-  const metodeJoin = hasKunjFilter
-    ? 'JOIN t_invoice i ON i.id = b.invoice_id JOIN t_kunjungan k ON k.id = i.kunjungan_id'
-    : '';
-  const fMetode = hasKunjFilter ? buildKunjunganFilter(filter, 'k', pMetode) : '';
+  const fMetode = buildKunjunganFilter(filter, 'k', pMetode);
 
   const [statusRes, metodeRes] = await Promise.all([
     pool.query<{
@@ -444,7 +447,8 @@ export async function getStatusPembayaran(filter: PeriodeFilter): Promise<Pembay
               COALESCE(SUM(i.total_bayar), 0)::text AS total_bayar
        FROM t_invoice i
        JOIN t_kunjungan k ON k.id = i.kunjungan_id
-       WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date${fStatus}
+       WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date
+         AND k.status <> 'batal'${fStatus}
        GROUP BY i.status
        ORDER BY i.status ASC`,
       pStatus,
@@ -454,8 +458,10 @@ export async function getStatusPembayaran(filter: PeriodeFilter): Promise<Pembay
               COUNT(*)::text AS jumlah_transaksi,
               COALESCE(SUM(b.jumlah), 0)::text AS total_bayar
        FROM t_pembayaran b
-       ${metodeJoin}
-       WHERE b.dibayar_at >= $1::date AND b.dibayar_at < ($2::date + INTERVAL '1 day')${fMetode}
+       JOIN t_invoice i ON i.id = b.invoice_id
+       JOIN t_kunjungan k ON k.id = i.kunjungan_id
+       WHERE b.dibayar_at >= $1::date AND b.dibayar_at < ($2::date + INTERVAL '1 day')
+         AND k.status <> 'batal'${fMetode}
        GROUP BY b.metode
        ORDER BY b.metode ASC`,
       pMetode,
@@ -568,7 +574,7 @@ export async function getDetail(
   if (jenis === 'pendapatan') {
     const params: unknown[] = [filter.from, filter.to];
     const extra = buildKunjunganFilter(filter, 'k', params);
-    const where = `WHERE b.dibayar_at >= $1::date AND b.dibayar_at < ($2::date + INTERVAL '1 day')${extra}`;
+    const where = `WHERE b.dibayar_at >= $1::date AND b.dibayar_at < ($2::date + INTERVAL '1 day') AND k.status <> 'batal'${extra}`;
     const [countRes, rowsRes] = await Promise.all([
       pool.query<{ total: string }>(
         `SELECT COUNT(*)::text AS total
@@ -648,7 +654,7 @@ export async function getDetail(
     params.push(options.status);
     extra += ` AND i.status = $${params.length}`;
   }
-  const where = `WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date${extra}`;
+  const where = `WHERE k.tgl_kunjungan >= $1::date AND k.tgl_kunjungan <= $2::date AND k.status <> 'batal'${extra}`;
   const [countRes, rowsRes] = await Promise.all([
     pool.query<{ total: string }>(
       `SELECT COUNT(*)::text AS total FROM t_invoice i JOIN t_kunjungan k ON k.id = i.kunjungan_id ${where}`,

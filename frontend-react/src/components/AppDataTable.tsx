@@ -95,7 +95,7 @@ export function AppDataTable<T>({
         <TableHeader>
           <TableRow>
             {columns.map((col) => (
-              <TableHead key={col.key} className={col.className}>
+              <TableHead key={col.key} className={col.className ? `px-3 ${col.className}` : 'px-3'}>
                 {col.sortValue ? (
                   <button
                     type="button"
@@ -111,7 +111,9 @@ export function AppDataTable<T>({
               </TableHead>
             ))}
             {showActions && (
-              <TableHead className="w-40 text-right">{t('common.actions')}</TableHead>
+              <TableHead className="whitespace-nowrap px-3 text-right">
+                {t('common.actions')}
+              </TableHead>
             )}
           </TableRow>
         </TableHeader>
@@ -120,12 +122,12 @@ export function AppDataTable<T>({
             Array.from({ length: 3 }).map((_, idx) => (
               <TableRow key={idx}>
                 {columns.map((col) => (
-                  <TableCell key={col.key}>
+                  <TableCell key={col.key} className="px-3 py-3">
                     <Skeleton className="h-4 w-24" />
                   </TableCell>
                 ))}
                 {showActions && (
-                  <TableCell>
+                  <TableCell className="px-3 py-3">
                     <Skeleton className="ml-auto h-4 w-16" />
                   </TableCell>
                 )}
@@ -141,18 +143,22 @@ export function AppDataTable<T>({
             sortedRows.map((row) => (
               <TableRow key={rowKey(row)}>
                 {columns.map((col) => (
-                  <TableCell key={col.key} className={col.className}>
+                  <TableCell
+                    key={col.key}
+                    className={col.className ? `px-3 py-3 ${col.className}` : 'px-3 py-3'}
+                  >
                     {col.cell(row)}
                   </TableCell>
                 ))}
                 {showActions && (
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
+                  <TableCell className="px-3 py-3 text-right">
+                    <div className="flex flex-wrap items-center justify-end gap-1">
                       {extraActions?.(row)}
                       {showEdit && onEdit && (
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-8 px-2"
                           onClick={() => onEdit(row)}
                           aria-label={t('common.edit')}
                         >
@@ -164,7 +170,7 @@ export function AppDataTable<T>({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-destructive hover:text-destructive"
+                          className="h-8 px-2 text-destructive hover:text-destructive"
                           onClick={() => onDelete(row)}
                           aria-label={t('common.delete')}
                         >
