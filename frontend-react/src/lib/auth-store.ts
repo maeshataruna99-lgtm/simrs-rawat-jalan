@@ -7,6 +7,7 @@
  */
 import axios from 'axios';
 import { create } from 'zustand';
+import { clearAllChatSessions } from '@/modules/chatbot/chatbot.storage';
 import * as authApi from '@/modules/system/auth/auth.api';
 import type { PermissionAction, UserProfile } from '@/modules/system/auth/auth.types';
 import { setUnauthorizedHandler } from './api-client';
@@ -57,6 +58,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: () => {
     tokenStorage.clear();
+    clearAllChatSessions();
     set({ status: 'guest', user: null, suppressRedirect: true });
   },
 

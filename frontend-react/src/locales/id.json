@@ -676,29 +676,75 @@
     "notFound": "Data untuk \"{{q}}\" tidak ditemukan.",
     "minLength": "Masukkan minimal 3 karakter.",
     "lookupFailed": "Gagal mengambil data dari server.",
+    "partialWarning": "Sebagian sumber data gagal dimuat; menampilkan data yang tersedia.",
     "faqNoAnswer": "Maaf, topik itu belum ada di basis pengetahuan. Coba kata kunci lain, misalnya \"daftar pasien\", \"resep\", atau \"hasil lab\".",
     "topic": {
       "pasien": "Cari informasi pasien berdasarkan No. RM / No. Registrasi",
       "tagihan": "Cek status tagihan berdasarkan No. Registrasi / No. RM",
+      "jadwal": "Cek jadwal praktik dokter hari ini / per poli",
+      "obat": "Cek stok dan harga obat",
+      "farmasi": "Cek antrean resep farmasi",
+      "lab": "Cek status order laboratorium",
+      "ringkasan": "Lihat ringkasan operasional hari ini",
       "faq": "Tanya fitur aplikasi (fitur X ada di mana / bagaimana caranya)"
     },
     "prompt": {
       "pasien": "Silakan ketik No. RM (contoh RM000001) atau No. Registrasi kunjungan (contoh RJ202611220001).",
       "tagihan": "Silakan ketik No. Registrasi kunjungan, No. RM, atau No. Invoice.",
+      "jadwal": "Ketik hari (contoh: hari ini, Senin), nama dokter, atau nama poli.",
+      "obat": "Ketik nama atau kode obat untuk melihat stok dan harga.",
+      "farmasi": "Ketik No. Resep, nama pasien, atau No. RM, atau klik Antrean aktif di bawah.",
+      "lab": "Ketik No. Order lab, nama pasien, atau No. RM, atau klik Order aktif di bawah.",
+      "ringkasan": "Mengambil ringkasan operasional hari ini...",
       "faq": "Silakan ketik pertanyaan tentang fitur aplikasi, atau pilih salah satu topik di bawah."
     },
     "placeholder": {
+      "direct": "Ketik No. RM, No. Invoice, atau tanya fitur...",
       "pasien": "No. RM / No. Registrasi",
       "tagihan": "No. Registrasi / No. RM / No. Invoice",
+      "jadwal": "Hari ini / Senin / nama dokter atau poli",
+      "obat": "Nama atau kode obat",
+      "farmasi": "No. Resep / nama pasien / aktif",
+      "lab": "No. Order / nama pasien / aktif",
+      "ringkasan": "Ketik untuk muat ulang ringkasan",
       "faq": "Contoh: cara daftar pasien baru"
+    },
+    "quick": {
+      "todaySchedule": "Jadwal hari ini",
+      "activePharmacy": "Antrean aktif",
+      "activeLab": "Order aktif",
+      "refreshSummary": "Muat ulang"
+    },
+    "action": {
+      "checkBill": "Cek tagihan",
+      "checkBillFor": "Cek tagihan {{code}}",
+      "openExam": "Pemeriksaan",
+      "viewInvoice": "Lihat invoice",
+      "openDashboard": "Buka dashboard",
+      "openBilling": "Buka billing"
     },
     "result": {
       "pasien": "Data pasien:",
       "kunjungan": "Kunjungan terakhir:",
       "tagihan": "Tagihan:",
+      "jadwal": "Jadwal praktik dokter:",
+      "obat": "Data obat:",
+      "farmasi": "Antrean resep farmasi:",
+      "lab": "Status order laboratorium:",
+      "ringkasan": "Ringkasan hari ini ({{date}}):",
       "antreanNo": "Antrean {{no}}",
       "total": "Total {{total}}",
-      "sisa": "Sisa {{sisa}}"
+      "sisa": "Sisa {{sisa}}",
+      "quota": "Kuota {{count}}",
+      "stock": "Stok {{count}}",
+      "stockEmpty": "habis",
+      "stockLow": "menipis",
+      "itemCount": "{{count}} item",
+      "visitCount": "Total kunjungan: {{count}}",
+      "actionCount": "Total tindakan: {{count}}",
+      "revenue": "Pendapatan: {{total}}",
+      "invoiceStatus": "Invoice: {{unpaid}} belum bayar, {{partial}} sebagian, {{paid}} lunas",
+      "unbilledCount": "Kunjungan belum ditagih: {{count}}"
     },
     "kb": {
       "pendaftaran": {

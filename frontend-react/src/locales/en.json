@@ -676,29 +676,75 @@
     "notFound": "No data found for \"{{q}}\".",
     "minLength": "Enter at least 3 characters.",
     "lookupFailed": "Failed to fetch data from the server.",
+    "partialWarning": "Some data sources failed to load; showing available results.",
     "faqNoAnswer": "Sorry, that topic is not in the knowledge base yet. Try other keywords, such as \"register patient\", \"prescription\", or \"lab result\".",
     "topic": {
       "pasien": "Find patient information by MRN / Registration No.",
       "tagihan": "Check bill status by Registration No. / MRN",
+      "jadwal": "Check doctor practice schedules today / by clinic",
+      "obat": "Check medicine stock and price",
+      "farmasi": "Check pharmacy prescription queue",
+      "lab": "Check laboratory order status",
+      "ringkasan": "View today's operational summary",
       "faq": "Ask about app features (where is feature X / how do I)"
     },
     "prompt": {
       "pasien": "Type the MRN (e.g. RM000001) or visit Registration No. (e.g. RJ202611220001).",
       "tagihan": "Type the visit Registration No., MRN, or Invoice No.",
+      "jadwal": "Type a day (e.g. today, Monday), doctor name, or clinic name.",
+      "obat": "Type a medicine name or code to check stock and price.",
+      "farmasi": "Type a Prescription No., patient name, or MRN, or click Active queue below.",
+      "lab": "Type a Lab Order No., patient name, or MRN, or click Active orders below.",
+      "ringkasan": "Loading today's operational summary...",
       "faq": "Type a question about an app feature, or pick a topic below."
     },
     "placeholder": {
+      "direct": "Type MRN, Invoice No., or ask about a feature...",
       "pasien": "MRN / Registration No.",
       "tagihan": "Registration No. / MRN / Invoice No.",
+      "jadwal": "Today / Monday / doctor or clinic name",
+      "obat": "Medicine name or code",
+      "farmasi": "Prescription No. / patient name / active",
+      "lab": "Order No. / patient name / active",
+      "ringkasan": "Type to refresh summary",
       "faq": "Example: how to register a new patient"
+    },
+    "quick": {
+      "todaySchedule": "Today's schedule",
+      "activePharmacy": "Active queue",
+      "activeLab": "Active orders",
+      "refreshSummary": "Refresh"
+    },
+    "action": {
+      "checkBill": "Check bill",
+      "checkBillFor": "Check bill {{code}}",
+      "openExam": "Examination",
+      "viewInvoice": "View invoice",
+      "openDashboard": "Open dashboard",
+      "openBilling": "Open billing"
     },
     "result": {
       "pasien": "Patient data:",
       "kunjungan": "Latest visits:",
       "tagihan": "Bills:",
+      "jadwal": "Doctor schedules:",
+      "obat": "Medicines:",
+      "farmasi": "Pharmacy queue:",
+      "lab": "Laboratory orders:",
+      "ringkasan": "Today's summary ({{date}}):",
       "antreanNo": "Queue {{no}}",
       "total": "Total {{total}}",
-      "sisa": "Remaining {{sisa}}"
+      "sisa": "Remaining {{sisa}}",
+      "quota": "Quota {{count}}",
+      "stock": "Stock {{count}}",
+      "stockEmpty": "out of stock",
+      "stockLow": "low stock",
+      "itemCount": "{{count}} items",
+      "visitCount": "Total visits: {{count}}",
+      "actionCount": "Total procedures: {{count}}",
+      "revenue": "Revenue: {{total}}",
+      "invoiceStatus": "Invoices: {{unpaid}} unpaid, {{partial}} partial, {{paid}} paid",
+      "unbilledCount": "Unbilled visits: {{count}}"
     },
     "kb": {
       "pendaftaran": {
