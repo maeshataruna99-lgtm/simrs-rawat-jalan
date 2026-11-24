@@ -154,6 +154,14 @@ class AntreanServiceTest extends TestCase
         $this->assertSame(1, $group['total_menunggu']);
         $this->assertSame(0, $group['total_selesai']);
         $this->assertSame($k2->id, $group['menunggu'][0]['id']);
+
+        // Pasien berikutnya dipanggil: U-001 masih diperiksa sampai lunas di kasir, tetapi di layar
+        // hanya panggilan terakhir dokter yang tampil dan panggilan lama dihitung selesai.
+        $service->ubahStatus($k2->id, 'diperiksa');
+        $group = $service->display(['tanggal' => $tgl, 'poli_id' => $poli->id])['poli'][0];
+        $this->assertSame(['U-002'], array_column($group['sedang_diperiksa'], 'kode_antrean'));
+        $this->assertSame(1, $group['total_selesai']);
+        $this->assertSame(0, $group['total_menunggu']);
     }
 
     public function testUbahStatusMenolakDokterLainDanMengizinkanPemilik(): void

@@ -182,6 +182,8 @@ class AntreanService
     /**
      * Mengambil ringkasan antrean publik per poli untuk layar display ruang tunggu.
      * Nama pasien disamarkan dan tidak menyertakan NIK maupun nomor rekam medis.
+     * Kunjungan tetap berstatus diperiksa sampai lunas di kasir, sehingga per dokter hanya panggilan terakhir
+     * yang tampil sebagai sedang diperiksa; panggilan sebelumnya dihitung selesai di layar.
      *
      * @param array<string, mixed> $params Filter opsional `tanggal` (YYYY-MM-DD) dan `poli_id`.
      * @return array<string, mixed>
@@ -210,7 +212,7 @@ class AntreanService
             : $allPoli;
 
         $query = Kunjungan::find()
-            ->with(['pasien', 'poli', 'dokter'])
+            ->with(['pasien', 'poli', 'dokter', 'statusLogs'])
             ->where(['tgl_kunjungan' => $tanggal])
             ->andWhere(['!=', 'status', Kunjungan::STATUS_BATAL])
             ->orderBy(['poli_id' => SORT_ASC, 'no_antrean' => SORT_ASC]);
@@ -224,6 +226,8 @@ class AntreanService
 
         /** @var array<int, array<string, mixed>> $grouped */
         $grouped = [];
+        /** @var array<int, array<int, array{urutan: int, entry: array<string, mixed>}>> $panggilanTerakhir poli => dokter => panggilan */
+        $panggilanTerakhir = [];
         foreach ($targetPoli as $p) {
             $grouped[(int) $p->id] = [
                 'poli_id' => (int) $p->id,
@@ -266,13 +270,31 @@ class AntreanService
             ];
 
             if ($k->status === Kunjungan::STATUS_DIPERIKSA) {
-                $grouped[$pid]['sedang_diperiksa'][] = $entry;
+                // Urutan panggilan = id log terakhir yang mengubah status menjadi diperiksa (bukan nomor antrean).
+                $urutan = 0;
+                foreach ($k->statusLogs as $log) {
+                    if ($log->status_baru === Kunjungan::STATUS_DIPERIKSA) {
+                        $urutan = max($urutan, (int) $log->id);
+                    }
+                }
+                $did = (int) $k->dokter_id;
+                $lama = $panggilanTerakhir[$pid][$did] ?? null;
+                if ($lama === null || $urutan > $lama['urutan']) {
+                    $panggilanTerakhir[$pid][$did] = ['urutan' => $urutan, 'entry' => $entry];
+                }
+                if ($lama !== null) {
+                    $grouped[$pid]['total_selesai']++;
+                }
             } elseif ($k->status === Kunjungan::STATUS_MENUNGGU) {
                 $grouped[$pid]['total_menunggu']++;
                 if (count($grouped[$pid]['menunggu']) < 10) {
                     $grouped[$pid]['menunggu'][] = $entry;
                 }
             }
+        }
+
+        foreach ($panggilanTerakhir as $pid => $perDokter) {
+            $grouped[$pid]['sedang_diperiksa'] = array_column(array_values($perDokter), 'entry');
         }
 
         return [
