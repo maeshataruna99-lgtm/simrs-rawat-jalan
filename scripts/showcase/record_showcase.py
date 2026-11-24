@@ -26,7 +26,7 @@ CAMERA_JS = r"""
   const style = document.createElement('style');
   style.textContent = `
     html {
-      transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.70s cubic-bezier(0.22, 1, 0.36, 1);
       transform-origin: 50% 50%;
       will-change: transform;
     }
@@ -156,19 +156,23 @@ def pick_fresh_patient():
     return no_rm.strip(), nama.strip()
 
 
-def get_latest_queue_code(no_rm: str) -> str:
-    row = psql(
-        f"""
-        SELECT COALESCE(mp.prefix_antrean, 'U') || '-' || LPAD(k.no_antrean::text, 3, '0')
-        FROM t_kunjungan k
-        JOIN m_pasien p ON p.id = k.pasien_id
-        JOIN m_poli mp ON mp.id = k.poli_id
-        WHERE p.no_rm = '{no_rm}' AND k.tgl_kunjungan = CURRENT_DATE
-        ORDER BY k.id DESC
-        LIMIT 1;
-        """
-    )
-    return row.strip() or "U-001"
+def get_latest_queue_code(no_rm: str, retries: int = 15) -> str:
+    for _ in range(retries):
+        row = psql(
+            f"""
+            SELECT COALESCE(mp.prefix_antrean, 'U') || '-' || LPAD(k.no_antrean::text, 3, '0')
+            FROM t_kunjungan k
+            JOIN m_pasien p ON p.id = k.pasien_id
+            JOIN m_poli mp ON mp.id = k.poli_id
+            WHERE p.no_rm = '{no_rm}' AND k.tgl_kunjungan = CURRENT_DATE
+            ORDER BY k.id DESC
+            LIMIT 1;
+            """
+        )
+        if row.strip():
+            return row.strip()
+        time.sleep(0.5)
+    raise RuntimeError(f"Kunjungan hari ini untuk {no_rm} tidak ditemukan di database.")
 
 
 def announcement_files(kode_antrean: str):
@@ -223,6 +227,16 @@ class Scene:
             pass
 
     def goto(self, path: str, mark_start: bool = False, wait_selector: str = "main, #username, header"):
+        # Jika sudah berada di app dan link sidebar tersedia, gunakan navigasi SPA agar instan tanpa reload Vite
+        if not mark_start and self.pg.url.startswith(APP):
+            link = self.pg.locator(f"aside a[href='{path}'], nav a[href='{path}']").first
+            if link.count() and link.is_visible():
+                link.click()
+                self.pg.locator(wait_selector).first.wait_for(state="visible", timeout=25000)
+                self.wait_idle(6000)
+                self.pg.wait_for_timeout(550)
+                self.install_cam()
+                return
         self.pg.goto(APP + path, wait_until="domcontentloaded", timeout=60000)
         self.pg.locator(wait_selector).first.wait_for(state="visible", timeout=45000)
         self.wait_idle(8000)
@@ -231,19 +245,38 @@ class Scene:
         if mark_start:
             self.trim_start = max(0.0, self.now() - 0.15)
 
-    def sub(self, text: str, duration: float = None):
-        """Mulai subtitle baru. Bila duration diisi, otomatis berakhir setelah durasi (atau dipotong sub berikutnya)."""
+    def sub(self, text: str, min_read: float = None):
+        """Mulai subtitle baru dengan jaminan waktu baca medium agar teks selalu sempat dibaca sebelum berganti."""
+        self.ensure_readable()
         t = self.now()
         if self._active_sub is not None and self._active_sub["end"] is None:
             self._active_sub["end"] = t
-        item = {"start": t, "end": (t + duration) if duration else None, "text": text}
+        calc_read = max(3.8, len(text) / 18.5 + 1.25)
+        item = {
+            "start": t,
+            "end": None,
+            "text": text,
+            "min_read": min_read if min_read is not None else calc_read,
+        }
         self.subtitles.append(item)
         self._active_sub = item
 
-    def end_sub(self):
+    def ensure_readable(self, extra_sec: float = 0.0):
+        """Pastikan subtitle aktif sudah tampil cukup lama sebelum lanjut ke subtitle/transisi berikutnya."""
+        if self._active_sub is not None and self._active_sub["end"] is None:
+            elapsed = self.now() - self._active_sub["start"]
+            target = self._active_sub.get("min_read", 3.8) + extra_sec
+            remain = target - elapsed
+            if remain > 0.05:
+                self.pg.wait_for_timeout(int(remain * 1000))
+
+    def end_sub(self, tail_sec: float = 0.85):
+        self.ensure_readable()
         if self._active_sub is not None and self._active_sub["end"] is None:
             self._active_sub["end"] = self.now()
         self._active_sub = None
+        if tail_sec > 0:
+            self.pg.wait_for_timeout(int(tail_sec * 1000))
 
     def audio(self, wav_names):
         self.audio_cues.append({"time": self.now(), "wavs": list(wav_names)})
@@ -261,18 +294,17 @@ class Scene:
 
     def zoom_in(self, locator, scale: float = 1.42, pad: int = 12):
         self.install_cam()
-        # Reset zoom temporarily if needed to compute clean unscaled viewport coords
         self.pg.evaluate("document.documentElement.style.transform = 'scale(1)'")
-        self.pg.wait_for_timeout(80)
+        self.pg.wait_for_timeout(120)
         rect = self._rect(locator)
         self.pg.evaluate("([r, s, p]) => window.__showcase.zoomRect(r, s, p)", [rect, scale, pad])
-        self.pg.wait_for_timeout(620)
+        self.pg.wait_for_timeout(780)
 
     def zoom_box(self, locators, scale: float = 1.38, pad: int = 16):
         """Zoom ke bounding box gabungan beberapa elemen (mis. satu grup form input)."""
         self.install_cam()
         self.pg.evaluate("document.documentElement.style.transform = 'scale(1)'")
-        self.pg.wait_for_timeout(80)
+        self.pg.wait_for_timeout(120)
         rects = [self._rect(loc) for loc in locators]
         left = min(r["left"] for r in rects)
         top = min(r["top"] for r in rects)
@@ -280,14 +312,14 @@ class Scene:
         bottom = max(r["top"] + r["height"] for r in rects)
         rect = {"left": left, "top": top, "width": right - left, "height": bottom - top}
         self.pg.evaluate("([r, s, p]) => window.__showcase.zoomRect(r, s, p)", [rect, scale, pad])
-        self.pg.wait_for_timeout(620)
+        self.pg.wait_for_timeout(780)
 
-    def zoom_out(self, wait_ms: int = 620):
+    def zoom_out(self, wait_ms: int = 780):
         self.install_cam()
         self.pg.evaluate("() => window.__showcase.zoomOut()")
         self.pg.wait_for_timeout(wait_ms)
 
-    def type_human(self, locator, text: str, delay: int = 36):
+    def type_human(self, locator, text: str, delay: int = 46):
         locator.click()
         self.pg.evaluate("() => window.__showcase && window.__showcase.pulseClick()")
         locator.fill("")
@@ -306,7 +338,7 @@ class Scene:
         video = self.pg.video
         self.pg.close()
         self.ctx.close()
-        self.video_path = video.path()
+        self.video_path = str(video.path())
         return {
             "id": self.scene_id,
             "badge": self.badge,
@@ -691,59 +723,97 @@ def main():
         s7.click_visual(btn_inv)
         s7.wait(1100)
         s7.zoom_out()
-        confirm_inv = s7.pg.locator("[role=alertdialog] button:not([disabled]), [role=dialog] button:not([disabled])").last
+
+        confirm_inv = s7.pg.locator("[role=alertdialog] button:not([disabled])").last
         confirm_inv.wait_for(state="visible", timeout=15000)
-        s7.wait(600)
+        s7.sub("Sebelum invoice dibuat, sistem memvalidasi kelengkapan pemeriksaan medis, laboratorium, dan penyerahan obat.", min_read=5.0)
+        s7.ensure_readable()
         s7.click_visual(confirm_inv)
-        s7.pg.wait_for_selector("[role=alertdialog], [role=dialog]", state="detached", timeout=20000)
+        s7.pg.wait_for_selector("[role=alertdialog]", state="detached", timeout=20000)
+
+        # BillingPage otomatis pindah ke tab Daftar Tagihan dan membuka InvoiceDetailDialog
+        s7.pg.locator("[role=dialog]").wait_for(state="visible", timeout=20000)
+        s7.sub("Rincian Invoice sebelum pembayaran: seluruh biaya Konsultasi, Nebulizer, Obat Farmasi, dan Lab terakumulasi otomatis.", min_read=5.8)
+        s7.ensure_readable()
+        # Tutup dialog detail agar tabel Daftar Tagihan terlihat jelas
+        s7.pg.keyboard.press("Escape")
+        s7.pg.wait_for_selector("[role=dialog]", state="detached", timeout=15000)
+        s7.wait(700)
+        s7.type_human(s7.pg.locator("main input[placeholder^='Cari']"), no_rm, delay=50)
+        s7.pg.get_by_text(no_rm).first.wait_for(timeout=15000)
         s7.wait(1000)
 
-        # Kembali ke daftar invoice
-        s7.goto("/transaction/billing")
-        s7.type_human(s7.pg.locator("main input[placeholder^='Cari']"), no_rm, delay=40)
-        s7.pg.get_by_text(no_rm).first.wait_for(timeout=15000)
-        s7.wait(700)
-        s7.sub("Invoice terbentuk dengan rincian komponen Konsultasi, Nebulizer, Obat Farmasi, dan Pemeriksaan Lab.")
-        s7.click_visual(s7.pg.get_by_role("button", name="Detail").first)
-        s7.wait(2100)
-        # Tutup dialog detail
-        s7.pg.keyboard.press("Escape")
-        s7.wait(500)
-
-        # Proses Pembayaran (Tunai sebagian + Non-Tunai pelunasan sisa)
-        s7.sub("Proses pembayaran mendukung multi-metode: demo bayar sebagian Tunai Rp100.000 lalu pelunasan sisa via Non-Tunai QRIS.")
+        # Proses Pembayaran Tahap 1 (Tunai sebagian)
+        s7.sub("Kasir mendukung pembayaran bertahap dan multi-metode. Contoh pertama: pembayaran sebagian Tunai sebesar Rp100.000.", min_read=5.2)
         s7.click_visual(s7.pg.get_by_role("button", name="Bayar", exact=True).first)
+        s7.pg.locator("#bayar-jumlah").wait_for(state="visible", timeout=15000)
         s7.wait(700)
         s7.zoom_box([s7.pg.locator("#bayar-jumlah"), s7.pg.get_by_role("button", name="Proses Pembayaran")], scale=1.38, pad=20)
-        s7.type_human(s7.pg.locator("#bayar-jumlah"), "100000", delay=55)
-        s7.wait(350)
+        s7.type_human(s7.pg.locator("#bayar-jumlah"), "100000", delay=65)
+        s7.wait(1100)
+        s7.ensure_readable()
         s7.click_visual(s7.pg.get_by_role("button", name="Proses Pembayaran"))
-        s7.wait(1500)
+        s7.pg.wait_for_selector("[role=dialog]", state="detached", timeout=20000)
+        s7.wait(900)
         s7.zoom_out()
 
-        s7.sub("Status berubah ke Dibayar Sebagian. Lanjutkan pelunasan sisa tagihan dengan metode Non-Tunai (QRIS).")
-        if s7.pg.get_by_role("button", name="Bayar", exact=True).count():
-            s7.click_visual(s7.pg.get_by_role("button", name="Bayar", exact=True).first)
-            s7.pg.locator("#bayar-metode").wait_for(state="visible", timeout=15000)
-            s7.wait(400)
-            s7.pg.select_option("#bayar-metode", label="Non-Tunai")
-            s7.pg.locator("#bayar-referensi").wait_for(state="visible", timeout=10000)
-            s7.wait(300)
-            s7.zoom_box([s7.pg.locator("#bayar-metode"), s7.pg.locator("#bayar-referensi"), s7.pg.get_by_role("button", name="Proses Pembayaran")], scale=1.36, pad=20)
-            s7.click_visual(s7.pg.get_by_role("button", name="Lunasi sisa"))
-            s7.wait(350)
-            s7.type_human(s7.pg.locator("#bayar-referensi"), "QRIS-20261124-0099", delay=38)
-            s7.wait(350)
-            s7.click_visual(s7.pg.get_by_role("button", name="Proses Pembayaran"))
-            s7.wait(1700)
-            s7.zoom_out()
+        # Tahan agar status Dibayar Sebagian sempat terbaca jelas
+        s7.sub("Status tagihan berubah menjadi Dibayar Sebagian dengan sisa tagihan terhitung otomatis. Lanjutkan pelunasan via Non-Tunai (QRIS).", min_read=5.4)
+        s7.wait(2200)
+        btn_bayar2 = s7.pg.get_by_role("button", name="Bayar", exact=True).first
+        btn_bayar2.wait_for(state="visible", timeout=15000)
+        s7.click_visual(btn_bayar2)
+        s7.pg.locator("#bayar-metode").wait_for(state="visible", timeout=15000)
+        s7.wait(600)
+        s7.pg.select_option("#bayar-metode", label="Non-Tunai")
+        s7.pg.locator("#bayar-referensi").wait_for(state="visible", timeout=10000)
+        s7.wait(500)
+        s7.zoom_box([s7.pg.locator("#bayar-metode"), s7.pg.locator("#bayar-referensi"), s7.pg.get_by_role("button", name="Proses Pembayaran")], scale=1.36, pad=20)
+        s7.click_visual(s7.pg.get_by_role("button", name="Lunasi sisa"))
+        s7.wait(650)
+        s7.type_human(s7.pg.locator("#bayar-referensi"), "QRIS-20261124-0099", delay=52)
+        s7.wait(1100)
+        s7.ensure_readable()
+        s7.click_visual(s7.pg.get_by_role("button", name="Proses Pembayaran"))
+        s7.pg.wait_for_selector("[role=dialog]", state="detached", timeout=20000)
+        s7.wait(1000)
+        s7.zoom_out()
 
-        s7.sub(f"Pembayaran BERHASIL LUNAS! Pasien {nama_pasien} ({no_rm}) tuntas dari pendaftaran hingga bukti bayar.")
-        s7.wait(1200)
-        # Cetak Invoice Lunas
+        s7.sub(f"Pembayaran BERHASIL LUNAS! Total Rp215.000 terbayar penuh dengan sisa Rp0 untuk pasien {nama_pasien} ({no_rm}).", min_read=5.0)
+        s7.ensure_readable()
+
+        # Tampilkan Riwayat Pembayaran -> Cetak Bukti Bayar (tahan nyaman untuk dibaca)
+        s7.click_visual(s7.pg.locator("[id$=trigger-riwayat]"))
+        s7.wait(900)
+        s7.type_human(s7.pg.locator("main input[placeholder^='Cari']"), no_rm, delay=45)
+        s7.pg.get_by_text(no_rm).first.wait_for(timeout=15000)
+        s7.wait(800)
+        s7.sub("Riwayat pembayaran mencatat setiap transaksi Tunai dan Non-Tunai lengkap dengan tombol cetak Bukti Bayar.", min_read=4.8)
+        s7.ensure_readable()
+
+        s7.click_visual(s7.pg.get_by_role("link", name="Bukti Bayar").first)
+        s7.wait_idle(8000)
+        s7.wait(900)
+        s7.sub("Halaman Cetak Bukti Pembayaran (Kwitansi) siap dicetak sebagai bukti resmi pelunasan pasien.", min_read=5.2)
+        s7.ensure_readable()
+
+        # Kembali ke Billing via React Router link -> Cetak Invoice Lunas (tahan nyaman untuk dibaca)
+        back_bill = s7.pg.locator("a[href='/transaction/billing']").first
+        if back_bill.count() and back_bill.is_visible():
+            s7.click_visual(back_bill)
+            s7.pg.locator("main input[placeholder^='Cari']").wait_for(state="visible", timeout=20000)
+            s7.wait_idle(6000)
+            s7.wait(600)
+        else:
+            s7.goto("/transaction/billing")
+        s7.type_human(s7.pg.locator("main input[placeholder^='Cari']"), no_rm, delay=45)
+        s7.pg.get_by_text(no_rm).first.wait_for(timeout=15000)
+        s7.wait(900)
         s7.click_visual(s7.pg.get_by_role("link", name="Cetak").first)
         s7.wait_idle(8000)
-        s7.wait(2200)
+        s7.wait(1000)
+        s7.sub("Halaman Cetak Invoice Lunas menampilkan rincian layanan, riwayat pembayaran, serta status LUNAS.", min_read=5.6)
+        s7.ensure_readable()
         scenes_meta.append(s7.close())
         print("[OK] Scene 7: Kasir & Lunas")
 
@@ -775,7 +845,7 @@ def main():
         "scenes": scenes_meta,
     }
     with open(TIMELINE_PATH, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2, ensure_ascii=False)
+        json.dump(manifest, f, indent=2, ensure_ascii=False, default=str)
     print(f"[DONE] Timeline tersimpan di {TIMELINE_PATH}")
 
 

@@ -19,7 +19,7 @@ os.makedirs(OUT_DIR, exist_ok=True)
 os.makedirs(SCRATCH, exist_ok=True)
 
 W, H, FPS = 1600, 900, 30
-XFADE_DUR = 0.65
+XFADE_DUR = 0.75
 FONT_BOLD = "C\\:/Windows/Fonts/segoeuib.ttf"
 FONT_REG = "C\\:/Windows/Fonts/segoeui.ttf"
 
@@ -71,19 +71,23 @@ def wrap_ass(text: str, width: int = 74) -> str:
     return r"\N".join(lines[:3])
 
 
-def make_title_card(out_path: str, duration: float, tag: str, title: str, subtitle: str, fade_in: bool = True, fade_out: bool = False):
+def make_title_card(out_path: str, duration: float, tag: str, title: str, subtitle: str, footer: str = "", title_size: int = 56, fade_in: bool = True, fade_out: bool = False):
     vf = [
         f"drawbox=x=0:y=0:w={W}:h=8:color=0x0ea5e9@1.0:t=fill",
-        f"drawbox=x=120:y=325:w=96:h=5:color=0x0ea5e9@1.0:t=fill",
-        f"drawtext=fontfile='{FONT_BOLD}':text='{escape_drawtext(tag)}':fontcolor=0x38bdf8:fontsize=24:x=120:y=282",
-        f"drawtext=fontfile='{FONT_BOLD}':text='{escape_drawtext(title)}':fontcolor=0xf8fafc:fontsize=56:x=120:y=350",
-        f"drawtext=fontfile='{FONT_REG}':text='{escape_drawtext(subtitle)}':fontcolor=0xcbd5e1:fontsize=28:x=120:y=432",
-        f"drawbox=x=120:y=508:w=1360:h=1:color=0x334155@0.8:t=fill",
+        f"drawbox=x=120:y=312:w=104:h=5:color=0x0ea5e9@1.0:t=fill",
+        f"drawtext=fontfile='{FONT_BOLD}':text='{escape_drawtext(tag)}':fontcolor=0x38bdf8:fontsize=24:x=120:y=268",
+        f"drawtext=fontfile='{FONT_BOLD}':text='{escape_drawtext(title)}':fontcolor=0xf8fafc:fontsize={title_size}:x=120:y=336",
+        f"drawtext=fontfile='{FONT_REG}':text='{escape_drawtext(subtitle)}':fontcolor=0xcbd5e1:fontsize=28:x=120:y={336 + title_size + 28}",
+        f"drawbox=x=120:y={336 + title_size + 96}:w=1360:h=1:color=0x334155@0.8:t=fill",
     ]
+    if footer:
+        vf.append(
+            f"drawtext=fontfile='{FONT_REG}':text='{escape_drawtext(footer)}':fontcolor=0x94a3b8:fontsize=22:x=120:y={336 + title_size + 122}"
+        )
     if fade_in:
-        vf.append("fade=t=in:st=0:d=0.55")
+        vf.append("fade=t=in:st=0:d=0.65")
     if fade_out:
-        vf.append(f"fade=t=out:st={max(0.0, duration - 0.75):.2f}:d=0.75")
+        vf.append(f"fade=t=out:st={max(0.0, duration - 1.0):.2f}:d=1.0")
     vf.append("format=yuv420p")
 
     run([
@@ -157,10 +161,11 @@ def main():
     clips = []
     intro_mp4 = os.path.join(norm_dir, "00_intro.mp4")
     make_title_card(
-        intro_mp4, 3.4,
+        intro_mp4, 4.5,
         "SIMRS RAWAT JALAN — SHOWCASE",
         "Alur Pelayanan Rawat Jalan End-to-End",
-        f"Login Admin  •  6 Role RBAC  •  Display Antrean Bersuara  •  Pasien {nama_pasien} ({no_rm}) Lunas",
+        "Login Admin  •  6 Role RBAC  •  Display Antrean Bersuara  •  Pembayaran Lunas",
+        footer=f"Studi Kasus Langsung: Pasien {nama_pasien} ({no_rm})  •  Antrean {kode_antrean}",
         fade_in=True, fade_out=False,
     )
     clips.append({
@@ -222,13 +227,15 @@ def main():
             "audio_cues": rel_audio,
         })
 
-    # 3. Buat Outro Card
+    # 3. Buat Outro Card dengan ucapan Terima Kasih
     outro_mp4 = os.path.join(norm_dir, "99_outro.mp4")
     make_title_card(
-        outro_mp4, 3.8,
-        "WORKFLOW SELESAI — TERVERIFIKASI",
-        f"Pasien {nama_pasien} ({no_rm}) Lunas",
-        f"Antrean {kode_antrean} Selesai  •  6 Role RBAC  •  Display Antrean & Pengumuman Suara Aktif",
+        outro_mp4, 5.5,
+        "SIMRS RAWAT JALAN — WORKFLOW SELESAI",
+        "Terima Kasih",
+        f"Alur Pelayanan Pasien {nama_pasien} ({no_rm}) Selesai & Lunas Terverifikasi",
+        footer=f"Antrean {kode_antrean} Selesai  •  6 Role RBAC Terintegrasi  •  Layar Display Antrean & Pengumuman Suara Aktif",
+        title_size=72,
         fade_in=False, fade_out=True,
     )
     clips.append({
@@ -286,7 +293,9 @@ def main():
                 )
         for sub in c["subtitles"]:
             s0 = base + sub["start"]
-            s1 = base + sub["end"]
+            # Hindari overlap subtitle saat transisi xfade menuju klip berikutnya
+            max_end = base + c["dur"] - (XFADE_DUR + 0.08 if i < len(clips) - 1 else 0.0)
+            s1 = min(base + sub["end"], max_end)
             if s1 - s0 < 0.25:
                 continue
             ass_lines.append(
