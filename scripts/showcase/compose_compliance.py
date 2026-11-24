@@ -82,18 +82,18 @@ def wrap_ass(text: str, width: int = 76) -> str:
 
 
 def make_outro_card(out_path: str, duration: float, no_rm: str, nama_pasien: str, kode_antrean: str):
-    tag = "REAL CASE TEST — PT INOVA MEDIKA SOLUSINDO — 100% TERVERIFIKASI"
+    tag = "REAL CASE TEST — PT INOVA MEDIKA SOLUSINDO — TERVERIFIKASI LENGKAP"
     title = "Terima Kasih"
-    subtitle = f"Seluruh Butir A, B.1–B.9, C, D.1–D.6, E, F.1–F.5, G & Bonus Terbukti Lengkap"
+    subtitle = "Seluruh Butir A, B.1–B.9, C, D.1–D.6, E, F.1–F.5, G & Bonus Terbukti Lengkap"
     footer = f"Studi Kasus Live: {nama_pasien} ({no_rm}) • Antrean {kode_antrean} Selesai & Lunas • 250 Unit Tests + 45 Newman Assertions PASS"
     vf = [
         f"drawbox=x=0:y=0:w={W}:h=8:color=0x0ea5e9@1.0:t=fill",
         f"drawbox=x=120:y=312:w=108:h=5:color=0x10b981@1.0:t=fill",
-        f"drawtext=fontfile='{FONT_BOLD}':text='{escape_drawtext(tag)}':fontcolor=0x38bdf8:fontsize=22:x=120:y=268",
-        f"drawtext=fontfile='{FONT_BOLD}':text='{escape_drawtext(title)}':fontcolor=0xf8fafc:fontsize=76:x=120:y=336",
-        f"drawtext=fontfile='{FONT_REG}':text='{escape_drawtext(subtitle)}':fontcolor=0xe2e8f0:fontsize=27:x=120:y=444",
+        f"drawtext=fontfile='{FONT_BOLD}':expansion=none:text='{escape_drawtext(tag)}':fontcolor=0x38bdf8:fontsize=22:x=120:y=268",
+        f"drawtext=fontfile='{FONT_BOLD}':expansion=none:text='{escape_drawtext(title)}':fontcolor=0xf8fafc:fontsize=76:x=120:y=336",
+        f"drawtext=fontfile='{FONT_REG}':expansion=none:text='{escape_drawtext(subtitle)}':fontcolor=0xe2e8f0:fontsize=27:x=120:y=444",
         f"drawbox=x=120:y=508:w=1360:h=1:color=0x334155@0.85:t=fill",
-        f"drawtext=fontfile='{FONT_REG}':text='{escape_drawtext(footer)}':fontcolor=0x94a3b8:fontsize=21:x=120:y=534",
+        f"drawtext=fontfile='{FONT_REG}':expansion=none:text='{escape_drawtext(footer)}':fontcolor=0x94a3b8:fontsize=21:x=120:y=534",
         f"fade=t=out:st={max(0.0, duration - 1.0):.2f}:d=1.0",
         "format=yuv420p",
     ]
@@ -220,7 +220,8 @@ def main():
             t_end = sc["trim_end"]
 
         out_clip = os.path.join(norm_dir, f"{idx:02d}_{cid}.mp4")
-        trim_and_normalize(sc["video"], t_start, t_end, out_clip)
+        if not os.path.exists(out_clip) or os.path.getsize(out_clip) < 1024:
+            trim_and_normalize(sc["video"], t_start, t_end, out_clip)
         real_dur = probe_duration(out_clip)
         print(f"  [{idx:02d}] {cid:26s} | {real_dur:6.2f}s | {badge}")
 
