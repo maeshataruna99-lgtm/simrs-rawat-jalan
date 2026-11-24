@@ -1,0 +1,58 @@
+# Langkah 1: matikan Yii (simulasi gangguan integrasi)
+$ docker stop simrs-yii
+simrs-yii
+
+# Langkah 2: sistem lab eksternal mengirim hasil ke Node saat Yii mati
+$ POST :3000/api/lab/results  (X-Api-Key) {"detail_id": 27, "hasil": "14.1", "idempotency_key": "f5fb9752-68e7-483a-929b-bc1df0a1b938"}
+HTTP 202
+{
+  "success": true,
+  "message": "Hasil diterima dan akan dikirim ulang.",
+  "data": {
+    "idempotency_key": "f5fb9752-68e7-483a-929b-bc1df0a1b938",
+    "status": "pending"
+  }
+}
+
+# Langkah 3: pesan aman di outbox (belum terkirim)
+$ select id,status,percobaan,idempotency_key from t_integration_outbox
+id | status  | percobaan |           idempotency_key            
+----+---------+-----------+--------------------------------------
+  1 | pending |         1 | f5fb9752-68e7-483a-929b-bc1df0a1b938
+(1 row)
+Hasil di tabel detail lab saat ini:
+id | hasil | flag 
+----+-------+------
+ 27 |       | 
+(1 row)
+# Langkah 4: hidupkan Yii lagi
+$ docker start simrs-yii
+simrs-yii
+
+# Langkah 5: worker outbox mengulang pengiriman sampai berhasil (menunggu ~15 detik)
+id |  status  | percobaan |           idempotency_key            
+----+----------+-----------+--------------------------------------
+  1 | terkirim |         2 | f5fb9752-68e7-483a-929b-bc1df0a1b938
+(1 row)
+Hasil di tabel detail lab sekarang:
+id | hasil |  flag  
+----+-------+--------
+ 27 | 14.1  | normal
+(1 row)
+# Langkah 6: kirim ulang key yang sama (retry klien) tidak menggandakan hasil
+HTTP 200
+{
+  "success": true,
+  "message": "Hasil laboratorium sudah diterima sebelumnya.",
+  "data": {
+    "id": 27,
+    "hasil": "14.1",
+    "idempotency_key": "f5fb9752-68e7-483a-929b-bc1df0a1b938",
+    "status": "terkirim"
+  }
+}
+
+baris_outbox_dengan_key_ini 
+-----------------------------
+                           1
+(1 row)

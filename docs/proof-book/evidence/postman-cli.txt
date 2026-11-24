@@ -1,0 +1,217 @@
+$ postman --version
+1.93.1
+$ postman collection run postman/simrs.collection.json -e postman/local.environment.json
+Running your collection...
+postman
+
+SIMRS Rawat Jalan — Alur End-to-End
+
+Folder 1. Health & Autentikasi
+Sub-folder Health Yii
+
+  GET http://localhost:8080/health [200 OK, 264 B, 157 ms]
+  Pass  HTTP 200
+
+Sub-folder Health Node
+
+  GET http://localhost:3000/health [200 OK, 479 B, 16 ms]
+  Pass  HTTP 200
+
+Sub-folder Login Admin
+
+  POST http://localhost:8080/system/auth/login [200 OK, 5.04 KB, 1022 ms]
+  Pass  Login admin 200
+
+Sub-folder Login Kasir
+
+  POST http://localhost:8080/system/auth/login [200 OK, 1.28 KB, 1032 ms]
+  Pass  Login kasir 200
+
+Sub-folder Login Dokter
+
+  POST http://localhost:8080/system/auth/login [200 OK, 2.37 KB, 953 ms]
+  Pass  Login dokter 200
+
+Sub-folder Login Farmasi
+
+  POST http://localhost:8080/system/auth/login [200 OK, 1.34 KB, 943 ms]
+  Pass  Login farmasi 200
+
+Sub-folder Profil Aktif (/system/auth/me)
+
+  GET http://localhost:8080/system/auth/me [200 OK, 4.85 KB, 181 ms]
+  Pass  Profil 200
+
+Sub-folder Cek RBAC 403 (Kasir akses /system/user)
+
+  GET http://localhost:8080/system/user [403 Forbidden, 330 B, 403 ms]
+  Pass  Ditolak 403
+
+Folder 2. Master Data & Pasien Uji
+Sub-folder Ambil Jadwal Dokter DR001 Hari Senin
+
+  GET http://localhost:8080/master/jadwal-dokter?per_page=100 [200 OK, 11.76 KB, 774 ms]
+  Pass  Jadwal 200
+  Pass  Jadwal Senin ditemukan
+
+Sub-folder Ambil Master Tindakan
+
+  GET http://localhost:8080/master/tindakan?per_page=10 [200 OK, 1.96 KB, 310 ms]
+  Pass  Tindakan 200
+
+Sub-folder Ambil Master Obat
+
+  GET http://localhost:8080/master/obat?per_page=10 [200 OK, 1.94 KB, 2.3 s]
+  Pass  Obat 200
+
+Sub-folder Ambil Master Pemeriksaan Lab
+
+  GET http://localhost:8080/master/pemeriksaan-lab?per_page=10 [200 OK, 1.19 KB, 1661 ms]
+  Pass  Lab 200
+
+Sub-folder Ambil Master ICD-10
+
+  GET http://localhost:8080/master/icd10?per_page=10 [200 OK, 1.6 KB, 277 ms]
+  Pass  ICD-10 200
+
+Sub-folder Buat Pasien Uji Newman
+
+  POST http://localhost:8080/master/pasien [201 Created, 577 B, 497 ms]
+  Pass  Pasien dibuat 201
+
+Folder 3. Pendaftaran, Pemeriksaan, Tindakan, Resep, & Lab
+Sub-folder Daftar Kunjungan
+
+  POST http://localhost:8080/transaction/pendaftaran [201 Created, 1.02 KB, 462 ms]
+  Pass  Pendaftaran 201
+
+Sub-folder Ubah Status Antrean ke Diperiksa
+
+  PUT http://localhost:8080/transaction/antrean/62/status [200 OK, 1.2 KB, 275 ms]
+  Pass  Status diperiksa 200
+
+Sub-folder Simpan Pemeriksaan Dokter
+
+  PUT http://localhost:8080/transaction/pemeriksaan/62 [200 OK, 660 B, 363 ms]
+  Pass  Pemeriksaan 200
+
+Sub-folder Simpan Diagnosis ICD-10
+
+  PUT http://localhost:8080/transaction/diagnosis/62 [200 OK, 515 B, 338 ms]
+  Pass  Diagnosis 200
+
+Sub-folder Tambah Tindakan Medis
+
+  POST http://localhost:8080/transaction/tindakan/62 [201 Created, 591 B, 332 ms]
+  Pass  Tindakan 201
+
+Sub-folder Buat Resep Obat
+
+  POST http://localhost:8080/transaction/resep [201 Created, 984 B, 382 ms]
+  Pass  Resep 201
+
+Sub-folder Buat Order Laboratorium
+
+  POST http://localhost:8080/transaction/order-lab [201 Created, 992 B, 381 ms]
+  Pass  Order lab 201
+
+Sub-folder Kirim Hasil Lab Eksternal via Node
+
+  POST http://localhost:3000/api/lab/results [200 OK, 793 B, 353 ms]
+  Pass  Hasil lab diteruskan 200
+
+Sub-folder Proses Resep Farmasi
+
+  PUT http://localhost:8080/transaction/farmasi/61/proses [200 OK, 983 B, 288 ms]
+  Pass  Farmasi proses 200
+
+Sub-folder Serahkan Obat Farmasi
+
+  PUT http://localhost:8080/transaction/farmasi/61/serahkan [200 OK, 1002 B, 311 ms]
+  Pass  Farmasi serahkan 200
+
+Folder 4. Billing, Pembayaran Bertahap, & Idempotency (D.3)
+Sub-folder Cek Peringatan Kasir Sebelum Invoice
+
+  GET http://localhost:8080/transaction/invoice/peringatan?kunjungan_id=62 [200 OK, 309 B, 258 ms]
+  Pass  Peringatan 200
+  Pass  Semua order sudah selesai (tanpa peringatan)
+
+Sub-folder Buat Invoice Kunjungan (4 Sumber)
+
+  POST http://localhost:8080/transaction/invoice/62 [201 Created, 1.81 KB, 456 ms]
+  Pass  Invoice 201
+  Pass  4 sumber biaya terkumpul
+
+Sub-folder Bayar Cicilan 1 (Tunai)
+
+  POST http://localhost:8080/transaction/pembayaran [201 Created, 2.91 KB, 895 ms]
+  Pass  Cicilan 1 dibuat 201
+  Pass  Status dibayar_sebagian
+
+Sub-folder Retry Cicilan 1 dengan Idempotency-Key Sama (D.3)
+
+  POST http://localhost:8080/transaction/pembayaran [200 OK, 2.91 KB, 271 ms]
+  Pass  Retry membalas 200 bukan 201
+  Pass  no_pembayaran identik
+
+Sub-folder Pelunasan Sisa Tagihan (Non-Tunai)
+
+  POST http://localhost:8080/transaction/pembayaran [201 Created, 3.27 KB, 324 ms]
+  Pass  Pelunasan 201
+  Pass  Status lunas
+
+Sub-folder Kunjungan Otomatis Selesai Setelah Lunas
+
+  GET http://localhost:8080/transaction/invoice/61 [200 OK, 2.48 KB, 246 ms]
+  Pass  Invoice 200
+  Pass  Status kunjungan selesai
+  Pass  Kunjungan terkunci (valid)
+
+Folder 5. Dashboard Read-Only (Node)
+Sub-folder Dashboard Summary
+
+  GET http://localhost:3000/api/dashboard/summary [200 OK, 672 B, 98 ms]
+  Pass  Summary 200
+  Pass  Total kunjungan > 0
+
+Sub-folder Dashboard Kunjungan per Poli
+
+  GET http://localhost:3000/api/dashboard/kunjungan-per-poli [200 OK, 760 B, 21 ms]
+  Pass  Per poli 200
+
+Sub-folder Dashboard Pendapatan
+
+  GET http://localhost:3000/api/dashboard/pendapatan [200 OK, 2.89 KB, 12 ms]
+  Pass  Pendapatan 200
+
+Sub-folder Dashboard Detail Kunjungan
+
+  GET http://localhost:3000/api/dashboard/detail/kunjungan?page=1&per_page=5 [200 OK, 1.55 KB, 15 ms]
+  Pass  Detail 200
+  Pass  Ada meta pagination
+
+Sub-folder Dashboard Validasi Periode Tidak Valid (422)
+
+  GET http://localhost:3000/api/dashboard/summary?from=2026-11-30&to=2026-11-01 [422 Unprocessable Entity, 550 B, 6 ms]
+  Pass  Periode terbalik 422
+
+-----------------------------------------------------------------------
+|                         |            executed |              failed |
+--------------------------+---------------------+----------------------
+|              iterations |                   1 |                   0 |
+--------------------------+---------------------+----------------------
+|                requests |                  35 |                   0 |
+--------------------------+---------------------+----------------------
+|            test-scripts |                  35 |                   0 |
+--------------------------+---------------------+----------------------
+|      prerequest-scripts |                   1 |                   0 |
+--------------------------+---------------------+----------------------
+|              assertions |                  45 |                   0 |
+-----------------------------------------------------------------------
+| total run duration: 19.7 s                                          |
+-----------------------------------------------------------------------
+| total data received: 53.75 KB (approx)                              |
+-----------------------------------------------------------------------
+| average response time: 475 ms [min: 6 ms, max: 2.3 s, s.d.: 478 ms] |
+-----------------------------------------------------------------------

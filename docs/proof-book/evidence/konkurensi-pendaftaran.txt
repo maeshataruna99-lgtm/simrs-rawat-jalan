@@ -1,0 +1,3 @@
+[D.1 Pasien Sama] 201 Created = 1, 409 Conflict = 9
+[D.1 Nomor Antrean Paralel] no_antrean = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+Uji konkurensi D.1 LULUS: hanya 1 kunjungan aktif per pasien dan nomor antrean tidak ganda.

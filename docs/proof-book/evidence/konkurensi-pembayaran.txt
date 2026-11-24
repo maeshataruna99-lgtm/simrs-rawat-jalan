@@ -1,0 +1,7 @@
+[D.3 Idempotency Paralel] status = [200, 200, 200, 200, 201], unik no_pembayaran = 1, total_bayar = 40000
+[D.3 Race Sisa Tagihan] status = [201, 409, 409, 409, 409], total_bayar = 100000, status_invoice = lunas
+[D.4 Validasi] batal tindakan saat valid = 409, setelah Unvalid dibuka
+[D.4 Revisi Tagihan] total 100000 -> 25000, item void = 1
+[D.4 Lunas] status kunjungan = selesai, diagnosis = 409, unvalid = 409
+[D.4 Audit Log] jumlah = 6, daftar = [t_diagnosis:update, t_diagnosis:update, t_invoice:sync, t_tindakan:update, t_invoice:insert, t_tindakan:insert]
+Uji konkurensi D.3 & D.4 LULUS: pembayaran tidak ganda dan revisi tagihan konsisten.

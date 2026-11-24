@@ -115,5 +115,6 @@ npx newman run postman/simrs.collection.json -e postman/local.environment.json -
 - **Dokumentasi API**: [`docs/api/yii.md`](docs/api/yii.md), [`docs/api/node.md`](docs/api/node.md), [`service-node/openapi.yaml`](service-node/openapi.yaml) (juga disajikan di `http://localhost:3000/openapi.yaml`)
 - **Postman & Hasil Newman**: [`postman/simrs.collection.json`](postman/simrs.collection.json), [`postman/local.environment.json`](postman/local.environment.json), [`postman/newman-report.txt`](postman/newman-report.txt)
 - **Daftar Test Case & Galeri Screenshot**: [`docs/test-cases.md`](docs/test-cases.md), [`docs/screenshots/README.md`](docs/screenshots/README.md)
+- **Proof Book (bukti per poin soal A–G, dengan screenshot)**: [`docs/proof-book/README.md`](docs/proof-book/README.md)
 - **Chatbot Bantuan (bonus, tanpa LLM)**: [`docs/chatbot.md`](docs/chatbot.md)
 - **Aturan Kontribusi & Roadmap**: [`CONTRIBUTING.md`](CONTRIBUTING.md), [`ROADMAP.md`](ROADMAP.md)

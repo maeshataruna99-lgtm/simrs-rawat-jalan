@@ -1,0 +1,48 @@
+$ docker compose exec yii php -v
+PHP 8.3.37 (cli) (built: Nov 19 2026 14:36:37) (NTS)
+$ yii version
+
+This is Yii version 2.0.55.
+
+
+$ node -v / npm ls (service-node)
+v24.22.3
+service-node@ /app
++-- @eslint/js@10.0.1
++-- @types/express@5.0.6
++-- @types/jsonwebtoken@9.0.10
++-- @types/node@26.6.6
++-- @types/pg@8.23.1
++-- @types/supertest@7.2.1
++-- eslint-config-prettier@10.1.8
++-- eslint@10.15.0
++-- express@5.3.0
++-- globals@17.14.0
++-- jsonwebtoken@9.0.3
++-- pg@8.23.1
++-- prettier@3.10.1
++-- supertest@7.3.2
++-- tsx@4.23.15
++-- typescript-eslint@8.73.0
++-- typescript@6.0.3
++-- vitest@5.1.1
+`-- zod@4.6.7
+
+$ psql version
+PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+
+$ git --version / remote
+git version 2.45.1.windows.1
+origin	https://github.com/maeshataruna99-lgtm/simrs-rawat-jalan (fetch)
+$ frontend deps
+    "dev": "vite",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zustand": "^5.1.0"
+    "tailwindcss": "^3.4.19",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.6",
+
+$ yii composer
+        "php": ">=8.3",
+        "yiisoft/yii2": "~2.0.49"

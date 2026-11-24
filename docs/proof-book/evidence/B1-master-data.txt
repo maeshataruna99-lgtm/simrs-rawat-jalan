@@ -1,0 +1,86 @@
+$ psql -d simrs   -- data master hasil seed
+
+# m_pasien (8 dari 50)
+ id |  no_rm   |       nik        |     nama      | tgl_lahir  | jenis_kelamin 
+----+----------+------------------+---------------+------------+---------------
+  1 | RM000001 | 3273011000000001 | Adi Santoso   | 1971-02-02 | L
+  2 | RM000002 | 3273011000000002 | Budi Santoso  | 1972-03-03 | P
+  3 | RM000003 | 3273011000000003 | Citra Santoso | 1973-04-04 | L
+  4 | RM000004 | 3273011000000004 | Dewi Santoso  | 1974-05-05 | P
+  5 | RM000005 | 3273011000000005 | Eko Santoso   | 1975-06-06 | L
+  6 | RM000006 | 3273011000000006 | Fitri Santoso | 1976-07-07 | P
+  7 | RM000007 | 3273011000000007 | Gita Santoso  | 1977-08-08 | L
+  8 | RM000008 | 3273011000000008 | Hadi Santoso  | 1978-09-09 | P
+(8 rows)
+
+# m_poli
+ id |   kode    |        nama         
+----+-----------+---------------------
+  1 | POLI-UMUM | Poli Umum
+  2 | POLI-GIGI | Poli Gigi
+  3 | POLI-ANAK | Poli Anak
+  4 | POLI-PD   | Poli Penyakit Dalam
+(4 rows)
+
+# m_dokter
+ id | kode  |          nama           |      spesialis      
+----+-------+-------------------------+---------------------
+  1 | DR001 | dr. Budi Santoso        | Dokter Umum
+  2 | DR002 | drg. Ratna Dewi         | Kedokteran Gigi
+  3 | DR003 | dr. Hendra Wijaya, Sp.A | Ilmu Kesehatan Anak
+  4 | DR004 | dr. Siti Rahayu, Sp.PD  | Penyakit Dalam
+  5 | DR005 | dr. Agus Pratama        | Dokter Umum
+(5 rows)
+
+# m_jadwal_dokter (8 dari 35)
+ id |         dokter          |        poli         | hari | jam_mulai | jam_selesai | kuota 
+----+-------------------------+---------------------+------+-----------+-------------+-------
+  1 | dr. Budi Santoso        | Poli Umum           |    1 | 08:00     | 14:00       |    30
+  2 | drg. Ratna Dewi         | Poli Gigi           |    1 | 08:00     | 14:00       |    30
+  3 | dr. Hendra Wijaya, Sp.A | Poli Anak           |    1 | 09:00     | 15:00       |    30
+  4 | dr. Siti Rahayu, Sp.PD  | Poli Penyakit Dalam |    1 | 09:00     | 15:00       |    30
+  5 | dr. Agus Pratama        | Poli Umum           |    1 | 14:00     | 20:00       |    30
+  6 | dr. Budi Santoso        | Poli Umum           |    2 | 08:00     | 14:00       |    30
+  7 | drg. Ratna Dewi         | Poli Gigi           |    2 | 08:00     | 14:00       |    30
+  8 | dr. Hendra Wijaya, Sp.A | Poli Anak           |    2 | 09:00     | 15:00       |    30
+(8 rows)
+
+# m_tindakan
+  kode  |           nama            |   tarif   
+--------+---------------------------+-----------
+ TND001 | Konsultasi Dokter Umum    |  50000.00
+ TND002 | Perawatan Luka Ringan     |  65000.00
+ TND003 | Nebulizer                 |  55000.00
+ TND004 | Tambal Gigi Komposit      | 150000.00
+ TND005 | Scaling Gigi              | 125000.00
+ TND006 | Konsultasi Dokter Anak    |  85000.00
+ TND007 | Konsultasi Penyakit Dalam | 100000.00
+ TND008 | Elektrokardiografi (EKG)  |  90000.00
+(8 rows)
+
+# m_obat
+  kode  |       nama        | satuan |  harga  | stok 
+--------+-------------------+--------+---------+------
+ OBT001 | Paracetamol 500mg | tablet | 1500.00 |  500
+ OBT002 | Amoxicillin 500mg | kapsul | 3000.00 |  400
+ OBT003 | Omeprazole 20mg   | kapsul | 4500.00 |  300
+ OBT004 | Amlodipine 5mg    | tablet | 2500.00 |  350
+ OBT005 | Metformin 500mg   | tablet | 2000.00 |  350
+ OBT006 | Cetirizine 10mg   | tablet | 2500.00 |  300
+ OBT007 | Ibuprofen 400mg   | tablet | 2000.00 |  300
+ OBT008 | Salbutamol 2mg    | tablet | 1800.00 |  250
+ OBT009 | Oralit Sachet     | sachet | 3500.00 |  200
+ OBT010 | Vitamin C 500mg   | tablet | 1200.00 |  500
+(10 rows)
+
+# m_user dan role
+   username   |       nama       |         role         
+--------------+------------------+----------------------
+ admin        | Administrator    | Administrator
+ pendaftaran  | Rina Pendaftaran | Petugas Pendaftaran
+ dokter       | dr. Budi Santoso | Dokter
+ farmasi      | Dewi Apoteker    | Petugas Farmasi
+ laboratorium | Agus Analis      | Petugas Laboratorium
+ kasir        | Sari Kasir       | Kasir
+(6 rows)
+

@@ -1,0 +1,42 @@
+$ psql -d simrs   -- data transaksi hasil seed (pendaftaran sampai pembayaran)
+# t_kunjungan (6 terbaru dari 60)
+ id |  no_kunjungan  |  no_rm   |        poli         | no_antrean |  status  | tgl_kunjungan 
+----+----------------+----------+---------------------+------------+----------+---------------
+ 60 | RJ202611240002 | RM000010 | Poli Penyakit Dalam |          2 | selesai  | 2026-11-24
+ 59 | RJ202611240001 | RM000009 | Poli Umum           |          1 | menunggu | 2026-11-24
+ 58 | RJ202611230002 | RM000008 | Poli Gigi           |          2 | selesai  | 2026-11-23
+ 57 | RJ202611230001 | RM000007 | Poli Umum           |          1 | selesai  | 2026-11-23
+ 56 | RJ202611220002 | RM000006 | Poli Penyakit Dalam |          2 | selesai  | 2026-11-22
+ 55 | RJ202611220001 | RM000005 | Poli Anak           |          1 | selesai  | 2026-11-22
+(6 rows)
+
+# t_invoice
+ id |   no_invoice    | kunjungan_id |   total   | total_bayar |      status      
+----+-----------------+--------------+-----------+-------------+------------------
+ 59 | INV202611240002 |           60 | 305000.00 |        0.00 | belum_dibayar
+ 58 | INV202611230002 |           58 | 201000.00 |   201000.00 | lunas
+ 57 | INV202611230001 |           57 | 119000.00 |   119000.00 | lunas
+ 56 | INV202611220002 |           56 | 175000.00 |   175000.00 | lunas
+ 55 | INV202611220001 |           55 | 273000.00 |   273000.00 | lunas
+ 54 | INV202611210002 |           54 | 197000.00 |    98500.00 | dibayar_sebagian
+(6 rows)
+
+# t_pembayaran
+ id |  no_pembayaran  | invoice_id |  metode   |  jumlah   
+----+-----------------+------------+-----------+-----------
+ 54 | PAY202611230002 |         58 | non_tunai | 201000.00
+ 53 | PAY202611230001 |         57 | tunai     | 119000.00
+ 52 | PAY202611220002 |         56 | non_tunai | 175000.00
+ 51 | PAY202611220001 |         55 | tunai     | 273000.00
+ 50 | PAY202611210002 |         54 | non_tunai |  98500.00
+ 49 | PAY202611210001 |         53 | tunai     |  90000.00
+(6 rows)
+
+# ringkasan status invoice
+      status      | count |   total    
+------------------+-------+------------
+ dibayar_sebagian |     5 |  828000.00
+ lunas            |    49 | 9197000.00
+ belum_dibayar    |     5 | 1005000.00
+(3 rows)
+

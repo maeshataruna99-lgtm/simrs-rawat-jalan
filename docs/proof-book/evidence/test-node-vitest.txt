@@ -1,0 +1,37 @@
+
+> test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.1.1 [39m[90m/app[39m
+
+ [32m✓[39m tests/dashboard.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 1024[2mms[22m[39m
+ [32m✓[39m tests/lab-integration.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1073[2mms[22m[39m
+   [32m✓[39m Integrasi hasil lab saat Yii gagal lalu pulih (D.5) [2m(3)[22m
+     [33m[2m✓[22m[39m Yii mati lalu error 5xx: hasil tertahan di outbox, terkirim tepat sekali setelah pulih[33m 611[2mms[22m[39m
+ [32m✓[39m tests/lab.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 923[2mms[22m[39m
+ [32m✓[39m tests/auth.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 273[2mms[22m[39m
+ [32m✓[39m tests/validate.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 266[2mms[22m[39m
+[90mstderr[2m | tests/app.test.ts[2m > [22m[2mapp[2m > [22m[2merror tak terduga dibalas 500 tanpa detail
+[22m[39mError: rahasia internal
+    at [90m/app/[39mtests/app.test.ts:46:13
+    at Layer.handleRequest [90m(/app/[39mnode_modules/[4mrouter[24m/lib/layer.js:169:33[90m)[39m
+    at next [90m(/app/[39mnode_modules/[4mrouter[24m/lib/route.js:163:13[90m)[39m
+    at Route.dispatch [90m(/app/[39mnode_modules/[4mrouter[24m/lib/route.js:123:3[90m)[39m
+    at handle [90m(/app/[39mnode_modules/[4mrouter[24m/index.js:449:11[90m)[39m
+    at Layer.handleRequest [90m(/app/[39mnode_modules/[4mrouter[24m/lib/layer.js:169:33[90m)[39m
+    at [90m/app/[39mnode_modules/[4mrouter[24m/index.js:309:15
+    at processParams [90m(/app/[39mnode_modules/[4mrouter[24m/index.js:619:12[90m)[39m
+    at next [90m(/app/[39mnode_modules/[4mrouter[24m/index.js:305:5[90m)[39m
+    at router.handle [90m(/app/[39mnode_modules/[4mrouter[24m/index.js:187:3[90m)[39m
+
+ [32m✓[39m tests/app.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 207[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[32m38 passed[39m[22m[90m (38)[39m
+[2m   Start at [22m 14:17:53
+[2m   Duration [22m 13.19s[2m (import 53%, tests 38%, transform 7%, worker 1%)[22m
+
+[2m    Isolate [22m [33m6 workers spawned[39m[2m · ~482ms startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~2.41s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

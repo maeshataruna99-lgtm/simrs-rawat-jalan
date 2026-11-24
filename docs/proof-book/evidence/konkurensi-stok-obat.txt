@@ -1,0 +1,3 @@
+[D.2 Dua Resep] status = [200, 409], stok akhir = 0, mutasi keluar = 1
+[D.2 Resep Sama] sukses = 1, stok akhir = 8
+Uji konkurensi D.2 LULUS: stok tidak minus dan obat tidak diserahkan ganda.

@@ -1,0 +1,62 @@
+$ node scripts/bench-api.mjs 20   (latensi endpoint daftar Yii, 20 request berurutan per endpoint)
+Benchmark http://localhost:8080, 20 request per endpoint, tanggal 2026-11-24
+
+| Endpoint | Median (ms) | p95 (ms) | Min (ms) | Max (ms) |
+|---|---:|---:|---:|---:|
+| Antrean poli | 241 | 297 | 217 | 865 |
+| Worklist pemeriksaan | 238 | 316 | 220 | 498 |
+| Worklist laboratorium | 206 | 245 | 192 | 255 |
+| Antrean farmasi | 211 | 304 | 192 | 366 |
+| Daftar invoice | 256 | 307 | 243 | 440 |
+| Belum ditagih | 244 | 381 | 226 | 476 |
+| Riwayat pembayaran | 247 | 260 | 227 | 307 |
+| Master pasien | 186 | 449 | 171 | 2991 |
+
+$ psql -- index pengoptimal dashboard (migrasi m261122_010000_create_dashboard_indexes)
+       tablename        |                indexname                
+------------------------+-----------------------------------------
+ m_dokter               | idx_m_dokter_jenis_tenaga
+ m_icd10                | idx_m_icd10_nama
+ m_jadwal_dokter        | idx_m_jadwal_dokter_dokter_hari
+ m_jadwal_dokter        | idx_m_jadwal_dokter_poli_hari
+ m_menu                 | idx_m_menu_parent_id
+ m_module_menu          | idx_m_module_menu_menu_id
+ m_obat                 | idx_m_obat_nama
+ m_pasien               | idx_m_pasien_nama
+ m_role_access          | idx_m_role_access_menu_id
+ m_tindakan             | idx_m_tindakan_poli_id
+ m_user                 | idx_m_user_dokter_id
+ m_user                 | idx_m_user_role_id
+ t_audit_log            | idx_t_audit_log_tabel_record
+ t_integration_outbox   | idx_t_integration_outbox_antrean
+ t_invoice              | idx_t_invoice_status
+ t_invoice_item         | idx_t_invoice_item_invoice_id
+ t_invoice_item         | idx_t_invoice_item_invoice_sumber_aktif
+ t_kunjungan            | idx_t_kunjungan_dokter_penjamin
+ t_kunjungan            | idx_t_kunjungan_tgl_poli
+ t_kunjungan_status_log | idx_t_kunjungan_status_log_kunjungan_id
+ t_order_lab            | idx_t_order_lab_kunjungan_id
+ t_order_lab            | idx_t_order_lab_status
+ t_pembayaran           | idx_t_pembayaran_dibayar_at
+ t_pembayaran           | idx_t_pembayaran_invoice_id
+ t_resep                | idx_t_resep_kunjungan_id
+ t_resep                | idx_t_resep_kunjungan_status
+ t_resep                | idx_t_resep_status
+ t_stok_mutasi          | idx_t_stok_mutasi_obat_id
+ t_tindakan             | idx_t_tindakan_kunjungan_id
+ t_tindakan             | idx_t_tindakan_kunjungan_status
+(30 rows)
+
+$ EXPLAIN (ANALYZE, BUFFERS)  -- invoice belum dibayar memakai index
+SET
+                                          QUERY PLAN                                          
+----------------------------------------------------------------------------------------------
+ Index Scan using idx_t_invoice_status on t_invoice (actual time=0.032..0.045 rows=5 loops=1)
+   Index Cond: ((status)::text = 'belum_dibayar'::text)
+   Buffers: shared hit=3 dirtied=1
+ Planning:
+   Buffers: shared hit=114
+ Planning Time: 2.169 ms
+ Execution Time: 0.136 ms
+(7 rows)
+

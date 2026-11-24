@@ -1,0 +1,72 @@
+$ POST :8080/system/auth/login  (Yii menerbitkan JWT)
+HTTP 200
+{
+  "success": true,
+  "message": "Login berhasil.",
+  "data": {
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzaW1ycy1iYWNrZW5kIiwic3ViIjoxLCJyb2xlIjoiYWRtaW4iLCJuYW1hIjoiQWRtaW5pc3Ry ...(dipotong)
+
+$ GET :3000/health
+HTTP 200
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "service": "service-node"
+  }
+}
+
+$ GET :3000/api/dashboard/summary?from=2026-11-01&to=2026-11-30  (Bearer JWT dari Yii)
+HTTP 200
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "periode": {
+      "from": "2026-11-01",
+      "to": "2026-11-30"
+    },
+    "total_kunjungan": 48,
+    "total_tindakan": 57,
+    "total_pendapatan": 7645000,
+    "total_tagihan": 8817000,
+    "invoice_per_status": {
+      "belum_dibayar": 4,
+      "dibayar_sebagian": 4,
+      "lunas": 39
+    }
+  }
+}
+
+$ GET :3000/api/dashboard/summary  (tanpa token -> ditolak middleware)
+HTTP 401
+{
+  "success": false,
+  "message": "Sesi tidak valid atau sudah berakhir, silakan login ulang."
+}
+
+$ GET :3000/api/lab/orders  (tanpa X-Api-Key -> ditolak)
+HTTP 401
+{
+  "success": false,
+  "message": "API key tidak valid atau tidak dikirim (header X-Api-Key)."
+}
+
+$ GET :3000/api/dashboard/summary?from=2026-11-30&to=2026-11-01  (validasi Zod -> 422)
+HTTP 422
+{
+  "success": false,
+  "message": "Validasi gagal.",
+  "errors": {
+    "to": [
+      "Tanggal akhir harus sama atau setelah tanggal awal."
+    ]
+  }
+}
+
+$ docker compose ps
+NAME             IMAGE                     STATUS                 PORTS
+simrs-node       simrs-rawat-jalan-node    Up 3 hours             0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+simrs-postgres   postgres:16-alpine        Up 3 hours (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+simrs-react      simrs-rawat-jalan-react   Up 3 hours             0.0.0.0:5173->5173/tcp, [::]:5173->5173/tcp
+simrs-yii        simrs-rawat-jalan-yii     Up 19 minutes          0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
