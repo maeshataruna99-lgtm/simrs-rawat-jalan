@@ -1,6 +1,6 @@
 """Bangun PDF "Module Guide and Proof" dari screenshot, evidence, dan data DB di docs/proof-book.
 Jalankan setelah reset-db.sh, flow.py, capture.py, d5-outbox.py: python scripts/proof/build-pdf.py"""
-import html, os, re, subprocess
+import html, json, os, re, subprocess
 from playwright.sync_api import sync_playwright
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -16,7 +16,10 @@ def q(sql):
 
 
 def C(s): return f"<code>{e(s)}</code>"
-def md(s): return re.sub(r"`([^`]+)`", lambda m: f"<code>{e(m.group(1))}</code>", re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")))
+def md(s):
+    s = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", s)
+    s = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return re.sub(r"`([^`]+)`", r"<code>\1</code>", re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s))
 
 
 def img(path, caption, kind="app"):
@@ -36,6 +39,122 @@ def table(head, rows, cls=""):
 
 def ul(items): return "<ul>" + "".join(f"<li>{i}</li>" for i in items) + "</ul>"
 def ol(items): return "<ol>" + "".join(f"<li>{i}</li>" for i in items) + "</ol>"
+
+
+def X(name, caption, kind="app"): return img(f"screenshots/extra/{name}.png", caption, kind)
+
+
+def md_html(text):
+    """Konversi markdown sederhana (daftar, tabel, kode, paragraf) ke HTML; judul # diabaikan, ## jadi h3, ### jadi h4."""
+    out, items, ltype = [], [], None
+
+    def flush():
+        nonlocal items, ltype
+        if items:
+            tag = ltype or "ul"
+            body = "".join(f"<li>{t}" + ("<ul>" + "".join(f"<li>{x}</li>" for x in subs) + "</ul>" if subs else "") + "</li>" for t, subs in items)
+            out.append(f"<{tag}>{body}</{tag}>")
+        items, ltype = [], None
+
+    lines = text.splitlines(); i = 0
+    while i < len(lines):
+        ln = lines[i]
+        if ln.startswith("```"):
+            flush(); j = i + 1; buf = []
+            while j < len(lines) and not lines[j].startswith("```"):
+                buf.append(lines[j]); j += 1
+            out.append(f"<pre><code>{e(chr(10).join(buf))}</code></pre>"); i = j + 1; continue
+        if ln.startswith("|"):
+            flush(); rows = []
+            while i < len(lines) and lines[i].startswith("|"):
+                rows.append(lines[i]); i += 1
+            cells = [[c.strip().replace("\\|", "|") for c in re.split(r"(?<!\\)\|", r.strip().strip("|"))] for r in rows if not re.match(r"^\|[-| :]+\|$", r.strip())]
+            if cells:
+                out.append(table([c.replace("`", "") for c in cells[0]], [[md(c) for c in r] for r in cells[1:]], "small"))
+            continue
+        m_num = re.match(r"^(\d+)\. (.*)", ln); m_bul = re.match(r"^(\s*)- (.*)", ln)
+        if m_num:
+            if ltype not in (None, "ol"): flush()
+            ltype = "ol"; items.append((md(m_num.group(2)), []))
+        elif m_bul:
+            if len(m_bul.group(1)) >= 2 and items:
+                items[-1][1].append(md(m_bul.group(2)))
+            else:
+                if ltype not in (None, "ul"): flush()
+                ltype = "ul"; items.append((md(m_bul.group(2)), []))
+        elif ln.startswith("#"):
+            flush()
+            if ln.startswith("###"): out.append(f"<h4>{md(ln.lstrip('# '))}</h4>")
+            elif ln.startswith("##"): out.append(f"<h3>{md(ln.lstrip('# '))}</h3>")
+        elif ln.strip() in ("", "---"):
+            flush() if not ln.strip() and False else None
+        elif ln.startswith(" ") and items:
+            items[-1] = (items[-1][0] + " " + md(ln.strip()), items[-1][1])
+        else:
+            flush(); out.append(f"<p>{md(ln)}</p>")
+        i += 1
+    flush()
+    return "".join(out)
+
+
+ts_txt = open(os.path.join(ROOT, "docs", "technical-scenarios.md"), encoding="utf-8").read()
+
+
+def dscen(n, evidence):
+    m = re.search(rf"## D\.{n} — ([^\n]+)\n(.*?)(?=\n---\n|\n## D\.|\Z)", ts_txt, re.S)
+    html_ = f"<h3>D.{n} {e(m.group(1))}</h3>"
+    for part in re.split(r"^### ", m.group(2), flags=re.M)[1:]:
+        name, _, txt = part.partition("\n")
+        html_ += f"<h4>{e(name)}</h4>" + md_html(txt)
+    return html_ + evidence
+
+
+def chapter(title, body, page_break=True): return f'<section class="chapter"><h2>{e(title)}</h2>{body}</section>'
+
+
+def role_grid():
+    nama = {"admin": "Administrator", "pendaftaran": "Petugas Pendaftaran", "dokter": "Dokter", "farmasi": "Petugas Farmasi", "laboratorium": "Petugas Laboratorium", "kasir": "Kasir"}
+    cells = "".join(f'<figure><img src="screenshots/extra/role-{k}.png"><figcaption>{v}</figcaption></figure>' for k, v in nama.items())
+    return f'<p class="note">Menu setelah login berbeda untuk tiap role:</p><div class="rolegrid">{cells}</div>'
+
+
+DESC = {"firebase/php-jwt": "JWT HS256", "yiisoft/yii2": "framework backend", "friendsofphp/php-cs-fixer": "lint gaya kode PHP", "phpunit/phpunit": "unit test PHP",
+        "axios": "HTTP client", "react-router": "routing", "react-hook-form": "form dan validasi", "@hookform/resolvers": "penghubung form dengan zod", "zod": "validasi skema", "zustand": "state global",
+        "recharts": "grafik dashboard", "i18next": "terjemahan ID/EN", "react-i18next": "terjemahan di React", "sonner": "notifikasi toast", "cmdk": "combobox dan pencarian menu",
+        "lucide-react": "ikon", "clsx": "util class", "tailwind-merge": "util class Tailwind", "tailwindcss-animate": "animasi Tailwind", "class-variance-authority": "varian komponen",
+        "express": "web framework Node", "pg": "driver PostgreSQL", "jsonwebtoken": "verifikasi JWT", "vitest": "test runner", "supertest": "test HTTP", "tsx": "jalankan TypeScript",
+        "typescript": "bahasa dan pemeriksa tipe", "eslint": "lint", "prettier": "format kode", "jsdom": "DOM untuk test", "vite": "bundler dan dev server", "tailwindcss": "styling utilitas",
+        "@testing-library/react": "test komponen", "@vitejs/plugin-react": "plugin React untuk Vite"}
+
+
+def pkg_table(path, sections):
+    j = json.load(open(os.path.join(ROOT, path), encoding="utf-8"))
+    rows = []
+    for sec in sections:
+        for k, v in j.get(sec, {}).items():
+            if k == "php" or k.startswith("bower-asset") or k.startswith("@types/"): continue
+            kind = "runtime" if sec in ("dependencies", "require") else "pengembangan"
+            desc = DESC.get(k) or ("komponen UI aksesibel (Radix)" if k.startswith("@radix-ui") else "pendukung")
+            rows.append([C(k), e(v), kind, e(desc)])
+    return table(["Paket", "Versi", "Jenis", "Fungsi"], rows, "small")
+
+
+def api_doc(path):
+    txt = open(os.path.join(ROOT, path), encoding="utf-8").read()
+    return md_html(txt)
+
+
+struktur = table(["Lapisan", "Pola folder", "Tanggung jawab"], [
+    ["backend-yii", "<code>modules/&lt;domain&gt;/&lt;fitur&gt;/</code>: <code>*Controller</code>, <code>*Service</code>, model ActiveRecord", "Controller hanya HTTP dan otorisasi; Service memegang logika bisnis dan transaksi; Model memegang relasi dan aturan data. Test unit per Service di <code>tests/unit/</code>."],
+    ["backend-yii/common", "<code>BaseApiController</code>, <code>CrudController</code>, <code>CrudService</code>, <code>ApiResponse</code>, <code>JwtService</code>, <code>AccessFilter</code>, <code>ListQuery</code>, <code>SequenceService</code>, <code>AuditLogBehavior</code>", "Dasar yang dipakai ulang semua modul: CRUD generik, format respons seragam, JWT, RBAC, paginasi, penomoran atomik, audit log."],
+    ["service-node", "<code>src/modules/&lt;fitur&gt;/</code> (routes, service, outbox), <code>src/middleware/</code>, <code>src/lib/</code>", "Middleware <code>auth</code>, <code>validate</code>, <code>error-handler</code>; <code>lib</code> berisi koneksi database, klien Yii, dan format respons."],
+    ["frontend-react", "<code>src/modules/&lt;domain&gt;/&lt;fitur&gt;/</code> (Page, Dialog, <code>*.api.ts</code>, <code>*.types.ts</code>), <code>components/</code>, <code>lib/</code>, <code>routes/</code>", "Komponen reusable <code>App*</code> dan shadcn/ui; <code>api-client</code> satu pintu ke REST; <code>RequireAuth</code> dan <code>PermissionGuard</code> untuk akses."],
+    ["database", "<code>migrations/</code> (26 file), <code>seeds/</code>, <code>database/init/</code>", "Migrasi dan seed hanya dari Yii; skrip init membuat database test dan user read-only."],
+    ["Konvensi", "Conventional Commits (commitlint, husky), ESLint, Prettier, PHP-CS-Fixer, CI GitHub Actions", "Satu sub-poin roadmap satu commit; CI menjalankan lint, test, dan build tiga lapisan."]])
+
+pustaka = ("<h3>B.1 Backend Yii (composer.json)</h3>" + pkg_table("backend-yii/composer.json", ["require", "require-dev"])
+           + "<h3>B.2 Service Node.js (package.json)</h3>" + pkg_table("service-node/package.json", ["dependencies", "devDependencies"])
+           + "<h3>B.3 Frontend React (package.json)</h3>" + pkg_table("frontend-react/package.json", ["dependencies", "devDependencies"]))
 
 
 # ---------- data hidup dari database ----------
@@ -194,7 +313,7 @@ mods.append(module("5.1", "Autentikasi dan Hak Akses", "Poin B.9",
     "<code>m_role</code>, <code>m_user</code>, <code>m_module</code>, <code>m_menu</code>, <code>m_module_menu</code>, <code>m_role_access</code>, <code>t_audit_log</code>.",
     ["Password disimpan sebagai hash (<code>password_hash</code>); token punya masa berlaku (<code>JWT_TTL</code>).", "Otorisasi diputuskan di Yii; React hanya menyembunyikan menu.", "Secret JWT minimal 32 karakter, dipakai bersama Yii dan Node."],
     "<code>backend-yii/modules/system/</code>, <code>frontend-react/src/modules/system/</code>, <code>frontend-react/src/routes/</code>.",
-    S("B9-login", "Halaman login") + S("M-user", "Manajemen pengguna (6 akun, satu per role)") + S("M-role-access", "Matriks hak akses per role") + S("RBAC-ditolak-billing", "Role Pendaftaran membuka /transaction/billing: Akses ditolak")))
+    S("B9-login", "Halaman login") + S("M-user", "Manajemen pengguna (6 akun, satu per role)") + S("M-role-access", "Matriks hak akses per role") + S("RBAC-ditolak-billing", "Role Pendaftaran membuka /transaction/billing: Akses ditolak") + role_grid()))
 
 mods.append(module("5.2", "Pengelolaan Master Data", "Poin B.1",
     "Menyimpan data dasar SIMRS: pasien dan No. RM, dokter, poli, jadwal praktik, tindakan dan tarif, obat dengan stok dan harga, master pemeriksaan lab, dan ICD-10.",
@@ -209,7 +328,10 @@ mods.append(module("5.2", "Pengelolaan Master Data", "Poin B.1",
     "<code>backend-yii/modules/master/</code>, <code>frontend-react/src/modules/master/</code>.",
     '<p class="note">Bukti 1: data ada di PostgreSQL (query langsung setelah seed).</p>' + T("B1-master-data", "Hasil query ke database simrs") + '<p class="note">Bukti 2: data yang sama tampil di aplikasi.</p>'
     + S("B1-pasien", "Master Pasien: 50 data, pencarian, Ubah, Hapus") + S("B1-dokter", "Master Dokter") + S("B1-poli", "Master Poli") + S("B1-jadwal", "Jadwal praktik")
-    + S("B1-tindakan", "Tindakan dan tarif") + S("B1-obat", "Obat, stok, harga") + S("B1-lab", "Master pemeriksaan laboratorium") + S("B1-icd10", "Master ICD-10")))
+    + S("B1-tindakan", "Tindakan dan tarif") + S("B1-obat", "Obat, stok, harga") + S("B1-lab", "Master pemeriksaan laboratorium") + S("B1-icd10", "Master ICD-10")
+    + '<p class="note">Bukti 3: tambah, ubah, hapus, validasi input, dan pencegahan duplikasi pada Master Pasien.</p>'
+    + X("m1-validasi-form-kosong", "Validasi input: form kosong menampilkan pesan tiap kolom wajib") + X("m2-nik-duplikat-ditolak", "Pencegahan duplikasi: NIK yang sudah terdaftar ditolak (\"NIK sudah terdaftar.\")")
+    + X("m3-pasien-ditambah-no-rm-otomatis", "Tambah: pasien tersimpan dan No. RM terbentuk otomatis (RM000051)") + X("m4-pasien-diubah", "Ubah: nama pasien berubah") + X("m5-konfirmasi-hapus", "Hapus: dialog konfirmasi") + X("m6-pasien-dihapus", "Hapus: data tidak lagi tampil (soft delete)")))
 
 mods.append(module("5.3", "Pendaftaran dan Antrean", "Poin B.2",
     "Mendaftarkan kunjungan, memilih poli dan dokter sesuai jadwal praktik, membuat nomor antrean otomatis, menampilkan status antrean, dan menyimpan riwayat kunjungan.",
@@ -259,7 +381,9 @@ mods.append(module("5.6", "Farmasi dan Resep Obat", "Poin B.5",
     ["Jumlah melebihi stok ditolak 422 saat resep dibuat (TC-FAR-01).", "Penyerahan mengunci baris resep dan obat (<code>FOR UPDATE</code>, urut id) dan <code>CHECK (stok &gt;= 0)</code> menjaga stok tidak minus (D.2).", "Resep yang sudah diserahkan tidak bisa diserahkan lagi."],
     "<code>backend-yii/modules/transaction/resep/</code>, <code>.../farmasi/</code>.",
     F("13-pilih-obat-dan-stok", "Daftar obat dengan stok dan harga") + F("15-resep-tersimpan", "Resep tersimpan, status Baru, total Rp 15.000") + F("22-resep-diproses", "Farmasi: status Diproses, tombol Serahkan")
-    + F("23-resep-diserahkan", "Filter Diserahkan: resep selesai diserahkan") + F("24-stok-obat-berkurang", "Stok Paracetamol turun dari 500 menjadi 490 setelah penyerahan 10 tablet")))
+    + F("23-resep-diserahkan", "Filter Diserahkan: resep selesai diserahkan") + F("24-stok-obat-berkurang", "Stok Paracetamol turun dari 500 menjadi 490 setelah penyerahan 10 tablet")
+    + X("r1-resep-melebihi-stok-ditolak", "Validasi stok: jumlah 99999 ditolak dengan pesan stok tidak cukup")
+    + X("o1-riwayat-mutasi-stok", "Riwayat mutasi stok: tiap penyerahan tercatat sebagai mutasi keluar dengan stok sebelum dan sesudah (baris atas berasal dari resep uji lain sehingga stok saat gambar ini 460)")))
 
 mods.append(module("5.7", "Pemeriksaan Penunjang (Laboratorium)", "Poin B.6, C",
     "Dokter membuat order laboratorium, petugas lab melihat daftar dan menginput hasil, dan dokter membaca hasil di riwayat kunjungan. Sistem eksternal memakai API Node untuk membaca order dan mengirim hasil.",
@@ -298,7 +422,8 @@ mods.append(module("5.9", "Dashboard dan Laporan", "Poin B.8",
     "Membaca tabel transaksi lewat user database read-only <code>simrs_readonly</code>.",
     ["Node tidak menulis data; semua penulisan lewat Yii.", "Periode terbalik ditolak 422 oleh validasi Zod (TC-DSH-01).", "Index khusus dashboard mempercepat agregasi (D.6)."],
     "<code>service-node/src/modules/dashboard/</code>, <code>frontend-react/src/modules/dashboard/</code>.",
-    F("39-dashboard-hari-ini", "Dashboard periode Hari Ini") + F("40-dashboard-rincian-tagihan", "Rincian tab Tagihan")))
+    F("39-dashboard-hari-ini", "Dashboard periode Hari Ini: kartu ringkasan, kunjungan per poli, pendapatan, status pembayaran") + X("d0-dashboard-filter-7-hari", "Filter periode 7 Hari")
+    + X("d-rincian-kunjungan", "Rincian Kunjungan") + X("d-rincian-tindakan", "Rincian Tindakan medis") + X("d-rincian-pendapatan", "Rincian Pendapatan") + X("d-rincian-obat", "Rekap penggunaan Obat") + X("d-rincian-pembayaran", "Rincian Tagihan dan status pembayaran")))
 
 mods.append(module("5.10", "Backend Services Node.js", "Poin C",
     "Menyediakan REST API pendukung: integrasi hasil lab untuk sistem eksternal dan API agregasi dashboard. Node bukan pemilik business logic transaksi.",
@@ -309,6 +434,19 @@ mods.append(module("5.10", "Backend Services Node.js", "Poin C",
     ["Middleware: verifikasi JWT, verifikasi API key, validasi Zod, penanganan error.", "Format respons seragam: <code>success</code>, <code>message</code>, <code>data</code> atau <code>errors</code>.", "Pembagian tanggung jawab dengan Yii: bab 2.4."],
     "<code>service-node/src/</code>.",
     T("C-node-service", "Panggilan HTTP nyata ke service Node: 200, 401 tanpa token, 401 tanpa API key, 422 validasi, dan status kontainer")))
+
+
+mods.append(module("5.11", "Fitur Tambahan (Bonus)", "Catatan penilaian",
+    "Fitur di luar syarat minimal yang meningkatkan kegunaan dan kerapihan aplikasi.",
+    "Sesuai fitur: dashboard dan cetak untuk semua role berizin; layar display antrean terbuka tanpa login.",
+    ["<b>Export PDF dan Excel:</b> tombol pada Dashboard dan pada halaman cetak invoice dan bukti bayar.", "<b>Filter laporan:</b> periode cepat (Hari Ini, 7 Hari, 30 Hari, Bulan Ini), rentang tanggal, dokter, dan penjamin.",
+     "<b>Layar display antrean:</b> buka <code>/display-antrean</code> (atau tombol Layar Display di Antrean Poli); nama pasien disamarkan.", "<b>Chatbot bantuan:</b> tombol <b>Bantuan</b> di pojok kanan bawah; menjawab panduan penggunaan tanpa LLM.",
+     "<b>Tema dan bahasa:</b> tombol tema terang atau gelap dan tombol bahasa ID/EN pada header; <b>Ctrl K</b> membuka pencarian menu."],
+    [["GET", C("/api/dashboard/*"), "Sumber data laporan dan export"], ["GET", C("/transaction/antrean/display"), "Data layar display antrean"]],
+    "-",
+    ["UI konsisten memakai komponen shadcn/ui dan komponen reusable <code>App*</code>.", "Chatbot memakai basis pengetahuan lokal (<code>docs/chatbot.md</code>)."],
+    "<code>frontend-react/src/lib/export-pdf.ts</code>, <code>export-excel.ts</code>, <code>frontend-react/src/modules/chatbot/</code>, <code>frontend-react/src/modules/transaction/antrean/DisplayAntreanPage.tsx</code>.",
+    X("b1-layar-display-antrean", "Layar display antrean publik") + X("b2-chatbot-bantuan", "Chatbot bantuan") + X("b3-tema-gelap", "Tema gelap pada Dashboard") + F("36-invoice-cetak-lunas", "Tombol Cetak dan Export PDF pada invoice")))
 
 # ---------- bab 4: alur satu pasien ----------
 tahap = [
@@ -387,6 +525,78 @@ perf_api = table(["Endpoint Yii", "Median sebelum", "Median sesudah", "p95 sebel
     ["Antrean poli", "1.484 ms", "225 ms", "3.170 ms", "363 ms"], ["Worklist pemeriksaan", "500 ms", "236 ms", "3.168 ms", "264 ms"], ["Worklist laboratorium", "551 ms", "272 ms", "3.175 ms", "374 ms"],
     ["Antrean farmasi", "546 ms", "262 ms", "2.056 ms", "331 ms"], ["Daftar invoice", "286 ms", "214 ms", "1.468 ms", "304 ms"], ["Master pasien", "322 ms", "185 ms", "1.380 ms", "232 ms"]])
 
+
+bab7 = chapter("7. Skenario teknis D.1 sampai D.6", "<p>Instruksi D meminta analisis dan implementasi penanganan tiap kondisi. Setiap skenario berikut memuat masalah, solusi berlapis, lokasi kode, dan bukti. Sumber: <code>docs/technical-scenarios.md</code>.</p>"
+    + dscen(1, T("konkurensi-pendaftaran", "Bukti D.1: 10 pendaftaran paralel pasien sama, 1 sukses dan 9 ditolak 409; nomor antrean unik"))
+    + dscen(2, T("konkurensi-stok-obat", "Bukti D.2: dua resep berebut stok, satu sukses, satu 409, stok akhir 0") + X("r1-resep-melebihi-stok-ditolak", "Validasi stok di UI saat membuat resep"))
+    + dscen(3, T("konkurensi-pembayaran", "Bukti D.3 dan D.4: lima percobaan key sama hanya mencatat satu pembayaran; revisi tagihan dan audit log"))
+    + dscen(4, F("28-detail-invoice-4-sumber", "Rincian invoice dan audit log perubahan pada dialog Detail"))
+    + dscen(5, T("D5-outbox-retry", "Bukti D.5: Yii dimatikan, hasil lab masuk outbox (pending), lalu terkirim otomatis setelah Yii hidup; kirim ulang key yang sama dijawab 200 tanpa duplikasi"))
+    + dscen(6, "<h4>Hasil pengukuran</h4><p>EXPLAIN (ANALYZE, BUFFERS) pada data besar, dari <code>docs/performance.md</code>:</p>" + perf_table + "<p>Latensi API Yii sebelum dan sesudah optimasi:</p>" + perf_api
+            + T("D6-performa", "Bukti D.6: benchmark API, daftar index aktif, dan EXPLAIN memakai index")))
+
+
+def row(sec, butir, lokasi, status="Terpenuhi"): return [e(sec), butir, status, lokasi]
+
+
+kes_rows = [
+    row("A", "Aplikasi SIMRS rawat jalan dari pendaftaran sampai pembayaran, alur terintegrasi, data terstruktur, hak akses per tanggung jawab", "Bab 1, 3, 4"),
+    row("A", "Frontend React.js; backend utama Yii1/Yii2; backend services Node.js; database PostgreSQL; Postman; Git", "Bab 2.1"),
+    row("B.1", "Data pasien dan No. RM; dokter dan tenaga medis; poli; jadwal praktik; tindakan dan tarif; obat, stok, harga", "Bab 5.2"),
+    row("B.1", "Tambah, lihat, ubah, hapus; pencarian dan filter; validasi input; pencegahan duplikasi", "Bab 5.2 (bukti 3)"),
+    row("B.2", "Cari pasien berdasarkan No. RM atau identitas; daftarkan kunjungan; pilih poli dan dokter sesuai jadwal", "Bab 4.1, 5.3"),
+    row("B.2", "Nomor antrean otomatis; status antrean; riwayat kunjungan pasien", "Bab 4.1, 5.3"),
+    row("B.3", "Daftar pasien menunggu; anamnesis dan keluhan; tanda vital; pemeriksaan fisik; diagnosis utama dan sekunder; simpan ke riwayat rekam medis", "Bab 4.2, 5.4"),
+    row("B.4", "Pilih tindakan dari master dengan tarif; lebih dari satu tindakan per kunjungan; tindakan menjadi komponen tagihan", "Bab 4.3, 5.5"),
+    row("B.5", "Resep (obat, dosis, frekuensi, jumlah); validasi stok; proses dan serahkan obat; stok berkurang setelah penyerahan; riwayat penggunaan obat", "Bab 4.4, 4.6, 5.6"),
+    row("B.6", "Permintaan lab oleh dokter; daftar permintaan untuk petugas lab; input hasil; hasil dapat dibaca dokter lewat riwayat kunjungan", "Bab 4.5, 5.7"),
+    row("B.6", "Layanan API untuk komunikasi atau integrasi data pemeriksaan penunjang", "Bab 5.7, 5.10, Lampiran A"),
+    row("B.7", "Tagihan gabungan: biaya pendaftaran, tindakan, penunjang, obat; total otomatis; rincian biaya", "Bab 4.7, 5.8"),
+    row("B.7", "Pembayaran tunai dan non-tunai (simulasi); status belum dibayar, dibayar sebagian, lunas; pembayaran bertahap; riwayat pembayaran", "Bab 4.8, 5.8"),
+    row("B.7", "Cegah pembayaran ganda; invoice dan bukti pembayaran dapat dicetak", "Bab 4.9, 7 (D.3)"),
+    row("B.8", "Dashboard: jumlah kunjungan, per poli, tindakan, pendapatan, rekap obat, status pembayaran; filter periode; rincian data; data dari API backend", "Bab 4.10, 5.9"),
+    row("B.9", "Autentikasi dan otorisasi untuk Administrator, Petugas Pendaftaran, Dokter, Petugas Farmasi, Petugas Laboratorium, Kasir", "Bab 3.5, 5.1"),
+    row("C.1", "REST API untuk komunikasi dengan layanan pemeriksaan penunjang atau sistem eksternal", "Bab 5.7, 5.10, Lampiran A"),
+    row("C.2", "API untuk kebutuhan dashboard atau layanan pendukung", "Bab 5.9, 5.10, Lampiran A"),
+    row("C.3", "Middleware validasi request dan autentikasi", "Bab 5.10, 2.6"),
+    row("C.4", "Error handling dan format respons konsisten", "Bab 2.4, 5.10"),
+    row("C.5", "Dokumentasi endpoint API", "Lampiran A; <code>service-node/openapi.yaml</code>"),
+    row("C", "Penjelasan komunikasi Node dengan Yii dan database; pembagian tanggung jawab data dan business logic", "Bab 2.2 sampai 2.4"),
+    row("D.1", "Duplikasi pendaftaran: cegah kunjungan dan nomor antrean ganda", "Bab 7 (D.1)"),
+    row("D.2", "Konkurensi stok obat: stok tidak minus", "Bab 7 (D.2)"),
+    row("D.3", "Pembayaran ganda saat gangguan jaringan", "Bab 7 (D.3)"),
+    row("D.4", "Perubahan diagnosis atau tindakan setelah billing; tagihan konsisten dan riwayat perubahan dapat ditelusuri", "Bab 7 (D.4)"),
+    row("D.5", "Gangguan integrasi: tanpa kehilangan atau ketidaksesuaian data", "Bab 7 (D.5)"),
+    row("D.6", "Performa: optimasi query, pengambilan data, respons API", "Bab 7 (D.6)"),
+    row("E.1", "Yii1 atau Yii2 untuk backend utama dan business logic", "Bab 2.1 (Yii 2.0.55)"),
+    row("E.2", "React.js untuk frontend", "Bab 2.1, seluruh screenshot"),
+    row("E.3", "Node.js untuk backend services dan API pendukung", "Bab 2.1, 5.10"),
+    row("E.4", "PostgreSQL sebagai database utama", "Bab 2.1, 6"),
+    row("E.5", "Komunikasi antarbagian melalui REST API", "Bab 2.2, 2.3, Lampiran A"),
+    row("E.6", "Autentikasi, otorisasi, dan validasi data", "Bab 3.5, 5.1, aturan validasi tiap modul"),
+    row("E.7", "Postman untuk pengujian API", "Bab 8.2"),
+    row("E.8", "Git untuk pengelolaan source code", "Repo publik GitHub: github.com/maeshataruna99-lgtm/simrs-rawat-jalan"),
+    row("E.9", "Library atau package pendukung yang relevan", "Lampiran B"),
+    row("E.10", "Penjelasan pembagian tanggung jawab Yii dan Node.js (tanpa duplikasi logic dan inkonsistensi data)", "Bab 2.4"),
+    row("F.1", "Source code Yii, React, Node.js, repository Git yang dapat diakses", "Bab 2.6; repo publik GitHub"),
+    row("F.2", "Skema dan relasi tabel; ERD; file migrasi atau SQL instalasi", "Bab 6; <code>database/schema.sql</code>, <code>backend-yii/migrations/</code>"),
+    row("F.3", "Diagram arsitektur; alur komunikasi React, Yii, Node, PostgreSQL; dokumentasi endpoint; petunjuk instalasi; keputusan teknis", "Bab 2, 9, Lampiran A"),
+    row("F.4", "Screenshot aplikasi; bukti alur pendaftaran sampai pembayaran; bukti invoice atau struk; bukti backend Node.js", "Bab 4, 5, 5.10"),
+    row("F.5", "Test case fitur utama; bukti Postman; unit atau integration test transaksi penting", "Bab 8"),
+    row("G", "Data dummy untuk pengujian", "Hasil <code>php yii seed</code> (bab 9)"),
+    row("Catatan", "Alur sistem dan logika pemrograman", "Bab 3, 4, 7"),
+    row("Catatan", "Kerapihan struktur kode", "Bab 2.6"),
+    row("Catatan", "Prinsip CRUD dan autentikasi", "Bab 5.1, 5.2"),
+    row("Bonus", "Export PDF, filter laporan, UI rapi", "Bab 5.11")]
+checklist_full = table(["Butir", "Persyaratan instruksi", "Status", "Lokasi bukti"], kes_rows, "small")
+bab10 = chapter("10. Kesesuaian dengan instruksi Real Case Test", checklist_full + "<h3>Catatan</h3>" + ul([
+    "Postman dijalankan lewat Postman CLI dan Newman (baris perintah); collection dan environment dapat diimpor ke aplikasi Postman.",
+    "Bukti D.1 sampai D.4 berupa skrip konkurensi yang memanggil API; bukti D.5 berupa demonstrasi langsung dengan mematikan Yii.",
+    "Seluruh data berupa data dummy hasil seed.", "Pengumpulan (G): kirim ke inovamedika.career@gmail.com dengan subjek <code>Senior Programmer_Pengumpulan Real Case Test_&lt;Nama Lengkap&gt;</code>.",
+    "Diagram arsitektur dan workflow digambar sebagai SVG; ERD digambar dari <code>database/erd.md</code>."]))
+lampiran = (chapter("Lampiran A. Dokumentasi endpoint API", "<p>Kutipan lengkap <code>docs/api/yii.md</code> dan <code>docs/api/node.md</code>. Spesifikasi OpenAPI service Node: <code>service-node/openapi.yaml</code> (juga di <code>http://localhost:3000/openapi.yaml</code>).</p><h3>A.1 Backend Yii2</h3>" + api_doc("docs/api/yii.md") + "<h3>A.2 Service Node.js</h3>" + api_doc("docs/api/node.md"))
+            + chapter("Lampiran B. Library dan package pendukung (E.9)", pustaka))
+
 stack = table(["Komponen", "Syarat soal", "Yang dipakai", "Bukti"], [
     ["Frontend", "React.js", "React 19.3, TypeScript 6, Vite 8, Tailwind CSS 3, shadcn/ui, Zustand", "<code>frontend-react/package.json</code>"],
     ["Backend utama / SIMRS", "Yii1 atau Yii2", "Yii 2.0.55, PHP 8.3.37", "keluaran <code>yii version</code>"],
@@ -424,7 +634,7 @@ img { width: 100%; border: 1px solid #ccc; border-radius: 3px; } figure.app img 
 .sm { margin: 2mm 0; } .smlbl { font-weight: 700; font-size: 9pt; margin-bottom: 1mm; } .chip { display:inline-block; background:#e6f6ef; border:1px solid #0f9d6e; border-radius: 10px; padding: 1px 9px; font-size: 8.8pt; } .arr { margin: 0 4px; color:#555; } .smnote { font-size: 8.5pt; color:#555; margin: 0 0 2mm; }
 .entgrid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; } .ent { border:1px solid #94a3b8; border-radius: 4px; font-size: 6.8pt; break-inside: avoid; } .entname { background:#0f9d6e; color:#fff; font-weight:700; padding: 2px 5px; font-size: 7.6pt; }
 .col { display:flex; gap: 3px; padding: 1px 5px; border-top: 1px solid #eef2f7; } .col span { flex: 1; font-weight: 600; } .col i { color:#64748b; font-style: normal; } .col b { width: 14px; font-size: 6pt; } b.PK { color:#b45309; } b.FK { color:#1d4ed8; } b.UK { color:#7e22ce; }
-.svgwrap { margin: 3mm 0; break-inside: avoid; }"""
+.svgwrap { margin: 3mm 0; break-inside: avoid; } .rolegrid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 2mm; break-inside: avoid; } .rolegrid figure { margin: 0; } .rolegrid img { max-height: none; } pre { background:#f1f3f5; padding: 2mm; font-size: 7.5pt; overflow:hidden; white-space: pre-wrap; break-inside: avoid; } pre code { background:none; font-size: 7.5pt; }"""
 
 
 def chapter(title, body, page_break=True):
@@ -435,8 +645,7 @@ doc = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><title>SIMR
 <div class="cover"><h1>SIMRS Rawat Jalan</h1><div class="sub">Module Guide and Proof Book<br>Real Case Test Senior Programmer, PT Inova Medika Solusindo</div>
 <div class="meta">Tanggal bukti: 24 November 2026<br>Repository: github.com/maeshataruna99-lgtm/simrs-rawat-jalan<br>Seluruh data dan screenshot dihasilkan setelah reset total dan seed ulang database.<br>Satu pasien ({e(nama_px)}, {e(rm_px)}) diikuti dari pendaftaran sampai lunas lewat antarmuka.</div></div>
 
-<section class="part"><h2>Daftar Isi</h2><ol class="toc"><li>Fungsi proyek</li><li>Stack dan arsitektur (Poin A, F.3)</li><li>Workflow pelayanan (diagram alur, status, hak akses)</li><li>Bukti alur satu pasien dari pendaftaran sampai lunas (F.4)</li><li>Panduan dan bukti per modul (10 modul)</li>
-<li>Database: ERD, constraint, migrasi (F.2)</li><li>Skenario teknis D.1 sampai D.6</li><li>Pengujian: test case, Postman, unit dan konkurensi (F.5)</li><li>Instalasi dan konfigurasi</li><li>Kesesuaian dengan instruksi Real Case Test</li></ol></section>
+<section class="part"><h2>Daftar Isi</h2><ol class="toc"><li>Fungsi proyek</li><li>Stack dan arsitektur (Poin A, E, F.3), struktur kode</li><li>Workflow pelayanan: diagram alur, status, hak akses</li><li>Bukti alur satu pasien dari pendaftaran sampai lunas (F.4)</li><li>Panduan dan bukti per modul (B.1 sampai B.9, C, bonus)</li><li>Database: ERD, constraint, migrasi (F.2)</li><li>Skenario teknis D.1 sampai D.6</li><li>Pengujian: test case, Postman, unit dan konkurensi (F.5)</li><li>Instalasi dan konfigurasi</li><li>Kesesuaian dengan instruksi (A sampai G)</li><li>Lampiran A: dokumentasi endpoint API; Lampiran B: library pendukung</li></ol></section>
 
 {chapter("1. Fungsi proyek", f'''<p>SIMRS Rawat Jalan adalah sistem informasi rumah sakit untuk mengelola seluruh perjalanan pasien rawat jalan, dari pendaftaran sampai pembayaran, dalam satu aplikasi terintegrasi.</p>
 <h3>Masalah yang diselesaikan</h3>{ul(["Data pasien, jadwal dokter, tindakan, obat, dan tarif tersebar di banyak catatan terpisah. Sistem menyatukannya di satu database terstruktur.", "Antrean dan nomor antrean mudah ganda saat banyak petugas bekerja bersamaan. Sistem membuatnya atomik.",
@@ -450,7 +659,8 @@ doc = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><title>SIMR
 <p>React berkomunikasi dengan Yii (seluruh operasi bisnis) dan dengan Node (dashboard) lewat REST JSON dan JWT. Yii menerbitkan JWT; Node memverifikasinya dengan secret yang sama. Sistem lab eksternal memanggil Node dengan <code>X-Api-Key</code>. Node meneruskan hasil lab ke Yii. Yii membaca dan menulis PostgreSQL dan memegang migrasi. Node menulis hanya <code>t_integration_outbox</code> dan membaca sisanya sebagai <code>simrs_readonly</code>.</p>
 <h3>2.3 Alur komunikasi React, Yii, Node, PostgreSQL</h3>{diag_flow}
 <h3>2.4 Pembagian tanggung jawab Yii dan Node.js (E.10)</h3>{yvn}<p>Duplikasi logic dicegah: flag lab dan status order hanya dihitung di Yii; tagihan dan revisi billing hanya di Yii; Node hanya meneruskan dan menjumlahkan kolom snapshot. Kedua layanan memakai format respons yang sama.</p>
-<h3>2.5 Keputusan teknis</h3>{decisions}''')}
+<h3>2.5 Keputusan teknis</h3>{decisions}
+<h3>2.6 Struktur kode dan kerapihan</h3>{struktur}''')}
 
 {chapter("3. Workflow pelayanan", f'''<h3>3.1 Diagram alur end-to-end</h3><p>Diagram menunjukkan urutan tahap, pelaku (warna), cabang paralel dari dokter (tindakan, resep, laboratorium), titik temu di kasir, dan alur revisi.</p><div class="svgwrap">{flow_svg}</div>
 <h3>3.2 Penjelasan alur</h3>{ol(["<b>Pendaftaran.</b> Petugas mencari pasien atau membuat pasien baru, memilih poli, jadwal dokter, dan penjamin. Sistem membuat nomor kunjungan dan nomor antrean otomatis. Status: menunggu.", "<b>Panggil.</b> Petugas memanggil pasien dari Antrean Poli. Status: diperiksa.",
@@ -473,15 +683,7 @@ doc = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><title>SIMR
 <h3>6.2 Entity Relationship Diagram</h3><p>Diagram digambar dari definisi di <code>database/erd.md</code>. Tanda PK = primary key, FK = foreign key, UK = unique.</p>{erd_sections()}
 <h3>6.3 Constraint dan index pengaman utama</h3>{table(["Skenario", "Tabel", "Pengaman di PostgreSQL"], constraint_rows, "small")}''')}
 
-{chapter("7. Skenario teknis D.1 sampai D.6", f'''<p>Analisis lengkap dan lokasi kode: <code>docs/technical-scenarios.md</code>. Bukti berikut dijalankan pada lingkungan lokal.</p>
-<h3>D.1 Duplikasi pendaftaran</h3><p>Dua petugas mendaftarkan pasien yang sama bersamaan. Pengaman: partial unique index <code>(pasien, poli, tanggal)</code> untuk kunjungan non-batal, unique index nomor antrean, counter atomik (<code>INSERT ... ON CONFLICT</code>), dan <code>FOR UPDATE</code> pada jadwal. Hasil: 10 request paralel, 1 sukses, 9 ditolak 409, nomor antrean unik.</p>{T("konkurensi-pendaftaran", "Uji konkurensi D.1")}
-<h3>D.2 Konkurensi stok obat</h3><p>Dua transaksi memproses obat yang stoknya hanya cukup untuk satu. Pengaman: <code>FOR UPDATE</code> pada resep dan obat (urut id), validasi stok di dalam transaksi, dan <code>CHECK (stok &gt;= 0)</code>. Hasil: satu sukses, satu 409, stok akhir 0.</p>{T("konkurensi-stok-obat", "Uji konkurensi D.2")}
-<h3>D.3 Pembayaran ganda</h3><p>Setelah gangguan jaringan kasir mengulang pembayaran. Pengaman: header <code>Idempotency-Key</code> yang sama dikirim ulang oleh klien, <code>FOR UPDATE</code> pada invoice, unique index <code>uq_t_pembayaran_idempotency_key</code>, dan <code>CHECK (total_bayar &lt;= total)</code>. Hasil: lima percobaan dengan key sama hanya mencatat satu pembayaran.</p>
-<h3>D.4 Perubahan data setelah billing</h3><p>Pengaman: kunci Valid / Unvalid oleh kasir, item tagihan berbasis sumber dengan void dan alasan wajib, sinkronisasi tagihan, serta audit log JSONB. Hasil: total 100000 menjadi 25000 setelah revisi, 6 entri audit log, setelah lunas perubahan ditolak 409.</p>{T("konkurensi-pembayaran", "Uji D.3 dan D.4")}
-<h3>D.5 Gangguan integrasi</h3><p>Yii dimatikan, sistem lab eksternal tetap mengirim hasil ke Node. Node membalas 202 dan menyimpan pesan di <code>t_integration_outbox</code> berstatus pending. Setelah Yii hidup, worker mengulang pengiriman sampai terkirim; hasil masuk ke detail lab dengan flag normal. Kirim ulang key yang sama dijawab 200 tanpa menggandakan data.</p>{T("D5-outbox-retry", "Bukti D.5: Yii dimatikan, outbox pending, lalu terkirim otomatis")}
-<h3>D.6 Performa</h3><p>Langkah: index khusus dashboard, user database read-only untuk Node, paginasi dan filter tanggal di server, OPcache dan schema cache, serta menghilangkan query N+1 pada daftar billing. Pengukuran <code>EXPLAIN (ANALYZE, BUFFERS)</code> pada data besar (dari <code>docs/performance.md</code>):</p>{perf_table}
-<p>Latensi API Yii sebelum dan sesudah optimasi (<code>node scripts/bench-api.mjs 20</code>, dari <code>docs/performance.md</code>):</p>{perf_api}
-<p>Pengukuran ulang di lingkungan ini beserta daftar index aktif:</p>{T("D6-performa", "Bukti D.6: benchmark API, daftar index, dan EXPLAIN memakai index")}''')}
+{bab7}
 
 {chapter("8. Pengujian", f'''<h3>8.1 Ringkasan hasil</h3>{table(["Jenis", "Hasil (data seed bersih)"], [["PHPUnit (Yii, transaksi penting)", "134 test, 446 assertion, OK"], ["Vitest (Node, supertest + PostgreSQL)", "38 test lulus"], ["Vitest (React)", "78 test lulus"], ["Postman CLI 1.93.1", "35 request, 45 assertion, 0 gagal"], ["Newman", "35 request, 45 assertion, 0 gagal"], ["Konkurensi D.1 sampai D.4", "Semua skrip lulus"]])}
 <h3>8.2 Pengujian API dengan Postman</h3><p>Koleksi <code>postman/simrs.collection.json</code> menjalankan alur penuh lewat API: kesehatan layanan, login, master, pendaftaran, pemeriksaan, tindakan, resep, farmasi, lab, billing, pembayaran bertahap, dashboard, dan kasus ditolak (401, 403, 409, 422). Dijalankan dengan Postman CLI:</p><pre><code>postman collection run postman/simrs.collection.json -e postman/local.environment.json</code></pre>{T("postman-cli", "Postman CLI: versi, request, dan ringkasan 35 request, 45 assertion, 0 gagal")}{T("postman-newman", "Hasil yang sama dengan Newman")}
@@ -490,9 +692,8 @@ doc = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><title>SIMR
 
 {chapter("9. Instalasi dan konfigurasi", install)}
 
-{chapter("10. Kesesuaian dengan instruksi Real Case Test", f'''{checklist}
-<h3>Catatan</h3>{ul(["Postman dijalankan lewat Postman CLI dan Newman (baris perintah), bukan antarmuka grafis Postman; collection dan environment dapat diimpor ke aplikasi Postman.", "Bukti D.1 sampai D.4 berupa skrip konkurensi yang memanggil API; bukti D.5 berupa demonstrasi langsung dengan mematikan Yii.",
- "Seluruh data berupa data dummy hasil seed (G).", "Dokumen sumber lain ada di folder <code>docs/</code>: arsitektur, Yii vs Node, skenario teknis, performa, API, dan test case.", "Diagram arsitektur dan workflow di dokumen ini digambar sendiri sebagai SVG; ERD digambar dari <code>database/erd.md</code>."])}''')}
+{bab10}
+{lampiran}
 </body></html>"""
 
 open(OUT_HTML, "w", encoding="utf-8").write(doc)
