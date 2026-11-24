@@ -10,9 +10,11 @@ import { toast } from 'sonner';
 import { AppDataTable, type AppColumn } from '@/components/AppDataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { errorMessage } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { formatRupiah } from '@/lib/format';
+import { matchesQuery } from '@/lib/search';
 import * as resepApi from './resep.api';
 import type { ResepItem, ResepStatus } from './resep.api';
 
@@ -28,6 +30,7 @@ export default function FarmasiPage() {
   const [rows, setRows] = useState<ResepItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [q, setQ] = useState('');
 
   const reload = useCallback(async () => {
     await Promise.resolve();
@@ -126,23 +129,41 @@ export default function FarmasiPage() {
         <p className="text-sm text-muted-foreground">{t('transaction.farmasi.subtitle')}</p>
       </div>
 
-      <select
-        aria-label={t('system.common.status')}
-        className={selectClassName}
-        value={status}
-        onChange={(e) => setStatus(e.target.value as ResepStatus | '')}
-      >
-        <option value="">{t('transaction.farmasi.activeStatus')}</option>
-        {(['baru', 'diproses', 'diserahkan', 'batal'] as const).map((s) => (
-          <option key={s} value={s}>
-            {t(`transaction.resep.status.${s}`)}
-          </option>
-        ))}
-      </select>
+      <div className="flex flex-wrap gap-2">
+        <Input
+          aria-label={t('common.searchPlaceholder')}
+          className="max-w-sm"
+          placeholder={t('transaction.farmasi.searchPlaceholder')}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        <select
+          aria-label={t('system.common.status')}
+          className={selectClassName}
+          value={status}
+          onChange={(e) => setStatus(e.target.value as ResepStatus | '')}
+        >
+          <option value="">{t('transaction.farmasi.activeStatus')}</option>
+          {(['baru', 'diproses', 'diserahkan', 'batal'] as const).map((s) => (
+            <option key={s} value={s}>
+              {t(`transaction.resep.status.${s}`)}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <AppDataTable
         columns={columns}
-        rows={rows}
+        rows={rows.filter((r) =>
+          matchesQuery(
+            q,
+            r.no_resep,
+            r.pasien?.nama,
+            r.pasien?.no_rm,
+            r.dokter?.nama,
+            ...r.details.map((d) => d.obat?.nama),
+          ),
+        )}
         rowKey={(row) => row.id}
         loading={loading}
         extraActions={

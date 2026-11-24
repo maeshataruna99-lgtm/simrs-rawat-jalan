@@ -386,6 +386,7 @@
     "pemeriksaan": {
       "worklistTitle": "Examination Worklist",
       "worklistSubtitle": "Today's patients waiting or currently under examination",
+      "searchPlaceholder": "Search patient, MRN, clinic, or doctor...",
       "examineButton": "Examine",
       "tabAnamnesis": "Anamnesis",
       "tabTtv": "Vital Signs",
@@ -462,6 +463,7 @@
       "subtitle": "Process doctor prescriptions and dispense medicines to patients; stock deducts upon dispensing",
       "noResep": "Prescription No.",
       "activeStatus": "New and processing",
+      "searchPlaceholder": "Search prescription no., patient, doctor, or drug...",
       "prosesButton": "Process",
       "serahkanButton": "Dispense",
       "prosesSuccess": "Prescription is now being processed.",
@@ -489,6 +491,8 @@
       "worklistTitle": "Laboratory Examinations",
       "worklistSubtitle": "Process orders from doctors and enter results; flags are evaluated against reference ranges",
       "activeStatus": "Requested and processing",
+      "searchWorklist": "Search patient, MRN, order no., or test...",
+      "pemeriksaanCount": "{{count}} tests",
       "nilaiRujukan": "Reference range",
       "hasil": "Result",
       "resultSaved": "Laboratory result saved."

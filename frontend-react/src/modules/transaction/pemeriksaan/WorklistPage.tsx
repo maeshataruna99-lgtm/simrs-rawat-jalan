@@ -9,7 +9,9 @@ import { useNavigate } from 'react-router';
 import { AppDataTable, type AppColumn } from '@/components/AppDataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { errorMessage } from '@/lib/api-client';
+import { matchesQuery } from '@/lib/search';
 import type { KunjunganItem } from '@/modules/transaction/pendaftaran/pendaftaran.types';
 import * as pemeriksaanApi from './pemeriksaan.api';
 
@@ -19,6 +21,7 @@ export default function WorklistPage() {
   const [rows, setRows] = useState<KunjunganItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [q, setQ] = useState('');
 
   useEffect(() => {
     pemeriksaanApi
@@ -81,9 +84,19 @@ export default function WorklistPage() {
         </p>
       )}
 
+      <Input
+        aria-label={t('common.searchPlaceholder')}
+        className="max-w-sm"
+        placeholder={t('transaction.pemeriksaan.searchPlaceholder')}
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+      />
+
       <AppDataTable
         columns={columns}
-        rows={rows}
+        rows={rows.filter((r) =>
+          matchesQuery(q, r.pasien?.nama, r.pasien?.no_rm, r.poli?.nama, r.dokter?.nama, r.kode_antrean),
+        )}
         rowKey={(row) => row.id}
         loading={loading}
         extraActions={(row) => (

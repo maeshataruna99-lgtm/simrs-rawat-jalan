@@ -67,6 +67,8 @@ services:
       YII_URL: http://yii:8080
       LAB_YII_USERNAME: ${LAB_YII_USERNAME:-laboratorium}
       LAB_YII_PASSWORD: ${LAB_YII_PASSWORD:-simrs123}
+      # tsx watch tidak menangkap perubahan dari bind mount Windows tanpa polling.
+      CHOKIDAR_USEPOLLING: "true"
       TZ: Asia/Jakarta
     ports:
       - "3000:3000"

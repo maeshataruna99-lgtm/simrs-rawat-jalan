@@ -386,6 +386,7 @@
     "pemeriksaan": {
       "worklistTitle": "Worklist Pemeriksaan",
       "worklistSubtitle": "Pasien hari ini yang menunggu atau sedang diperiksa",
+      "searchPlaceholder": "Cari pasien, no. RM, poli, atau dokter...",
       "examineButton": "Periksa",
       "tabAnamnesis": "Anamnesis",
       "tabTtv": "Tanda Vital",
@@ -462,6 +463,7 @@
       "subtitle": "Proses resep dari dokter lalu serahkan obat ke pasien; stok berkurang saat diserahkan",
       "noResep": "No. Resep",
       "activeStatus": "Baru dan diproses",
+      "searchPlaceholder": "Cari no. resep, pasien, dokter, atau obat...",
       "prosesButton": "Proses",
       "serahkanButton": "Serahkan",
       "prosesSuccess": "Resep sedang diproses.",
@@ -489,6 +491,8 @@
       "worklistTitle": "Pemeriksaan Laboratorium",
       "worklistSubtitle": "Kerjakan order dari dokter dan input hasil; flag dihitung dari nilai rujukan",
       "activeStatus": "Diminta dan diproses",
+      "searchWorklist": "Cari pasien, no. RM, no. order, atau pemeriksaan...",
+      "pemeriksaanCount": "{{count}} pemeriksaan",
       "nilaiRujukan": "Nilai rujukan",
       "hasil": "Hasil",
       "resultSaved": "Hasil laboratorium tersimpan."

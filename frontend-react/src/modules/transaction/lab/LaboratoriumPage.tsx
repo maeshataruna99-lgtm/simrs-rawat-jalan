@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { errorMessage, fieldErrors } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { matchesQuery } from '@/lib/search';
 import * as labApi from './lab.api';
 import type { OrderLabDetailItem, OrderLabItem } from './lab.api';
 import { LabHasilBadge } from './LabHasilBadge';
@@ -90,6 +91,17 @@ export default function LaboratoriumPage() {
   const canUpdate = useAuthStore((s) => s.can)(MENU, 'update');
   const [status, setStatus] = useState<string>(STATUS_OPTIONS[0]);
   const [orders, setOrders] = useState<OrderLabItem[] | null>(null);
+  const [q, setQ] = useState('');
+  const shown = (orders ?? []).filter((o) =>
+    matchesQuery(
+      q,
+      o.pasien?.nama,
+      o.pasien?.no_rm,
+      o.no_order,
+      o.dokter?.nama,
+      ...o.details.map((d) => d.pemeriksaan?.nama),
+    ),
+  );
 
   const reload = useCallback(async () => {
     await Promise.resolve();
@@ -114,28 +126,37 @@ export default function LaboratoriumPage() {
         <p className="text-sm text-muted-foreground">{t('transaction.lab.worklistSubtitle')}</p>
       </div>
 
-      <select
-        aria-label={t('system.common.status')}
-        className={selectClassName}
-        value={status}
-        onChange={(e) => {
-          setOrders(null);
-          setStatus(e.target.value);
-        }}
-      >
-        {STATUS_OPTIONS.map((s) => (
-          <option key={s} value={s}>
-            {s.includes(',') ? t('transaction.lab.activeStatus') : t(`transaction.lab.status.${s}`)}
-          </option>
-        ))}
-      </select>
+      <div className="flex flex-wrap gap-2">
+        <Input
+          aria-label={t('common.searchPlaceholder')}
+          className="max-w-sm"
+          placeholder={t('transaction.lab.searchWorklist')}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        <select
+          aria-label={t('system.common.status')}
+          className={selectClassName}
+          value={status}
+          onChange={(e) => {
+            setOrders(null);
+            setStatus(e.target.value);
+          }}
+        >
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s} value={s}>
+              {s.includes(',') ? t('transaction.lab.activeStatus') : t(`transaction.lab.status.${s}`)}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {orders === null ? (
         <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
-      ) : orders.length === 0 ? (
+      ) : shown.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t('common.emptyData')}</p>
       ) : (
-        orders.map((order) => (
+        shown.map((order) => (
           <Card key={order.id} data-testid="lab-order">
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
               <div>
@@ -152,15 +173,23 @@ export default function LaboratoriumPage() {
               </div>
               <Badge variant="outline">{t(`transaction.lab.status.${order.status}`)}</Badge>
             </CardHeader>
-            <CardContent className="divide-y">
-              {order.details.map((d) => (
-                <HasilRow
-                  key={`${d.id}-${d.hasil ?? ''}`}
-                  detail={d}
-                  canUpdate={canUpdate && order.status !== 'selesai'}
-                  onSaved={reload}
-                />
-              ))}
+            <CardContent>
+              <details>
+                <summary className="cursor-pointer text-sm text-muted-foreground">
+                  {t('transaction.lab.pemeriksaanCount', { count: order.details.length })}:{' '}
+                  {order.details.map((d) => d.pemeriksaan?.nama).join(', ')}
+                </summary>
+                <div className="divide-y">
+                  {order.details.map((d) => (
+                    <HasilRow
+                      key={`${d.id}-${d.hasil ?? ''}`}
+                      detail={d}
+                      canUpdate={canUpdate && order.status !== 'selesai'}
+                      onSaved={reload}
+                    />
+                  ))}
+                </div>
+              </details>
             </CardContent>
           </Card>
         ))
