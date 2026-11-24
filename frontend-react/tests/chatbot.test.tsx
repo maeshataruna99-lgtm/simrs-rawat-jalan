@@ -278,6 +278,7 @@ describe('ChatbotWidget', () => {
             no_kunjungan: 'RJ202611240001',
             tgl_kunjungan: '2026-11-24',
             status: 'selesai',
+            is_valid: true,
           },
           poli: { id: 1, kode: 'UMUM', nama: 'Poli Umum' },
           dokter: { id: 1, nama: 'dr. Andi' },

@@ -190,7 +190,6 @@ export default function AntreanPage() {
           <option value="">{t('transaction.antrean.allStatus')}</option>
           <option value="menunggu">{t('transaction.antrean.status.menunggu')}</option>
           <option value="diperiksa">{t('transaction.antrean.status.diperiksa')}</option>
-          <option value="selesai">{t('transaction.antrean.status.selesai')}</option>
           <option value="batal">{t('transaction.antrean.status.batal')}</option>
         </select>
       </AppFilterBar>
@@ -228,15 +227,6 @@ export default function AntreanPage() {
                         {t('transaction.antrean.cancelButton')}
                       </Button>
                     </>
-                  )}
-                  {row.status === 'diperiksa' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => void handleStatusChange(row.id, 'selesai')}
-                    >
-                      {t('transaction.antrean.finishButton')}
-                    </Button>
                   )}
                 </>
               )

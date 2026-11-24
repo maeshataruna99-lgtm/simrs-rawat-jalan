@@ -41,6 +41,7 @@ const buatInvoiceFixture = (
     no_kunjungan: 'RJ202611220001',
     tgl_kunjungan: '2026-11-22',
     status: 'selesai',
+    is_valid: true,
   },
   pasien: { id: 31, no_rm: 'RM000031', nama: 'Budi Billing', nik: '3201010101900031' },
   poli: { id: 1, kode: 'POLI-UMUM', nama: 'Poli Umum' },
@@ -195,5 +196,50 @@ describe('BillingPage (poin 8.7)', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Riwayat Pembayaran' }));
     expect(await screen.findByText('PAY202611220001')).toBeInTheDocument();
+  });
+
+  it('buat invoice menampilkan peringatan merah transaksi belum selesai sebelum kasir melanjutkan', async () => {
+    const user = userEvent.setup();
+    vi.mocked(pembayaranApi.listBelumTagih).mockResolvedValue({
+      items: [
+        {
+          id: 77,
+          no_kunjungan: 'RJ202611240077',
+          tgl_kunjungan: '2026-11-24',
+          no_antrean: 3,
+          status: 'diperiksa',
+          pasien: { id: 31, no_rm: 'RM000031', nama: 'Budi Billing' },
+          poli: { id: 1, kode: 'UMUM', nama: 'Poli Umum' },
+          dokter: { id: 2, nama: 'dr. Santi' },
+        },
+      ],
+      meta: { page: 1, per_page: 20, total: 1 },
+    });
+    vi.mocked(pembayaranApi.peringatanKunjungan).mockResolvedValue([
+      'Order laboratorium LAB202611240001 belum selesai (status diminta).',
+    ]);
+    vi.mocked(pembayaranApi.buatInvoice).mockResolvedValue(buatInvoiceFixture('belum_dibayar', 0));
+
+    renderAt('/transaction/billing');
+    await user.click(await screen.findByRole('tab', { name: 'Belum Ditagih' }));
+    await user.click(await screen.findByRole('button', { name: 'Buat Invoice' }));
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(await within(dialog).findByText(/LAB202611240001 belum selesai/)).toBeInTheDocument();
+    expect(pembayaranApi.peringatanKunjungan).toHaveBeenCalledWith(77);
+    expect(pembayaranApi.buatInvoice).not.toHaveBeenCalled();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Tetap Lanjutkan' }));
+    await waitFor(() => expect(pembayaranApi.buatInvoice).toHaveBeenCalledWith(77));
+  });
+
+  it('invoice valid menampilkan tombol Unvalid untuk membuka kunci kunjungan', async () => {
+    const user = userEvent.setup();
+    vi.mocked(pembayaranApi.ubahValidasi).mockResolvedValue(buatInvoiceFixture('belum_dibayar', 0));
+    renderAt('/transaction/billing');
+
+    expect(await screen.findByText('Valid (terkunci)')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Unvalid' }));
+    await waitFor(() => expect(pembayaranApi.ubahValidasi).toHaveBeenCalledWith(11, 'unvalid'));
   });
 });

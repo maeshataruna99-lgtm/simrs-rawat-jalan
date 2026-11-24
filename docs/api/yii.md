@@ -73,7 +73,7 @@ Seluruh endpoint mengembalikan format JSON seragam:
 | `GET` | `/transaction/pendaftaran/cari-pasien?q=` | `pendaftaran:read` | Pencarian cepat pasien (No. RM / NIK / Nama). |
 | `POST` | `/transaction/pendaftaran` | `pendaftaran:create` | Body: `{ pasien_id, jadwal_id, tgl_kunjungan, penjamin? }`, dengan `penjamin` berisi `umum` (bawaan), `bpjs`, atau `asuransi`. Pengaman D.1 (kuota & kunjungan/antrean ganda → `409`). |
 | `GET` | `/transaction/antrean?poli_id=&status=&tanggal=&tanggal_dari=&tanggal_sampai=&q=&page=&per_page=` | `antrean:read` | Daftar antrean kunjungan berhalaman. Kata kunci `q` mencari no. kunjungan, no. RM, atau nama pasien. Setiap item memuat `kode_antrean` (prefix poli + nomor, mis. `U-001`) dan `penjamin`. |
-| `PUT` | `/transaction/antrean/{id}/status` | `antrean:update` | Body: `{ status }`. Transisi sah: `menunggu → diperiksa/batal`, `diperiksa → selesai/batal`. |
+| `PUT` | `/transaction/antrean/{id}/status` | `antrean:update` | Body: `{ status }`. Transisi sah: `menunggu → diperiksa/batal` dan `diperiksa → batal`. Status `selesai` tidak bisa dipilih manual; kunjungan otomatis selesai saat invoicenya lunas. |
 | `GET` | `/transaction/riwayat-kunjungan/{pasienId}` | `antrean:read` | Riwayat kunjungan pasien. |
 
 ### Pemeriksaan, Diagnosis, dan Tindakan Medis
@@ -117,7 +117,10 @@ Seluruh endpoint mengembalikan format JSON seragam:
 | `GET` | `/transaction/invoice?status=&tanggal_dari=&tanggal_sampai=&q=&page=&per_page=` | `billing:read` | Daftar invoice berhalaman. Rentang tanggal memfilter tanggal kunjungan. |
 | `GET` | `/transaction/invoice/belum-tagih?tanggal=&tanggal_dari=&tanggal_sampai=&q=&page=&per_page=` | `billing:read` | Daftar kunjungan non-batal yang belum dibuatkan invoice, berhalaman. |
 | `GET` | `/transaction/invoice/{id}` | `billing:read` | Detail invoice beserta item aktif/void dan daftar pembayaran. |
-| `POST` | `/transaction/invoice/{kunjunganId}` | `billing:create` | Membentuk invoice dari 4 sumber biaya (pendaftaran, tindakan, lab, obat). Duplikat ditolak `409`. |
+| `POST` | `/transaction/invoice/{kunjunganId}` | `billing:create` | Membentuk invoice dari 4 sumber biaya (pendaftaran, tindakan, lab, obat) sekaligus memvalidasi kunjungan (`is_valid = true`). Duplikat ditolak `409`. |
+| `GET` | `/transaction/invoice/peringatan?kunjungan_id=` | `billing:read` | Daftar teks transaksi belum tuntas (pasien belum diperiksa, hasil pemeriksaan belum disimpan, order lab belum selesai, resep belum diserahkan) untuk catatan kasir. Array kosong berarti semua order sudah selesai. |
+| `PUT` | `/transaction/invoice/{id}/valid` | `billing:update` | Mengunci kunjungan dari order baru dokter. Selama valid, simpan pemeriksaan, diagnosis, tindakan, resep, dan order lab dibalas `409`. |
+| `PUT` | `/transaction/invoice/{id}/unvalid` | `billing:update` | Membuka kunci agar dokter bisa menambah transaksi lagi; tagihan disinkronkan otomatis. Ditolak `409` bila invoice sudah lunas (kunjungan selesai permanen). |
 | `GET` | `/transaction/invoice/{id}/audit-log` | `billing:read` | Jejak perubahan tagihan & klinis kunjungan dari `t_audit_log` (D.4). |
 | `GET` | `/transaction/pembayaran?invoice_id=&metode=&tanggal_dari=&tanggal_sampai=&q=&page=&per_page=` | `billing:read` | Riwayat pembayaran berhalaman. Rentang tanggal memfilter tanggal bayar (`dibayar_at`). |
 | `GET` | `/transaction/pembayaran/{id}` | `billing:read` | Detail satu transaksi pembayaran (untuk cetak kwitansi). |

@@ -359,7 +359,6 @@
       "searchPlaceholder": "Cari No. Kunjungan, No. RM, atau nama pasien...",
       "allStatus": "Semua status",
       "callButton": "Panggil / Periksa",
-      "finishButton": "Selesai",
       "cancelButton": "Batalkan",
       "openDisplay": "Layar Display",
       "statusUpdated": "Status antrean berhasil diperbarui.",
@@ -416,8 +415,7 @@
       "addDiagnosis": "Tambah diagnosis ICD-10...",
       "saveDiagnosisButton": "Simpan Diagnosis",
       "diagnosisSaved": "Diagnosis berhasil disimpan.",
-      "finishButton": "Selesaikan Pemeriksaan",
-      "finished": "Pemeriksaan selesai.",
+      "lockedNotice": "Kunjungan sudah divalidasi kasir. Pemeriksaan, diagnosis, tindakan, resep, dan order lab tidak dapat diubah sampai kasir menekan Unvalid.",
       "jenis": {
         "utama": "Utama",
         "sekunder": "Sekunder"
@@ -534,6 +532,21 @@
       "auditTitle": "Riwayat Perubahan & Audit Log",
       "voidReason": "Dibatalkan: {{reason}}",
       "createInvoiceAction": "Buat Invoice",
+      "validasi": {
+        "description": "Periksa catatan berikut sebelum melanjutkan. Kunjungan yang divalidasi terkunci dari order baru dokter sampai di-Unvalid.",
+        "warningTitle": "Masih ada transaksi yang belum selesai:",
+        "warningHint": "Melanjutkan tetap diizinkan. Tekan Unvalid nanti bila pasien perlu menambah transaksi, lalu Valid lagi setelah semuanya selesai.",
+        "allDone": "Semua order kunjungan ini sudah selesai.",
+        "proceedAnyway": "Tetap Lanjutkan",
+        "createTitle": "Buat Invoice dan Validasi Kunjungan",
+        "validTitle": "Validasi Kunjungan",
+        "validAction": "Valid",
+        "unvalidAction": "Unvalid",
+        "validSuccess": "Kunjungan berhasil divalidasi.",
+        "unvalidSuccess": "Validasi dibuka, dokter dapat menambah transaksi.",
+        "lockedLabel": "Valid (terkunci)",
+        "openLabel": "Belum valid"
+      },
       "invoiceCreated": "Invoice {{noInvoice}} berhasil dibuat.",
       "payAction": "Bayar",
       "payDialogTitle": "Catat Pembayaran",
@@ -768,7 +781,7 @@
       "antrean": {
         "title": "Antrean poli",
         "keywords": "antrean antri panggil status menunggu diperiksa batal poli",
-        "answer": "Buka menu Pendaftaran > Antrean Poli. Filter per poli, tanggal, atau status, lalu ubah status antrean dari menunggu ke diperiksa, selesai, atau batal. Setiap perubahan status tercatat di log."
+        "answer": "Buka menu Pendaftaran > Antrean Poli. Filter per poli, tanggal, atau status, lalu ubah status antrean dari menunggu ke diperiksa atau batal. Kunjungan otomatis selesai saat invoicenya lunas. Setiap perubahan status tercatat di log."
       },
       "displayAntrean": {
         "title": "Layar display antrean",

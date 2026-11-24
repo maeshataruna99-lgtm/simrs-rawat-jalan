@@ -23,7 +23,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { errorMessage, fieldErrors } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import * as icd10Api from '@/modules/master/icd10/icd10.api';
-import * as pendaftaranApi from '@/modules/transaction/pendaftaran/pendaftaran.api';
 import * as pemeriksaanApi from './pemeriksaan.api';
 import type { DiagnosisJenis, PemeriksaanData, PemeriksaanDetail } from './pemeriksaan.types';
 import { RiwayatMedisList } from './RiwayatMedisList';
@@ -147,8 +146,12 @@ export default function PemeriksaanPage() {
   }, [load]);
 
   const kunjungan = detail?.kunjungan;
+  // Kunjungan yang divalidasi kasir terkunci dari order baru sampai kasir menekan Unvalid.
+  const terkunci = kunjungan?.is_valid === true;
   const editable =
-    can(MENU, 'update') && (kunjungan?.status === 'menunggu' || kunjungan?.status === 'diperiksa');
+    can(MENU, 'update') &&
+    !terkunci &&
+    (kunjungan?.status === 'menunggu' || kunjungan?.status === 'diperiksa');
 
   const errorText = (message?: string) => {
     if (!message) return null;
@@ -217,16 +220,6 @@ export default function PemeriksaanPage() {
     }
   };
 
-  const finish = async () => {
-    try {
-      await pendaftaranApi.ubahStatusAntrean(kunjunganId, 'selesai');
-      toast.success(t('transaction.pemeriksaan.finished'));
-      void navigate('/transaction/pemeriksaan');
-    } catch (err) {
-      toast.error(errorMessage(err, t('common.saveFailed')));
-    }
-  };
-
   if (loadError) {
     return (
       <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -261,13 +254,14 @@ export default function PemeriksaanPage() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">{t(`transaction.antrean.status.${kunjungan.status}`)}</Badge>
-          {can('antrean', 'update') && kunjungan.status === 'diperiksa' && (
-            <Button variant="outline" onClick={() => void finish()}>
-              {t('transaction.pemeriksaan.finishButton')}
-            </Button>
-          )}
         </div>
       </div>
+
+      {terkunci && kunjungan.status !== 'selesai' && (
+        <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {t('transaction.pemeriksaan.lockedNotice')}
+        </p>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap">

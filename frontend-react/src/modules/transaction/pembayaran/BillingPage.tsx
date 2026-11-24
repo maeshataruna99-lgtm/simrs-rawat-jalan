@@ -21,6 +21,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { formatRupiah, hariIni } from '@/lib/format';
 import { BayarDialog } from './BayarDialog';
 import { InvoiceDetailDialog } from './InvoiceDetailDialog';
+import { ValidasiDialog } from './ValidasiDialog';
 import * as pembayaranApi from './pembayaran.api';
 import type {
   BayarResult,
@@ -51,6 +52,7 @@ function rentangHariIni() {
 export default function BillingPage() {
   const { t } = useTranslation();
   const canCreate = useAuthStore((s) => s.can)(MENU, 'create');
+  const canUpdate = useAuthStore((s) => s.can)(MENU, 'update');
 
   const [tab, setTab] = useState<'invoice' | 'belum-tagih' | 'riwayat'>('invoice');
 
@@ -73,6 +75,12 @@ export default function BillingPage() {
   const [metaBelum, setMetaBelum] = useState<ListMeta>({ page: 1, per_page: 20, total: 0 });
   const [loadingBelum, setLoadingBelum] = useState(false);
   const [creatingId, setCreatingId] = useState<number | null>(null);
+  // Dialog catatan kasir sebelum buat invoice (invoiceId null) atau validasi ulang invoice yang sudah ada.
+  const [validasiTarget, setValidasiTarget] = useState<{
+    kunjunganId: number;
+    invoiceId: number | null;
+  } | null>(null);
+  const [validasiBusyId, setValidasiBusyId] = useState<number | null>(null);
 
   // State tab riwayat pembayaran
   const [metodeFilter, setMetodeFilter] = useState<MetodePembayaran | ''>('');
@@ -186,7 +194,23 @@ export default function BillingPage() {
     setPayOpen(true);
   };
 
+  const handleUbahValidasi = async (invoiceId: number, aksi: 'valid' | 'unvalid') => {
+    setValidasiBusyId(invoiceId);
+    try {
+      const updated = await pembayaranApi.ubahValidasi(invoiceId, aksi);
+      toast.success(t(`transaction.billing.validasi.${aksi}Success`));
+      if (selectedInvoice?.id === invoiceId) setSelectedInvoice(updated);
+      setValidasiTarget(null);
+      await loadInvoices();
+    } catch (err) {
+      toast.error(errorMessage(err, t('common.saveFailed')));
+    } finally {
+      setValidasiBusyId(null);
+    }
+  };
+
   const handleBuatInvoice = async (kunjunganId: number) => {
+    setValidasiTarget(null);
     setCreatingId(kunjunganId);
     try {
       const created = await pembayaranApi.buatInvoice(kunjunganId);
@@ -265,9 +289,16 @@ export default function BillingPage() {
       header: t('transaction.billing.colStatus'),
       sortValue: (row) => row.status,
       cell: (row) => (
-        <Badge variant={statusVariant[row.status]}>
-          {t(`transaction.billing.statusLabel.${row.status}`)}
-        </Badge>
+        <div className="flex flex-col items-start gap-1">
+          <Badge variant={statusVariant[row.status]}>
+            {t(`transaction.billing.statusLabel.${row.status}`)}
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            {row.kunjungan?.is_valid
+              ? t('transaction.billing.validasi.lockedLabel')
+              : t('transaction.billing.validasi.openLabel')}
+          </span>
+        </div>
       ),
     },
   ];
@@ -428,6 +459,22 @@ export default function BillingPage() {
                     {t('transaction.billing.print.printButton')}
                   </Link>
                 </Button>
+                {canUpdate && row.status !== 'lunas' && row.kunjungan && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={validasiBusyId === row.id}
+                    onClick={() =>
+                      row.kunjungan?.is_valid
+                        ? void handleUbahValidasi(row.id, 'unvalid')
+                        : setValidasiTarget({ kunjunganId: row.kunjungan_id, invoiceId: row.id })
+                    }
+                  >
+                    {row.kunjungan.is_valid
+                      ? t('transaction.billing.validasi.unvalidAction')
+                      : t('transaction.billing.validasi.validAction')}
+                  </Button>
+                )}
                 {canCreate && row.status !== 'lunas' && (
                   <Button size="sm" onClick={() => bukaBayar(row)}>
                     {t('transaction.billing.payAction')}
@@ -481,7 +528,7 @@ export default function BillingPage() {
                     <Button
                       size="sm"
                       disabled={creatingId === row.id}
-                      onClick={() => void handleBuatInvoice(row.id)}
+                      onClick={() => setValidasiTarget({ kunjunganId: row.id, invoiceId: null })}
                     >
                       {creatingId === row.id
                         ? t('common.saving')
@@ -564,6 +611,27 @@ export default function BillingPage() {
           />
         </TabsContent>
       </Tabs>
+
+      <ValidasiDialog
+        kunjunganId={validasiTarget?.kunjunganId ?? null}
+        title={
+          validasiTarget?.invoiceId
+            ? t('transaction.billing.validasi.validTitle')
+            : t('transaction.billing.validasi.createTitle')
+        }
+        confirmLabel={
+          validasiTarget?.invoiceId
+            ? t('transaction.billing.validasi.validAction')
+            : t('transaction.billing.createInvoiceAction')
+        }
+        loading={creatingId !== null || validasiBusyId !== null}
+        onOpenChange={(open) => !open && setValidasiTarget(null)}
+        onConfirm={async () => {
+          if (!validasiTarget) return;
+          if (validasiTarget.invoiceId) await handleUbahValidasi(validasiTarget.invoiceId, 'valid');
+          else await handleBuatInvoice(validasiTarget.kunjunganId);
+        }}
+      />
 
       <InvoiceDetailDialog
         open={detailOpen}

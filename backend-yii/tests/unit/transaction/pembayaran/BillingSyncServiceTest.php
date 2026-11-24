@@ -17,7 +17,9 @@ use app\modules\transaction\pembayaran\Invoice;
 use app\modules\transaction\pembayaran\InvoiceItem;
 use app\modules\transaction\pembayaran\InvoiceService;
 use app\modules\transaction\pembayaran\PembayaranService;
+use app\modules\transaction\pembayaran\ValidasiKunjunganService;
 use app\modules\transaction\pemeriksaan\PemeriksaanService;
+use app\modules\transaction\pendaftaran\Kunjungan;
 use app\modules\transaction\pendaftaran\PendaftaranService;
 use app\modules\transaction\resep\ResepService;
 use app\modules\transaction\tindakan\TindakanKunjunganService;
@@ -87,7 +89,11 @@ class BillingSyncServiceTest extends TestCase
         $invoice = $invSvc->buat($f['kunjungan']);
         $this->assertSame(150000.0, (float) $invoice->total);
 
-        // Batalkan EKG (75.000) setelah invoice dibuat.
+        // Invoice baru otomatis valid: pembatalan ditolak sampai kasir menekan Unvalid.
+        $this->assertTerkunci(fn () => $tSvc->batal($t2->id, $f['dokter']));
+        (new ValidasiKunjunganService())->batalkanValidasi($invoice->id);
+
+        // Batalkan EKG (75.000) setelah invoice dibuat dan di-unvalid.
         $tSvc->batal($t2->id, $f['dokter']);
 
         $revisi = $invSvc->detail($invoice->id);
@@ -129,6 +135,8 @@ class BillingSyncServiceTest extends TestCase
         $invSvc = new InvoiceService();
         $invoice = $invSvc->buat($f['kunjungan']);
         $this->assertSame(25000.0, (float) $invoice->total);
+        $this->assertTerkunci(fn () => (new TindakanKunjunganService())->tambah($f['kunjungan'], ['tindakan_id' => $f['tindakan1'], 'qty' => 1], $f['dokter']));
+        (new ValidasiKunjunganService())->batalkanValidasi($invoice->id);
 
         (new TindakanKunjunganService())->tambah($f['kunjungan'], ['tindakan_id' => $f['tindakan1'], 'qty' => 1], $f['dokter']);
         (new ResepService())->buat([
@@ -146,7 +154,7 @@ class BillingSyncServiceTest extends TestCase
         $this->assertCount(4, $revisi->items);
     }
 
-    public function testTolakPerubahanBiayaSetelahInvoiceLunasTapiDiagnosisTetapBolehDanTeraudit(): void
+    public function testInvoiceLunasMenyelesaikanKunjunganDanMenguncinyaPermanen(): void
     {
         $f = $this->siapkan();
         $pemeriksaanSvc = new PemeriksaanService();
@@ -159,16 +167,28 @@ class BillingSyncServiceTest extends TestCase
             'jumlah' => 25000,
         ], $f['kasir'], 'idem-sync-lunas-1');
 
-        // Diagnosis diubah setelah lunas: tetap diizinkan, total tidak berubah, audit log tercatat.
-        $pemeriksaanSvc->simpanDiagnosis($f['kunjungan'], [['icd10_id' => $f['icd2'], 'jenis' => 'utama']], $f['dokter']);
-        $logs = (new BillingSyncService())->auditLogInvoice($invoice->id);
-        $diagLogs = array_values(array_filter($logs, fn (array $l) => $l['tabel'] === 't_diagnosis'));
-        $this->assertGreaterThanOrEqual(2, count($diagLogs));
-        $this->assertSame(25000.0, (float) (new InvoiceService())->detail($invoice->id)->total);
+        // Lunas = selesai sepenuhnya: status selesai tercatat di status log dan kunjungan tetap valid.
+        $kunjungan = Kunjungan::findOne($f['kunjungan']);
+        $this->assertSame(Kunjungan::STATUS_SELESAI, $kunjungan->status);
+        $this->assertTrue((bool) $kunjungan->is_valid);
+        $logs = $kunjungan->statusLogs;
+        $this->assertSame(Kunjungan::STATUS_SELESAI, end($logs)->status_baru);
 
-        // Tambah tindakan setelah invoice lunas harus ditolak 409.
-        $this->expectException(ConflictHttpException::class);
-        (new TindakanKunjunganService())->tambah($f['kunjungan'], ['tindakan_id' => $f['tindakan1'], 'qty' => 1], $f['dokter']);
+        // Setelah lunas tidak ada transaksi apa pun, dan validasi tidak bisa dibuka lagi.
+        foreach ([
+            fn () => $pemeriksaanSvc->simpanDiagnosis($f['kunjungan'], [['icd10_id' => $f['icd2'], 'jenis' => 'utama']], $f['dokter']),
+            fn () => (new TindakanKunjunganService())->tambah($f['kunjungan'], ['tindakan_id' => $f['tindakan1'], 'qty' => 1], $f['dokter']),
+            fn () => (new ValidasiKunjunganService())->batalkanValidasi($invoice->id),
+        ] as $aksi) {
+            $tertolak = false;
+            try {
+                $aksi();
+            } catch (ConflictHttpException) {
+                $tertolak = true;
+            }
+            $this->assertTrue($tertolak, 'Transaksi setelah invoice lunas harus ditolak 409.');
+        }
+        $this->assertSame(25000.0, (float) (new InvoiceService())->detail($invoice->id)->total);
     }
 
     public function testBatalTindakanSaatSebagianDibayarMembuatStatusOtomatisLunas(): void
@@ -186,12 +206,15 @@ class BillingSyncServiceTest extends TestCase
             'jumlah' => 75000,
         ], $f['kasir'], 'idem-sync-sebagian-1');
 
+        (new ValidasiKunjunganService())->batalkanValidasi($invoice->id);
         $tSvc->batal($t2->id, $f['dokter']);
         $revisi = $invSvc->detail($invoice->id);
 
         $this->assertSame(75000.0, (float) $revisi->total);
         $this->assertSame(75000.0, (float) $revisi->total_bayar);
         $this->assertSame(Invoice::STATUS_LUNAS, $revisi->status);
+        // Lunas lewat revisi tagihan juga menyelesaikan kunjungan.
+        $this->assertSame(Kunjungan::STATUS_SELESAI, Kunjungan::findOne($f['kunjungan'])->status);
     }
 
     public function testTolakBatalTindakanBilaTotalBaruKurangDariTotalBayarDanRollback(): void
@@ -208,12 +231,14 @@ class BillingSyncServiceTest extends TestCase
             'metode' => 'tunai',
             'jumlah' => 100000,
         ], $f['kasir'], 'idem-sync-rollback-1');
+        (new ValidasiKunjunganService())->batalkanValidasi($invoice->id);
 
         try {
             $tSvc->batal($t2->id, $f['dokter']);
             $this->fail('Seharusnya menolak pembatalan karena total baru (75.000) < total_bayar (100.000).');
-        } catch (ConflictHttpException) {
-            // Diharapkan ditolak 409 dan transaksi di-rollback.
+        } catch (ConflictHttpException $e) {
+            // Ditolak 409 karena revisi, bukan karena kunci validasi, lalu transaksi di-rollback.
+            $this->assertStringContainsString('lebih kecil dari jumlah yang sudah dibayar', $e->getMessage());
         }
 
         $t2->refresh();
@@ -249,10 +274,22 @@ class BillingSyncServiceTest extends TestCase
             $tertolak = false;
             try {
                 $aksi();
-            } catch (ConflictHttpException) {
-                $tertolak = true;
+            } catch (ConflictHttpException $e) {
+                // Ditolak karena lunas/selesai, bukan karena kunci validasi yang masih bisa di-unvalid.
+                $tertolak = $e->getMessage() !== ValidasiKunjunganService::PESAN_TERKUNCI;
             }
-            $this->assertTrue($tertolak, 'Perubahan biaya setelah invoice lunas harus ditolak 409.');
+            $this->assertTrue($tertolak, 'Perubahan biaya setelah invoice lunas harus ditolak 409 karena lunas atau selesai.');
+        }
+    }
+
+    /** Memastikan aksi ditolak 409 karena kunjungan sudah divalidasi kasir. */
+    private function assertTerkunci(callable $aksi): void
+    {
+        try {
+            $aksi();
+            $this->fail('Aksi seharusnya ditolak karena kunjungan valid.');
+        } catch (ConflictHttpException $e) {
+            $this->assertSame(ValidasiKunjunganService::PESAN_TERKUNCI, $e->getMessage());
         }
     }
 }

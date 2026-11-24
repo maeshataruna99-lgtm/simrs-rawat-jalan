@@ -56,7 +56,7 @@ class OrderLabService
         }
 
         $billing = new BillingSyncService();
-        $billing->pastikanBelumLunas($kunjungan->id);
+        $billing->pastikanBolehDiubah($kunjungan->id);
 
         $orderId = Yii::$app->db->transaction(function () use ($kunjungan, $pemeriksaan, $data, $billing) {
             $ymd = date('Ymd');
@@ -104,6 +104,8 @@ class OrderLabService
             $query->andWhere(['t_order_lab.status' => is_array($status) ? $status : explode(',', (string) $status)]);
         }
         ListQuery::rentangTanggal($query, 'k.tgl_kunjungan', $params);
+        // Kunjungan selesai (invoice lunas) hanya tampil di billing.
+        $query->andWhere(['<>', 'k.status', Kunjungan::STATUS_SELESAI]);
         $q = trim((string) ($params['q'] ?? ''));
         if ($q !== '') {
             $query->andWhere([

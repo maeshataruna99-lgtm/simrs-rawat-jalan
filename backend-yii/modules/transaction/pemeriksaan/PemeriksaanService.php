@@ -9,6 +9,7 @@ use app\modules\master\icd10\Icd10;
 use app\modules\master\pasien\Pasien;
 use app\modules\transaction\antrean\AntreanService;
 use app\modules\transaction\lab\OrderLabService;
+use app\modules\transaction\pembayaran\ValidasiKunjunganService;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use app\modules\transaction\resep\ResepService;
 use app\modules\transaction\tindakan\TindakanKunjunganService;
@@ -116,6 +117,7 @@ class PemeriksaanService
             if (!in_array($locked->status, [Kunjungan::STATUS_MENUNGGU, Kunjungan::STATUS_DIPERIKSA], true)) {
                 throw new ConflictHttpException("Kunjungan berstatus {$locked->status} tidak dapat diubah.");
             }
+            (new ValidasiKunjunganService())->pastikanBelumValid($locked);
 
             $model = Pemeriksaan::findOne(['kunjungan_id' => $kunjunganId])
                 ?? new Pemeriksaan(['kunjungan_id' => $kunjunganId, 'dokter_id' => $locked->dokter_id]);
@@ -187,6 +189,7 @@ class PemeriksaanService
             if (!in_array($locked->status, [Kunjungan::STATUS_MENUNGGU, Kunjungan::STATUS_DIPERIKSA], true)) {
                 throw new ConflictHttpException("Kunjungan berstatus {$locked->status} tidak dapat diubah diagnosisnya.");
             }
+            (new ValidasiKunjunganService())->pastikanBelumValid($locked);
 
             $sebelum = $this->daftarDiagnosis($kunjunganId);
             Diagnosis::deleteAll(['kunjungan_id' => $kunjunganId]);

@@ -2,7 +2,8 @@
  * Script uji konkurensi pembayaran ganda dan revisi tagihan (Skenario D.3 dan D.4 — poin 8.6).
  * 1. D.3 Idempotency-Key sama dikirim 5 kali paralel: tepat 1 kali dibuat (201), 4 sisanya 200 dengan no_pembayaran sama.
  * 2. D.3 5 pembayaran paralel berbeda untuk sisa tagihan penuh: tepat 1 sukses (201), 4 ditolak (409), total_bayar tidak melebihi total.
- * 3. D.4 Revisi tagihan: batal tindakan mem-void item, menurunkan total, dan tercatat di audit log; perubahan biaya setelah lunas ditolak 409; diagnosis tetap boleh dan tercatat di audit log.
+ * 3. D.4 Revisi tagihan: invoice mengunci kunjungan (valid); setelah kasir Unvalid, batal tindakan mem-void item,
+ *    menurunkan total, dan tercatat di audit log; Valid lagi lalu lunas menyelesaikan kunjungan dan menolak semua perubahan (409).
  *
  * Cara menjalankan: node tests/concurrency/pembayaran.mjs
  */
@@ -197,8 +198,26 @@ async function main() {
     `Jumlah pembayaran seharusnya 2, hasil ${invAfter2.pembayaran.length}`,
   );
 
-  // Skenario 3 (D.4): Revisi tagihan saat tindakan dibatalkan, proteksi saat lunas, dan audit log diagnosis.
+  // Skenario 3 (D.4): Invoice = kunjungan valid (terkunci). Revisi hanya setelah kasir Unvalid,
+  // lalu Valid lagi; invoice lunas menyelesaikan kunjungan dan menolak semua perubahan.
   const k2 = await buatInvoiceDenganTindakan(2);
+  const batalSaatValid = await api(
+    'DELETE',
+    `/transaction/tindakan/item/${k2.tindakanItemId}`,
+    null,
+    adminToken,
+  );
+  assert(
+    batalSaatValid.status === 409,
+    `Batal tindakan saat kunjungan valid harus 409, hasil ${batalSaatValid.status}`,
+  );
+  const unvalid = await api('PUT', `/transaction/invoice/${k2.invoiceId}/unvalid`, {}, kasirToken);
+  assert(
+    unvalid.status === 200 && unvalid.body.data.kunjungan.is_valid === false,
+    `Gagal unvalid kunjungan: ${unvalid.status}`,
+  );
+  console.log('[D.4 Validasi] batal tindakan saat valid = 409, setelah Unvalid dibuka');
+
   const batalRes = await api(
     'DELETE',
     `/transaction/tindakan/item/${k2.tindakanItemId}`,
@@ -222,7 +241,28 @@ async function main() {
     'Item lama harus di-void dengan alasan',
   );
 
-  // Lunasi 25.000, lalu cek penolakan perubahan biaya (409) dan audit perubahan diagnosis (200).
+  // Diagnosis diubah selama kunjungan belum valid: diizinkan dan tercatat di audit log.
+  const diag1 = await api(
+    'PUT',
+    `/transaction/diagnosis/${k2.kunjunganId}`,
+    { diagnosis: [{ icd10_id: icd1.body.data.id, jenis: 'utama' }] },
+    adminToken,
+  );
+  const diag2 = await api(
+    'PUT',
+    `/transaction/diagnosis/${k2.kunjunganId}`,
+    { diagnosis: [{ icd10_id: icd2.body.data.id, jenis: 'utama' }] },
+    adminToken,
+  );
+  assert(diag1.status === 200 && diag2.status === 200, 'Diagnosis saat belum valid harus boleh');
+
+  const validLagi = await api('PUT', `/transaction/invoice/${k2.invoiceId}/valid`, {}, kasirToken);
+  assert(
+    validLagi.status === 200 && validLagi.body.data.kunjungan.is_valid === true,
+    `Gagal validasi ulang: ${validLagi.status}`,
+  );
+
+  // Lunasi 25.000: kunjungan otomatis selesai, lalu semua perubahan ditolak 409.
   const lunasi = await api(
     'POST',
     '/transaction/pembayaran',
@@ -246,19 +286,22 @@ async function main() {
     `Tambah tindakan saat lunas harus 409, hasil ${tambahSaatLunas.status}`,
   );
 
-  const diag1 = await api(
+  const diagSaatLunas = await api(
     'PUT',
     `/transaction/diagnosis/${k2.kunjunganId}`,
     { diagnosis: [{ icd10_id: icd1.body.data.id, jenis: 'utama' }] },
     adminToken,
   );
-  const diag2 = await api(
-    'PUT',
-    `/transaction/diagnosis/${k2.kunjunganId}`,
-    { diagnosis: [{ icd10_id: icd2.body.data.id, jenis: 'utama' }] },
-    adminToken,
+  const unvalidSaatLunas = await api('PUT', `/transaction/invoice/${k2.invoiceId}/unvalid`, {}, kasirToken);
+  const invLunas = (await api('GET', `/transaction/invoice/${k2.invoiceId}`, null, kasirToken)).body.data;
+  console.log(
+    `[D.4 Lunas] status kunjungan = ${invLunas.kunjungan.status}, diagnosis = ${diagSaatLunas.status}, unvalid = ${unvalidSaatLunas.status}`,
   );
-  assert(diag1.status === 200 && diag2.status === 200, 'Diagnosis setelah lunas harus tetap boleh');
+  assert(invLunas.kunjungan.status === 'selesai', 'Kunjungan harus otomatis selesai saat lunas');
+  assert(
+    diagSaatLunas.status === 409 && unvalidSaatLunas.status === 409,
+    'Diagnosis dan Unvalid setelah lunas harus ditolak 409',
+  );
 
   const auditRes = await api(
     'GET',

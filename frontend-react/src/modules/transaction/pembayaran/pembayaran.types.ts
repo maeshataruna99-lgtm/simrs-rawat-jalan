@@ -65,6 +65,8 @@ export interface Invoice {
     no_kunjungan: string;
     tgl_kunjungan: string;
     status: string;
+    /** Divalidasi kasir: terkunci dari order baru dokter. */
+    is_valid: boolean;
   } | null;
   pasien: {
     id: number;

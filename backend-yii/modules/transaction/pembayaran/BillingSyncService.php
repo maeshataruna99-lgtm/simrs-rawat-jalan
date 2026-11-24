@@ -16,13 +16,13 @@ use yii\web\NotFoundHttpException;
 class BillingSyncService
 {
     /**
-     * Memastikan perubahan biaya tidak dilakukan bila invoice kunjungan sudah lunas.
+     * Memastikan perubahan biaya tidak dilakukan bila invoice kunjungan sudah lunas atau kunjungan sudah divalidasi kasir.
      *
-     * @throws ConflictHttpException Bila invoice sudah berstatus lunas.
+     * @throws ConflictHttpException Bila invoice sudah berstatus lunas atau kunjungan valid.
      *
      * Dipakai di: TindakanKunjunganService, ResepService, OrderLabService.
      */
-    public function pastikanBelumLunas(int $kunjunganId): void
+    public function pastikanBolehDiubah(int $kunjunganId): void
     {
         $status = Yii::$app->db->createCommand(
             'SELECT status FROM t_invoice WHERE kunjungan_id = :id',
@@ -32,6 +32,7 @@ class BillingSyncService
         if ($status === Invoice::STATUS_LUNAS) {
             throw new ConflictHttpException('Invoice kunjungan ini sudah lunas sehingga perubahan biaya tidak diizinkan.');
         }
+        (new ValidasiKunjunganService())->pastikanBelumValid($kunjunganId);
     }
 
     /**
@@ -168,6 +169,10 @@ class BillingSyncService
                     'updated_at' => new Expression('CURRENT_TIMESTAMP'),
                     'updated_by' => Yii::$app->has('user') && !Yii::$app->user->isGuest ? (int) Yii::$app->user->id : null,
                 ], ['id' => $invoiceId])->execute();
+
+                if ($statusBaru === Invoice::STATUS_LUNAS && $statusLama !== Invoice::STATUS_LUNAS) {
+                    (new ValidasiKunjunganService())->selesaikanKarenaLunas($kunjunganId);
+                }
 
                 AuditLog::catat('t_invoice', $invoiceId, 'sync', [
                     'total' => $totalLama,

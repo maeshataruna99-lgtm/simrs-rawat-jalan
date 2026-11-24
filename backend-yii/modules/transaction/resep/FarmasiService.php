@@ -45,6 +45,8 @@ class FarmasiService
             }
         }
         ListQuery::rentangTanggal($query, 'k.tgl_kunjungan', $params);
+        // Kunjungan selesai (invoice lunas) hanya tampil di billing.
+        $query->andWhere(['<>', 'k.status', Kunjungan::STATUS_SELESAI]);
         $q = trim((string) ($params['q'] ?? ''));
         if ($q !== '') {
             $query->andWhere([

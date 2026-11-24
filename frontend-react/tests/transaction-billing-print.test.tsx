@@ -47,6 +47,7 @@ describe('Halaman cetak invoice dan bukti pembayaran (poin 8.8)', () => {
         no_kunjungan: 'RJ202611220001',
         tgl_kunjungan: '2026-11-22',
         status: 'selesai',
+        is_valid: true,
       },
       pasien: { id: 31, no_rm: 'RM000031', nama: 'Budi Cetak', nik: '3201010101900031' },
       poli: { id: 1, kode: 'POLI-UMUM', nama: 'Poli Umum' },

@@ -21,6 +21,9 @@ use yii\db\ActiveQuery;
  * @property string $tgl_kunjungan
  * @property int $no_antrean
  * @property string $status
+ * @property bool $is_valid Divalidasi kasir: terkunci dari order baru dokter sampai di-unvalid
+ * @property string|null $divalidasi_at
+ * @property int|null $divalidasi_by
  * @property string $created_at
  * @property string|null $updated_at
  * @property Pasien $pasien

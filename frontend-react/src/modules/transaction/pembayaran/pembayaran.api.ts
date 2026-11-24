@@ -92,6 +92,30 @@ export async function buatInvoice(kunjunganId: number): Promise<Invoice> {
 }
 
 /**
+ * Daftar transaksi belum tuntas (order lab, resep, pemeriksaan) sebelum kasir membuat invoice atau validasi.
+ *
+ * Dipakai di: ValidasiDialog.tsx.
+ */
+export async function peringatanKunjungan(kunjunganId: number): Promise<string[]> {
+  const { data } = await yiiApi.get<ApiResponse<string[]>>('/transaction/invoice/peringatan', {
+    params: { kunjungan_id: kunjunganId },
+  });
+  return data.data;
+}
+
+/**
+ * Mengunci (valid) atau membuka kunci (unvalid) kunjungan dari order baru dokter.
+ *
+ * Dipakai di: BillingPage.tsx.
+ */
+export async function ubahValidasi(invoiceId: number, aksi: 'valid' | 'unvalid'): Promise<Invoice> {
+  const { data } = await yiiApi.put<ApiResponse<Invoice>>(
+    `/transaction/invoice/${invoiceId}/${aksi}`,
+  );
+  return data.data;
+}
+
+/**
  * Mengambil jejak audit log revisi tagihan dan perubahan klinis untuk satu invoice.
  *
  * Dipakai di: InvoiceDetailDialog.tsx.

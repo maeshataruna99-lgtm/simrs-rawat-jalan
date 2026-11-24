@@ -154,7 +154,7 @@ class ResepService
         }
 
         $billing = new BillingSyncService();
-        $billing->pastikanBelumLunas($kunjungan->id);
+        $billing->pastikanBolehDiubah($kunjungan->id);
 
         /** @var Resep $resep */
         $resep = Yii::$app->db->transaction(function () use ($kunjungan, $rows, $obatList, $data, $billing) {

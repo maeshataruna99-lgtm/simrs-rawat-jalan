@@ -1,171 +1,180 @@
+(node:7624) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
 newman
 
 SIMRS Rawat Jalan — Alur End-to-End
 
 □ 1. Health & Autentikasi
 └ Health Yii
-  GET http://localhost:8080/health [200 OK, 264B, 928ms]
+  GET http://localhost:8080/health [200 OK, 264B, 1602ms]
   √  HTTP 200
 
 └ Health Node
-  GET http://localhost:3000/health [200 OK, 479B, 17ms]
+  GET http://localhost:3000/health [200 OK, 479B, 25ms]
   √  HTTP 200
 
 └ Login Admin
-  POST http://localhost:8080/system/auth/login [200 OK, 4.98kB, 1567ms]
+  POST http://localhost:8080/system/auth/login [200 OK, 5.16kB, 2.3s]
   √  Login admin 200
 
 └ Login Kasir
-  POST http://localhost:8080/system/auth/login [200 OK, 1.12kB, 1742ms]
+  POST http://localhost:8080/system/auth/login [200 OK, 1.31kB, 1254ms]
   √  Login kasir 200
 
 └ Login Dokter
-  POST http://localhost:8080/system/auth/login [200 OK, 2.43kB, 1565ms]
+  POST http://localhost:8080/system/auth/login [200 OK, 2.43kB, 999ms]
   √  Login dokter 200
 
 └ Login Farmasi
-  POST http://localhost:8080/system/auth/login [200 OK, 1.37kB, 1875ms]
+  POST http://localhost:8080/system/auth/login [200 OK, 1.37kB, 997ms]
   √  Login farmasi 200
 
 └ Profil Aktif (/system/auth/me)
-  GET http://localhost:8080/system/auth/me [200 OK, 4.79kB, 712ms]
+  GET http://localhost:8080/system/auth/me [200 OK, 4.97kB, 344ms]
   √  Profil 200
 
 └ Cek RBAC 403 (Kasir akses /system/user)
-  GET http://localhost:8080/system/user [403 Forbidden, 330B, 2s]
+  GET http://localhost:8080/system/user [403 Forbidden, 330B, 237ms]
   √  Ditolak 403
 
 □ 2. Master Data & Pasien Uji
 └ Ambil Jadwal Dokter DR001 Hari Senin
-  GET http://localhost:8080/master/jadwal-dokter?per_page=100 [200 OK, 12.19kB, 981ms]
+  GET http://localhost:8080/master/jadwal-dokter?per_page=100 [200 OK, 19.76kB, 495ms]
   √  Jadwal 200
   √  Jadwal Senin ditemukan
 
 └ Ambil Master Tindakan
-  GET http://localhost:8080/master/tindakan?per_page=10 [200 OK, 2.03kB, 1068ms]
+  GET http://localhost:8080/master/tindakan?per_page=10 [200 OK, 2.38kB, 246ms]
   √  Tindakan 200
 
 └ Ambil Master Obat
-  GET http://localhost:8080/master/obat?per_page=10 [200 OK, 1.98kB, 319ms]
+  GET http://localhost:8080/master/obat?per_page=10 [200 OK, 2.17kB, 238ms]
   √  Obat 200
 
 └ Ambil Master Pemeriksaan Lab
-  GET http://localhost:8080/master/pemeriksaan-lab?per_page=10 [200 OK, 1.22kB, 779ms]
+  GET http://localhost:8080/master/pemeriksaan-lab?per_page=10 [200 OK, 1.24kB, 239ms]
   √  Lab 200
 
 └ Ambil Master ICD-10
-  GET http://localhost:8080/master/icd10?per_page=10 [200 OK, 1.63kB, 1014ms]
+  GET http://localhost:8080/master/icd10?per_page=10 [200 OK, 1.63kB, 246ms]
   √  ICD-10 200
 
 └ Buat Pasien Uji Newman
-  POST http://localhost:8080/master/pasien [201 Created, 578B, 540ms]
+  POST http://localhost:8080/master/pasien [201 Created, 578B, 382ms]
   √  Pasien dibuat 201
 
 □ 3. Pendaftaran, Pemeriksaan, Tindakan, Resep, & Lab
 └ Daftar Kunjungan
-  POST http://localhost:8080/transaction/pendaftaran [201 Created, 1.01kB, 709ms]
+  POST http://localhost:8080/transaction/pendaftaran [201 Created, 1.05kB, 361ms]
   √  Pendaftaran 201
 
 └ Ubah Status Antrean ke Diperiksa
-  PUT http://localhost:8080/transaction/antrean/186/status [200 OK, 1.14kB, 1055ms]
+  PUT http://localhost:8080/transaction/antrean/489/status [200 OK, 1.24kB, 292ms]
   √  Status diperiksa 200
 
 └ Simpan Pemeriksaan Dokter
-  PUT http://localhost:8080/transaction/pemeriksaan/186 [200 OK, 662B, 1182ms]
+  PUT http://localhost:8080/transaction/pemeriksaan/489 [200 OK, 663B, 678ms]
   √  Pemeriksaan 200
 
 └ Simpan Diagnosis ICD-10
-  PUT http://localhost:8080/transaction/diagnosis/186 [200 OK, 516B, 1490ms]
+  PUT http://localhost:8080/transaction/diagnosis/489 [200 OK, 517B, 322ms]
   √  Diagnosis 200
 
 └ Tambah Tindakan Medis
-  POST http://localhost:8080/transaction/tindakan/186 [201 Created, 595B, 1393ms]
+  POST http://localhost:8080/transaction/tindakan/489 [201 Created, 600B, 370ms]
   √  Tindakan 201
 
 └ Buat Resep Obat
-  POST http://localhost:8080/transaction/resep [201 Created, 991B, 1151ms]
+  POST http://localhost:8080/transaction/resep [201 Created, 994B, 349ms]
   √  Resep 201
 
 └ Buat Order Laboratorium
-  POST http://localhost:8080/transaction/order-lab [201 Created, 999B, 2.4s]
+  POST http://localhost:8080/transaction/order-lab [201 Created, 1kB, 312ms]
   √  Order lab 201
 
 └ Kirim Hasil Lab Eksternal via Node
-  POST http://localhost:3000/api/lab/results [200 OK, 796B, 5.8s]
+  POST http://localhost:3000/api/lab/results [200 OK, 798B, 339ms]
   √  Hasil lab diteruskan 200
 
 └ Proses Resep Farmasi
-  PUT http://localhost:8080/transaction/farmasi/74/proses [200 OK, 990B, 3.2s]
+  PUT http://localhost:8080/transaction/farmasi/196/proses [200 OK, 993B, 289ms]
   √  Farmasi proses 200
 
 └ Serahkan Obat Farmasi
-  PUT http://localhost:8080/transaction/farmasi/74/serahkan [200 OK, 1.01kB, 2.7s]
+  PUT http://localhost:8080/transaction/farmasi/196/serahkan [200 OK, 1.01kB, 274ms]
   √  Farmasi serahkan 200
 
-└ Selesaikan Kunjungan
-  PUT http://localhost:8080/transaction/antrean/186/status [200 OK, 1.26kB, 451ms]
-  √  Status selesai 200
-
 □ 4. Billing, Pembayaran Bertahap, & Idempotency (D.3)
+└ Cek Peringatan Kasir Sebelum Invoice
+  GET http://localhost:8080/transaction/invoice/peringatan?kunjungan_id=489 [200 OK, 309B, 257ms]
+  √  Peringatan 200
+  √  Semua order sudah selesai (tanpa peringatan)
+
 └ Buat Invoice Kunjungan (4 Sumber)
-  POST http://localhost:8080/transaction/invoice/186 [201 Created, 1.84kB, 2.2s]
+  POST http://localhost:8080/transaction/invoice/489 [201 Created, 1.87kB, 498ms]
   √  Invoice 201
   √  4 sumber biaya terkumpul
 
 └ Bayar Cicilan 1 (Tunai)
-  POST http://localhost:8080/transaction/pembayaran [201 Created, 2.92kB, 569ms]
+  POST http://localhost:8080/transaction/pembayaran [201 Created, 3.01kB, 344ms]
   √  Cicilan 1 dibuat 201
   √  Status dibayar_sebagian
 
 └ Retry Cicilan 1 dengan Idempotency-Key Sama (D.3)
-  POST http://localhost:8080/transaction/pembayaran [200 OK, 2.92kB, 1677ms]
+  POST http://localhost:8080/transaction/pembayaran [200 OK, 3.01kB, 284ms]
   √  Retry membalas 200 bukan 201
   √  no_pembayaran identik
 
 └ Pelunasan Sisa Tagihan (Non-Tunai)
-  POST http://localhost:8080/transaction/pembayaran [201 Created, 3.26kB, 607ms]
+  POST http://localhost:8080/transaction/pembayaran [201 Created, 3.38kB, 312ms]
   √  Pelunasan 201
   √  Status lunas
 
+└ Kunjungan Otomatis Selesai Setelah Lunas
+  GET http://localhost:8080/transaction/invoice/146 [200 OK, 2.57kB, 247ms]
+  √  Invoice 200
+  √  Status kunjungan selesai
+  √  Kunjungan terkunci (valid)
+
 □ 5. Dashboard Read-Only (Node)
 └ Dashboard Summary
-  GET http://localhost:3000/api/dashboard/summary [200 OK, 672B, 92ms]
+  GET http://localhost:3000/api/dashboard/summary [200 OK, 677B, 95ms]
   √  Summary 200
   √  Total kunjungan > 0
 
 └ Dashboard Kunjungan per Poli
-  GET http://localhost:3000/api/dashboard/kunjungan-per-poli [200 OK, 764B, 17ms]
+  GET http://localhost:3000/api/dashboard/kunjungan-per-poli [200 OK, 1.98kB, 12ms]
   √  Per poli 200
 
 └ Dashboard Pendapatan
-  GET http://localhost:3000/api/dashboard/pendapatan [200 OK, 2.86kB, 18ms]
+  GET http://localhost:3000/api/dashboard/pendapatan [200 OK, 2.97kB, 18ms]
   √  Pendapatan 200
 
 └ Dashboard Detail Kunjungan
-  GET http://localhost:3000/api/dashboard/detail/kunjungan?page=1&per_page=5 [200 OK, 1.51kB, 22ms]
+  GET http://localhost:3000/api/dashboard/detail/kunjungan?page=1&per_page=5 [200 OK, 1.63kB, 20ms]
   √  Detail 200
   √  Ada meta pagination
 
 └ Dashboard Validasi Periode Tidak Valid (422)
-  GET http://localhost:3000/api/dashboard/summary?from=2026-11-30&to=2026-11-01 [422 Unprocessable Entity, 550B, 12ms]
+  GET http://localhost:3000/api/dashboard/summary?from=2026-11-30&to=2026-11-01 [422 Unprocessable Entity, 550B, 5ms]
   √  Periode terbalik 422
 
-┌─────────────────────────┬─────────────────────┬────────────────────┐
-│                         │            executed │             failed │
-├─────────────────────────┼─────────────────────┼────────────────────┤
-│              iterations │                   1 │                  0 │
-├─────────────────────────┼─────────────────────┼────────────────────┤
-│                requests │                  34 │                  0 │
-├─────────────────────────┼─────────────────────┼────────────────────┤
-│            test-scripts │                  34 │                  0 │
-├─────────────────────────┼─────────────────────┼────────────────────┤
-│      prerequest-scripts │                   1 │                  0 │
-├─────────────────────────┼─────────────────────┼────────────────────┤
-│              assertions │                  41 │                  0 │
-├─────────────────────────┴─────────────────────┴────────────────────┤
-│ total run duration: 45.1s                                          │
-├────────────────────────────────────────────────────────────────────┤
-│ total data received: 52.87kB (approx)                              │
-├────────────────────────────────────────────────────────────────────┤
-│ average response time: 1242ms [min: 12ms, max: 5.8s, s.d.: 1148ms] │
-└────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────┬───────────────────┬───────────────────┐
+│                         │          executed │            failed │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│              iterations │                 1 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│                requests │                35 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│            test-scripts │                35 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│      prerequest-scripts │                 1 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│              assertions │                45 │                 0 │
+├─────────────────────────┴───────────────────┴───────────────────┤
+│ total run duration: 18.4s                                       │
+├─────────────────────────────────────────────────────────────────┤
+│ total data received: 64.82kB (approx)                           │
+├─────────────────────────────────────────────────────────────────┤
+│ average response time: 439ms [min: 5ms, max: 2.3s, s.d.: 477ms] │
+└─────────────────────────────────────────────────────────────────┘

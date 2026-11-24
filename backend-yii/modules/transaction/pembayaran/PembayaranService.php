@@ -44,7 +44,7 @@ class PembayaranService
         try {
             // Kunci baris invoice agar pembayaran paralel terurut dan tidak melebihi sisa tagihan.
             $row = Yii::$app->db->createCommand(
-                'SELECT id, total, total_bayar, status FROM t_invoice WHERE id = :id FOR UPDATE',
+                'SELECT id, kunjungan_id, total, total_bayar, status FROM t_invoice WHERE id = :id FOR UPDATE',
                 [':id' => $validated['invoice_id']]
             )->queryOne();
 
@@ -97,6 +97,10 @@ class PembayaranService
                 'updated_at' => new Expression('CURRENT_TIMESTAMP'),
                 'updated_by' => $kasirId,
             ], ['id' => $validated['invoice_id']])->execute();
+
+            if ($statusBaru === Invoice::STATUS_LUNAS) {
+                (new ValidasiKunjunganService())->selesaikanKarenaLunas((int) $row['kunjungan_id']);
+            }
 
             $tx->commit();
 

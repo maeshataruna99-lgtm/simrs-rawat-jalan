@@ -55,6 +55,8 @@ class AntreanService
         if (!empty($params['status'])) {
             $query->andWhere(['t_kunjungan.status' => trim((string) $params['status'])]);
         }
+        // Kunjungan selesai (invoice lunas) hanya tampil di billing.
+        $query->andWhere(['<>', 't_kunjungan.status', Kunjungan::STATUS_SELESAI]);
         if (!empty($params['q'])) {
             $q = trim((string) $params['q']);
             $query->andWhere([
@@ -90,9 +92,10 @@ class AntreanService
         }
 
         // Selesai dan batal adalah status akhir; membuka kembali kunjungan batal bisa bentrok dengan kunjungan aktif baru.
+        // Selesai tidak bisa dipilih manual: kunjungan baru selesai saat invoicenya lunas (ValidasiKunjunganService).
         $transisi = [
             Kunjungan::STATUS_MENUNGGU => [Kunjungan::STATUS_DIPERIKSA, Kunjungan::STATUS_BATAL],
-            Kunjungan::STATUS_DIPERIKSA => [Kunjungan::STATUS_SELESAI, Kunjungan::STATUS_BATAL],
+            Kunjungan::STATUS_DIPERIKSA => [Kunjungan::STATUS_BATAL],
         ];
 
         // Baris dikunci lalu status dibaca ulang di dalam transaksi: perubahan paralel diproses bergiliran

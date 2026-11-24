@@ -152,6 +152,9 @@ erDiagram
         int no_antrean
         varchar status
         varchar penjamin "umum | bpjs | asuransi"
+        boolean is_valid "dikunci kasir"
+        timestamp divalidasi_at
+        int divalidasi_by
     }
     t_kunjungan_status_log {
         int id PK

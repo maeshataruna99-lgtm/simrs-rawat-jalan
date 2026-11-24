@@ -6,11 +6,11 @@ Dokumen ini memuat skenario pengujian fungsional dan teknis (B.1–B.9, C.1–C.
 
 | Lapisan | Perintah | Status Terakhir |
 |---|---|---|
-| Backend Yii2 (PHPUnit) | `docker compose exec -T yii composer test` | 131 tests, 416 assertions lulus (termasuk `DummySeederTest`) |
+| Backend Yii2 (PHPUnit) | `docker compose exec -T yii composer test` | 134 tests, 443 assertions lulus (termasuk `DummySeederTest`) |
 | Service Node.js (Vitest) | `docker compose exec -T node npm test` | 6 files, 38 tests lulus (auth, validate, lab, outbox, dashboard) |
-| Frontend React (Vitest) | `cd frontend-react && npx vitest run` | 22 files, 76 tests lulus |
+| Frontend React (Vitest) | `cd frontend-react && npx vitest run` | 22 files, 78 tests lulus |
 | Konkurensi (Node scripts) | `node tests/concurrency/{pendaftaran,stok-obat,pembayaran}.mjs` | D.1, D.2, D.3, D.4 lulus |
-| End-to-End API (Newman) | `npx newman run postman/simrs.collection.json -e postman/local.environment.json` | 34 requests, 41 assertions, 0 failed |
+| End-to-End API (Newman) | `npx newman run postman/simrs.collection.json -e postman/local.environment.json` | 35 requests, 45 assertions, 0 failed |
 
 ---
 
@@ -40,7 +40,7 @@ Dokumen ini memuat skenario pengujian fungsional dan teknis (B.1–B.9, C.1–C.
 | TC-REG-01 | Pendaftaran kunjungan normal | Login `pendaftaran`, pilih pasien & jadwal hari aktif, simpan | Status `201`, `no_kunjungan` dan `no_antrean` berurutan, status `menunggu` | Lulus |
 | TC-REG-02 | Tolak tanggal kunjungan lampau | Kirim `POST /transaction/pendaftaran` dengan `tgl_kunjungan` kemarin | Ditolak `422` | Lulus |
 | TC-REG-03 | Pendaftaran ganda & kuota paralel (D.1) | Jalankan `node tests/concurrency/pendaftaran.mjs` | Pasien sama di poli & tanggal sama hanya 1 sukses (`409` untuk duplikat); kuota tidak terlampaui dan nomor antrean unik | Lulus |
-| TC-REG-04 | Transisi status antrean | Ubah `menunggu → diperiksa → selesai`; coba lompat `menunggu → selesai` atau ubah setelah `batal` | Transisi valid `200` + tercatat di `t_kunjungan_status_log`; transisi tidak sah ditolak `409` | Lulus |
+| TC-REG-04 | Transisi status antrean | Ubah `menunggu → diperiksa`; coba pilih `selesai` manual atau ubah setelah `batal` | Transisi valid `200` + tercatat di `t_kunjungan_status_log`; `selesai` manual dan transisi tidak sah ditolak. Kunjungan baru `selesai` saat invoicenya lunas | Lulus |
 
 ## 4. Pemeriksaan, Rekam Medis, & Tindakan (B.3, B.4)
 
@@ -74,7 +74,9 @@ Dokumen ini memuat skenario pengujian fungsional dan teknis (B.1–B.9, C.1–C.
 | TC-BIL-01 | Pembentukan invoice 4 sumber | Login `kasir`, buat invoice pada kunjungan yang punya daftar + tindakan + lab + obat | Status `201`, 4 sumber biaya terkumpul, `total` = jumlah seluruh subtotal | Lulus |
 | TC-BIL-02 | Pembayaran bertahap hingga lunas | Bayar sebagian Tunai (`40.000`), cek status, lalu lunasi sisa Non-Tunai (`60.000`) | Status berubah `belum_dibayar → dibayar_sebagian → lunas`; bayar melebihi sisa ditolak `422` | Lulus |
 | TC-BIL-03 | Pencegahan pembayaran ganda (D.3) | Jalankan `node tests/concurrency/pembayaran.mjs` (5 paralel key sama & 5 paralel key beda) | Key sama: 1×`201`, 4×`200`, 1 `no_pembayaran`; key beda melebihi sisa: 1×`201`, 4×`409`, `total_bayar == total` | Lulus |
-| TC-BIL-04 | Revisi tagihan & audit log (D.4) | Batalkan tindakan setelah invoice dibuat; ubah diagnosis & coba tambah tindakan setelah lunas | Item lama `is_void = true` dengan `alasan_void`, total turun, tercatat di `t_audit_log`; tambah tindakan saat lunas ditolak `409`; diagnosis tetap `200` + tercatat audit | Lulus |
+| TC-BIL-04 | Revisi tagihan & audit log (D.4) | Batalkan tindakan setelah invoice dibuat (ditolak), tekan Unvalid lalu batalkan lagi; Valid, lunasi, lalu coba ubah diagnosis/tindakan | Saat valid ditolak `409`; setelah Unvalid item lama `is_void = true` dengan `alasan_void`, total turun, tercatat di `t_audit_log`; setelah lunas kunjungan `selesai` dan semua perubahan maupun Unvalid ditolak `409` | Lulus |
+| TC-BIL-06 | Catatan kasir sebelum invoice/Valid | Klik Buat Invoice untuk kunjungan dengan order lab belum selesai atau resep belum diserahkan | Dialog menampilkan peringatan merah per transaksi; kasir tetap bisa menekan "Tetap Lanjutkan"; tanpa peringatan dialog menyatakan semua order selesai | Lulus |
+| TC-BIL-07 | Pasien lunas hanya tampil di billing | Lunasi invoice lalu buka Antrean, Laboratorium, dan Farmasi | Kunjungan selesai tidak muncul di antrean, worklist lab, dan antrean farmasi, tetapi tetap ada di Daftar Tagihan | Lulus |
 | TC-BIL-05 | Cetak invoice dan bukti pembayaran | Buka `/transaction/billing/invoice/:id/cetak` & `/transaction/billing/pembayaran/:id/cetak` | Tata letak rapi dengan `.print-sheet`, sidebar/header/tombol tersembunyi via `print:hidden` | Lulus |
 
 ## 8. Dashboard & Laporan (B.8, C.2, D.6)

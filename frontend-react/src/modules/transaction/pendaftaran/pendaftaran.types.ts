@@ -24,6 +24,8 @@ export interface KunjunganItem {
   no_antrean: number;
   kode_antrean?: string;
   status: KunjunganStatus;
+  /** Divalidasi kasir: terkunci dari order baru dokter sampai di-unvalid. */
+  is_valid?: boolean;
   pasien: {
     id: number;
     no_rm: string;

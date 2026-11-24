@@ -9,6 +9,8 @@ use app\modules\master\jadwal\JadwalDokterService;
 use app\modules\master\pasien\PasienService;
 use app\modules\master\poli\PoliService;
 use app\modules\transaction\antrean\AntreanService;
+use app\modules\transaction\pembayaran\InvoiceService;
+use app\modules\transaction\pembayaran\ValidasiKunjunganService;
 use app\modules\transaction\pemeriksaan\PemeriksaanService;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use app\modules\transaction\pendaftaran\PendaftaranService;
@@ -116,9 +118,17 @@ class PemeriksaanServiceTest extends TestCase
         $this->assertSame('Demam 4 hari', $detail['pemeriksaan']['keluhan_utama']);
         $this->assertSame(120, $detail['pemeriksaan']['td_sistolik']);
 
-        (new AntreanService())->ubahStatus($kunjunganId, 'selesai');
-        $this->expectException(ConflictHttpException::class);
+        // Invoice dibuat = kunjungan valid: pemeriksaan terkunci sampai kasir menekan Unvalid.
+        $invoice = (new InvoiceService())->buat($kunjunganId);
+        try {
+            $service->simpan($kunjunganId, ['keluhan_utama' => 'Ubah'], $data['dokter1']);
+            $this->fail('Simpan pemeriksaan seharusnya ditolak saat kunjungan valid.');
+        } catch (ConflictHttpException $e) {
+            $this->assertSame(ValidasiKunjunganService::PESAN_TERKUNCI, $e->getMessage());
+        }
+        (new ValidasiKunjunganService())->batalkanValidasi($invoice->id);
         $service->simpan($kunjunganId, ['keluhan_utama' => 'Ubah'], $data['dokter1']);
+        $this->assertSame('Ubah', $service->detail($kunjunganId, $data['dokter1'])['pemeriksaan']['keluhan_utama']);
     }
 
     public function testDiagnosisWajibTepatSatuUtamaDanSekunderBolehBanyak(): void

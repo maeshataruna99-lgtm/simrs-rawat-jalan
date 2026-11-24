@@ -69,7 +69,7 @@ class TindakanKunjunganService
         }
 
         $billing = new BillingSyncService();
-        $billing->pastikanBelumLunas($kunjungan->id);
+        $billing->pastikanBolehDiubah($kunjungan->id);
 
         /** @var TindakanKunjungan $item */
         $item = Yii::$app->db->transaction(function () use ($kunjungan, $tindakan, $qty, $billing) {
@@ -109,7 +109,7 @@ class TindakanKunjunganService
         $this->kunjunganTerbuka($item->kunjungan_id, $dokterId);
 
         $billing = new BillingSyncService();
-        $billing->pastikanBelumLunas($item->kunjungan_id);
+        $billing->pastikanBolehDiubah($item->kunjungan_id);
 
         /** @var TindakanKunjungan $terkunci */
         $terkunci = Yii::$app->db->transaction(function () use ($itemId, $dokterId, $billing) {

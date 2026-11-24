@@ -359,7 +359,6 @@
       "searchPlaceholder": "Search Visit No., MRN, or patient name...",
       "allStatus": "All statuses",
       "callButton": "Call / Examine",
-      "finishButton": "Finish",
       "cancelButton": "Cancel",
       "openDisplay": "Display Screen",
       "statusUpdated": "Queue status updated successfully.",
@@ -416,8 +415,7 @@
       "addDiagnosis": "Add ICD-10 diagnosis...",
       "saveDiagnosisButton": "Save Diagnosis",
       "diagnosisSaved": "Diagnosis saved successfully.",
-      "finishButton": "Complete Examination",
-      "finished": "Examination completed.",
+      "lockedNotice": "This visit has been validated by the cashier. Examination, diagnosis, procedures, prescriptions, and lab orders cannot be changed until the cashier presses Unvalid.",
       "jenis": {
         "utama": "Primary",
         "sekunder": "Secondary"
@@ -534,6 +532,21 @@
       "auditTitle": "Change History & Audit Log",
       "voidReason": "Voided: {{reason}}",
       "createInvoiceAction": "Create Invoice",
+      "validasi": {
+        "description": "Review the notes below before continuing. A validated visit is locked from new doctor orders until it is unvalidated.",
+        "warningTitle": "Some transactions are not finished yet:",
+        "warningHint": "You may still continue. Press Unvalid later if the patient needs more transactions, then Valid again once everything is done.",
+        "allDone": "All orders for this visit are finished.",
+        "proceedAnyway": "Continue Anyway",
+        "createTitle": "Create Invoice and Validate Visit",
+        "validTitle": "Validate Visit",
+        "validAction": "Valid",
+        "unvalidAction": "Unvalid",
+        "validSuccess": "Visit validated.",
+        "unvalidSuccess": "Validation removed; the doctor can add transactions.",
+        "lockedLabel": "Valid (locked)",
+        "openLabel": "Not validated"
+      },
       "invoiceCreated": "Invoice {{noInvoice}} created successfully.",
       "payAction": "Pay",
       "payDialogTitle": "Record Payment",
@@ -768,7 +781,7 @@
       "antrean": {
         "title": "Clinic queue",
         "keywords": "queue call status waiting examined cancel clinic",
-        "answer": "Open Registration > Clinic Queue. Filter by clinic, date, or status, then move the queue status from waiting to examined, done, or cancelled. Every status change is logged."
+        "answer": "Open Registration > Clinic Queue. Filter by clinic, date, or status, then move the queue status from waiting to examined or cancelled. A visit is completed automatically once its invoice is fully paid. Every status change is logged."
       },
       "displayAntrean": {
         "title": "Queue display screen",

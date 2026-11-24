@@ -757,44 +757,37 @@
               "raw": "{}"
             }
           }
-        },
-        {
-          "name": "Selesaikan Kunjungan",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status selesai 200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token_admin}}"
-              }
-            ],
-            "url": "{{yii_url}}/transaction/antrean/{{kunjungan_id}}/status",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"selesai\"\n}"
-            }
-          }
         }
       ]
     },
     {
       "name": "4. Billing, Pembayaran Bertahap, & Idempotency (D.3)",
       "item": [
+        {
+          "name": "Cek Peringatan Kasir Sebelum Invoice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Peringatan 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Semua order sudah selesai (tanpa peringatan)', () => pm.expect(pm.response.json().data).to.eql([]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_kasir}}"
+              }
+            ],
+            "url": "{{yii_url}}/transaction/invoice/peringatan?kunjungan_id={{kunjungan_id}}"
+          }
+        },
         {
           "name": "Buat Invoice Kunjungan (4 Sumber)",
           "event": [
@@ -948,6 +941,33 @@
               "mode": "raw",
               "raw": "{\n  \"invoice_id\": \"{{invoice_id}}\",\n  \"metode\": \"non_tunai\",\n  \"jumlah\": \"{{cicilan_2}}\",\n  \"no_referensi\": \"QRIS-NEWMAN-{{run_sfx}}\"\n}"
             }
+          }
+        },
+        {
+          "name": "Kunjungan Otomatis Selesai Setelah Lunas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invoice 200', () => pm.response.to.have.status(200));",
+                  "const k = pm.response.json().data.kunjungan;",
+                  "pm.test('Status kunjungan selesai', () => pm.expect(k.status).to.eql('selesai'));",
+                  "pm.test('Kunjungan terkunci (valid)', () => pm.expect(k.is_valid).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_kasir}}"
+              }
+            ],
+            "url": "{{yii_url}}/transaction/invoice/{{invoice_id}}"
           }
         }
       ]

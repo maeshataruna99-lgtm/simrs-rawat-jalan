@@ -21,6 +21,7 @@ describe('export-pdf', () => {
         no_kunjungan: 'RJ202611220001',
         tgl_kunjungan: '2026-11-22',
         status: 'selesai',
+        is_valid: true,
       },
       pasien: { id: 3, no_rm: 'RM000003', nama: 'Budi Santoso', nik: '3201010101900003' },
       poli: { id: 1, kode: 'POLI-UMUM', nama: 'Poli Umum' },

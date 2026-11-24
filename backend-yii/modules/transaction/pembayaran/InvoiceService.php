@@ -80,6 +80,13 @@ class InvoiceService
                 $item->save(false);
             }
 
+            // Membuat invoice sekaligus validasi pertama: kunjungan terkunci dari order baru dokter.
+            $validasi = new ValidasiKunjunganService();
+            $validasi->tandaiValid($kunjungan->id);
+            if ($invoice->status === Invoice::STATUS_LUNAS) {
+                $validasi->selesaikanKarenaLunas($kunjungan->id);
+            }
+
             $tx->commit();
 
             return $this->detail($invoice->id);

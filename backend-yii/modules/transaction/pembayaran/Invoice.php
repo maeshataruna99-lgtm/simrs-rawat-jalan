@@ -92,6 +92,7 @@ class Invoice extends ActiveRecord
             'no_kunjungan' => $this->kunjungan->no_kunjungan,
             'tgl_kunjungan' => $this->kunjungan->tgl_kunjungan,
             'status' => $this->kunjungan->status,
+            'is_valid' => (bool) $this->kunjungan->is_valid,
         ] : null;
         $fields['pasien'] = fn () => $this->kunjungan?->pasien ? [
             'id' => $this->kunjungan->pasien->id,

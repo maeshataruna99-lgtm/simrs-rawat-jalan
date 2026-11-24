@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict yiOBfEUcUVIxtwVGiVNSNtV0skI2YSO0I4ZGkcE5WXfM8aqFoPcj0bVWSggi13M
+\restrict ZepxT2ogEOjMLmN9pG5cKz1OCGx0AFfWbcKjcxKv8U2wYLhdRqk6fRizhl1D1av
 
 -- Dumped from database version 16.15
 -- Dumped by pg_dump version 16.15
@@ -798,6 +798,9 @@ CREATE TABLE public.t_kunjungan (
     created_by integer,
     updated_by integer,
     penjamin character varying(20) DEFAULT 'umum'::character varying NOT NULL,
+    is_valid boolean DEFAULT false NOT NULL,
+    divalidasi_at timestamp(0) without time zone DEFAULT NULL::timestamp without time zone,
+    divalidasi_by integer,
     CONSTRAINT chk_t_kunjungan_no_antrean CHECK ((no_antrean > 0)),
     CONSTRAINT chk_t_kunjungan_penjamin CHECK (((penjamin)::text = ANY ((ARRAY['umum'::character varying, 'bpjs'::character varying, 'asuransi'::character varying])::text[]))),
     CONSTRAINT chk_t_kunjungan_status CHECK (((status)::text = ANY ((ARRAY['menunggu'::character varying, 'diperiksa'::character varying, 'selesai'::character varying, 'batal'::character varying])::text[])))
@@ -2414,5 +2417,5 @@ ALTER TABLE ONLY public.t_tindakan
 -- PostgreSQL database dump complete
 --
 
-\unrestrict yiOBfEUcUVIxtwVGiVNSNtV0skI2YSO0I4ZGkcE5WXfM8aqFoPcj0bVWSggi13M
+\unrestrict ZepxT2ogEOjMLmN9pG5cKz1OCGx0AFfWbcKjcxKv8U2wYLhdRqk6fRizhl1D1av
 

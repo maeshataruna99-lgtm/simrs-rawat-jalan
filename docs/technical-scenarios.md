@@ -79,19 +79,23 @@ Dokter membatalkan atau menambah tindakan, resep, atau order lab setelah invoice
 
 ### Solusi Berlapis
 1. **Item berbasis sumber & void**: setiap baris `t_invoice_item` menyimpan `(sumber, referensi_id)` dengan partial unique index `uq_t_invoice_item_aktif WHERE is_void = false`. Saat tindakan/resep/lab berubah, `BillingSyncService::sinkronkan()` mengunci `t_invoice` (`FOR UPDATE`), menandai item lama `is_void = true` disertai `alasan_void` (wajib non-kosong lewat check constraint `chk_t_invoice_item_void`), menambahkan item baru, dan menghitung ulang `total` serta `status`.
-2. **Proteksi invoice lunas & overpay**: perubahan biaya ditolak `409` bila invoice sudah `lunas`, atau bila revisi membuat `total < total_bayar` (transaksi di-rollback utuh).
-3. **Audit log menyeluruh**: `AuditLogBehavior` (terpasang pada `Pemeriksaan`, `TindakanKunjungan`, `Invoice`, `InvoiceItem`) serta `AuditLog::catat()` pada `BillingSyncService::sinkronkan()` dan `PemeriksaanService::simpanDiagnosis()` mencatat `data_lama` & `data_baru` (JSONB) di `t_audit_log`. Perubahan diagnosis tetap diizinkan setelah lunas karena tidak mengubah biaya, namun tetap terekam di `t_audit_log`.
+2. **Validasi kasir (kunci Valid/Unvalid)**: membuat invoice sekaligus menandai kunjungan `is_valid = true` (migrasi `m261124_010000_add_validasi_to_t_kunjungan`). Selama valid, order baru dokter (pemeriksaan, diagnosis, tindakan, resep, order lab) ditolak `409`, sedangkan order yang sudah ada tetap bisa diproses farmasi dan laboratorium. Bila pasien perlu transaksi tambahan, kasir menekan **Unvalid** (`PUT /transaction/invoice/{id}/unvalid`). Perubahan lalu disinkronkan ke invoice, dan kasir menekan **Valid** lagi (`PUT /transaction/invoice/{id}/valid`). Sebelum membuat invoice atau Valid, kasir melihat catatan merah dari `GET /transaction/invoice/peringatan` (order lab belum selesai, resep belum diserahkan, pasien belum diperiksa). Kasir tetap boleh melanjutkan setelah konfirmasi.
+3. **Lunas = selesai permanen**: saat invoice lunas (dari pembayaran, invoice bernilai 0, atau revisi tagihan), `ValidasiKunjunganService::selesaikanKarenaLunas()` mengubah kunjungan menjadi `selesai` dengan jejak di `t_kunjungan_status_log`. Kunjungan selesai tidak bisa di-Unvalid dan hanya tampil di billing. Status `selesai` tidak bisa lagi dipilih manual dari antrean. Revisi yang membuat `total < total_bayar` tetap ditolak `409` dan di-rollback utuh.
+4. **Audit log menyeluruh**: `AuditLogBehavior` (terpasang pada `Pemeriksaan`, `TindakanKunjungan`, `Invoice`, `InvoiceItem`) serta `AuditLog::catat()` pada `BillingSyncService::sinkronkan()` dan `PemeriksaanService::simpanDiagnosis()` mencatat `data_lama` & `data_baru` (JSONB) di `t_audit_log`.
 
 ### Lokasi Kode
 - Migrasi: `backend-yii/migrations/m261121_170000_create_billing_and_audit_tables.php`
-- Service & Behavior: `backend-yii/common/AuditLog.php`, `backend-yii/common/AuditLogBehavior.php`, `backend-yii/modules/transaction/pembayaran/BillingSyncService.php`
-- Hook: `TindakanKunjunganService.php`, `ResepService.php`, `OrderLabService.php`, `PemeriksaanService.php`
-- Test: `backend-yii/tests/unit/transaction/pembayaran/BillingSyncServiceTest.php`, `tests/concurrency/pembayaran.mjs`
+- Service & Behavior: `backend-yii/common/AuditLog.php`, `backend-yii/common/AuditLogBehavior.php`, `backend-yii/modules/transaction/pembayaran/BillingSyncService.php`, `backend-yii/modules/transaction/pembayaran/ValidasiKunjunganService.php`
+- Hook: `TindakanKunjunganService.php`, `ResepService.php`, `OrderLabService.php`, `PemeriksaanService.php`, `PembayaranService.php`, `InvoiceService.php`
+- Test: `backend-yii/tests/unit/transaction/pembayaran/BillingSyncServiceTest.php`, `ValidasiKunjunganServiceTest.php`, `tests/concurrency/pembayaran.mjs`
 
 ### Bukti Uji
-- `BillingSyncServiceTest` (6 test): verifikasi void item + penurunan total, penambahan tindakan/resep/lab pasca-invoice, pelunasan otomatis saat total turun menyamai `total_bayar`, rollback `409` bila total < `total_bayar`, penolakan `409` saat lunas, dan audit log perubahan diagnosis.
+- `BillingSyncServiceTest` (6 test): perubahan ditolak selama valid dan baru diizinkan setelah Unvalid, void item disertai penurunan total, penambahan tindakan/resep/lab setelah Unvalid, pelunasan otomatis saat total turun menyamai `total_bayar` (kunjungan ikut selesai), rollback `409` bila total < `total_bayar`, dan kunci permanen setelah lunas.
+- `ValidasiKunjunganServiceTest` (3 test): isi peringatan kasir sampai semua order tuntas, siklus invoice → Unvalid → Valid, dan kunjungan lunas yang hilang dari antrean, worklist lab, dan antrean farmasi, tetapi tetap tampil di daftar invoice.
 - `node tests/concurrency/pembayaran.mjs`:
+  - `[D.4 Validasi]` `batal tindakan saat valid = 409, setelah Unvalid dibuka`
   - `[D.4 Revisi Tagihan]` `total 100000 -> 25000, item void = 1`
+  - `[D.4 Lunas]` `status kunjungan = selesai, diagnosis = 409, unvalid = 409`
   - `[D.4 Audit Log]` `jumlah = 6, daftar = [t_diagnosis:update, t_diagnosis:update, t_invoice:sync, t_tindakan:update, t_invoice:insert, t_tindakan:insert]`
 
 ---

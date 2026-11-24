@@ -10,6 +10,7 @@ use app\modules\master\pasien\PasienService;
 use app\modules\master\poli\PoliService;
 use app\modules\transaction\antrean\AntreanService;
 use app\modules\transaction\pembayaran\InvoiceService;
+use app\modules\transaction\pendaftaran\Kunjungan;
 use app\modules\transaction\pendaftaran\PendaftaranService;
 use app\modules\transaction\resep\FarmasiService;
 use app\modules\transaction\resep\ResepService;
@@ -207,8 +208,13 @@ class AntreanServiceTest extends TestCase
         $diperiksa = $service->ubahStatus($kunjungan->id, 'diperiksa', $dokterA->id);
         $this->assertSame('diperiksa', $diperiksa->status);
 
-        $selesai = $service->ubahStatus($kunjungan->id, 'selesai', null);
-        $this->assertSame('selesai', $selesai->status);
+        // Selesai tidak bisa dipilih manual; kunjungan baru selesai saat invoicenya lunas.
+        try {
+            $service->ubahStatus($kunjungan->id, 'selesai', null);
+            $this->fail('Status selesai manual seharusnya ditolak.');
+        } catch (ValidationException) {
+            $this->assertSame('diperiksa', Kunjungan::findOne($kunjungan->id)->status);
+        }
     }
 
     public function testBatalMenolakJikaResepDiserahkanAtauAdaInvoice(): void

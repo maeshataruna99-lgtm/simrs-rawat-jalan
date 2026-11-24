@@ -15,6 +15,9 @@ class InvoiceController extends BaseApiController
     protected array $actionPermissions = [
         'belum-tagih' => 'read',
         'audit-log' => 'read',
+        'peringatan' => 'read',
+        'valid' => 'update',
+        'unvalid' => 'update',
     ];
 
     protected function verbs(): array
@@ -25,7 +28,41 @@ class InvoiceController extends BaseApiController
             'create' => ['POST'],
             'belum-tagih' => ['GET'],
             'audit-log' => ['GET'],
+            'peringatan' => ['GET'],
+            'valid' => ['PUT'],
+            'unvalid' => ['PUT'],
         ];
+    }
+
+    /**
+     * GET /transaction/invoice/peringatan?kunjungan_id= — transaksi belum tuntas yang perlu diketahui kasir
+     * sebelum membuat invoice atau validasi.
+     */
+    public function actionPeringatan(): array
+    {
+        $kunjunganId = (int) Yii::$app->request->get('kunjungan_id');
+
+        return ApiResponse::success((new ValidasiKunjunganService())->peringatan($kunjunganId));
+    }
+
+    /**
+     * PUT /transaction/invoice/{id}/valid — kunci kunjungan dari order baru dokter.
+     */
+    public function actionValid(int $id): array
+    {
+        (new ValidasiKunjunganService())->validasi($id);
+
+        return ApiResponse::success((new InvoiceService())->detail($id)->toArray(), 'Kunjungan berhasil divalidasi.');
+    }
+
+    /**
+     * PUT /transaction/invoice/{id}/unvalid — buka kunci agar dokter bisa menambah transaksi lagi.
+     */
+    public function actionUnvalid(int $id): array
+    {
+        (new ValidasiKunjunganService())->batalkanValidasi($id);
+
+        return ApiResponse::success((new InvoiceService())->detail($id)->toArray(), 'Validasi kunjungan dibuka.');
     }
 
     /**
