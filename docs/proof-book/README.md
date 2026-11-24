@@ -1,6 +1,6 @@
 # Proof Book dan Module Guide
 
-Dokumen utama: [`SIMRS-Module-Guide-and-Proof.pdf`](SIMRS-Module-Guide-and-Proof.pdf) (105 halaman). Sumber HTML-nya: [`module-guide.html`](module-guide.html).
+Dokumen utama: [`SIMRS-Module-Guide-and-Proof.pdf`](SIMRS-Module-Guide-and-Proof.pdf) (107 halaman). Sumber HTML-nya: [`module-guide.html`](module-guide.html).
 
 ## Isi PDF
 

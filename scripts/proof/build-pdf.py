@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 PB = os.path.join(ROOT, "docs", "proof-book")
 OUT_HTML = os.path.join(PB, "module-guide.html")
-OUT_PDF = os.path.join(PB, "SIMRS-Module-Guide-and-Proof.pdf")
+OUT_PDF = os.environ.get("PDF_OUT") or os.path.join(PB, "SIMRS-Module-Guide-and-Proof.pdf")
 e = html.escape
 
 
@@ -109,7 +109,10 @@ def dscen(n, evidence):
     return html_ + evidence
 
 
-def chapter(title, body, page_break=True): return f'<section class="chapter"><h2>{e(title)}</h2>{body}</section>'
+def chapter(title, body, page_break=True):
+    m = re.match(r"(\d+)\.", title)
+    cid = f"bab-{m.group(1)}" if m else ("bab-e" if title.startswith("E.") else ("peta" if title.startswith("Peta") else "lampiran-" + title.split()[1].rstrip(".").lower() if title.startswith("Lampiran") else ""))
+    return f'<section class="chapter" id="{cid}"><h2>{e(title)}</h2>{body}</section>'
 
 
 def role_grid():
@@ -295,7 +298,7 @@ states = (chips("menunggu", "diperiksa", "selesai (otomatis saat lunas)", lbl="K
 
 # ---------- modul ----------
 def module(no, title, poin, tujuan, role, langkah, endpoint, tabel, aturan, kode, bukti):
-    return f"""<section class="module"><h2>{e(no)}. {e(title)} <span class="tag">{e(poin)}</span></h2>
+    return f"""<section class="module" id="m-{no.replace('.', '-')}"><h2>{e(no)}. {e(title)} <span class="tag">{e(poin)}</span></h2>
 <h3>Tujuan</h3><p>{tujuan}</p><h3>Pengguna dan hak akses</h3><p>{role}</p>
 <h3>Cara memakai</h3>{ol(langkah)}<h3>Endpoint utama</h3>{table(["Method", "Path", "Fungsi"], endpoint)}
 <h3>Tabel database</h3><p>{tabel}</p><h3>Aturan dan validasi</h3>{ul(aturan)}<h3>Lokasi kode</h3><p>{kode}</p>
@@ -536,6 +539,19 @@ bab7 = chapter("7. Skenario teknis D.1 sampai D.6", "<p>Instruksi D meminta anal
             + T("D6-performa", "Bukti D.6: benchmark API, daftar index aktif, dan EXPLAIN memakai index")))
 
 
+
+
+checklist = table(["Butir instruksi", "Status", "Lokasi bukti"], [
+    ["A. Stack: React, Yii, Node.js, PostgreSQL, Postman, Git", "Terpenuhi", "Bab 2.1"],
+    ["B.1 Master data (CRUD, cari, validasi, cegah duplikasi)", "Terpenuhi", "Bab 5.2"],
+    ["B.2 Pendaftaran dan antrean", "Terpenuhi", "Bab 4.1, 5.3"], ["B.3 Pemeriksaan dan rekam medis", "Terpenuhi", "Bab 4.2, 5.4"], ["B.4 Tindakan medis", "Terpenuhi", "Bab 4.3, 5.5"],
+    ["B.5 Farmasi dan resep", "Terpenuhi", "Bab 4.4, 4.6, 5.6"], ["B.6 Pemeriksaan penunjang dan API Node", "Terpenuhi", "Bab 4.5, 5.7, 5.10"],
+    ["B.7 Billing, pembayaran bertahap, invoice dan bukti bayar", "Terpenuhi", "Bab 4.7 sampai 4.9, 5.8"], ["B.8 Dashboard dan laporan dari API Node", "Terpenuhi", "Bab 5.9"], ["B.9 Autentikasi dan otorisasi 6 role", "Terpenuhi", "Bab 3.5, 5.1"],
+    ["C. Backend services Node.js (REST, middleware, error, dokumentasi, penjelasan komunikasi)", "Terpenuhi", "Bab 2.2 sampai 2.4, 5.10"], ["D.1 sampai D.6 skenario teknis", "Terpenuhi (bukti uji dan implementasi)", "Bab 7"],
+    ["F.2 Skema, ERD, migrasi", "Terpenuhi", "Bab 6; <code>database/</code>, <code>backend-yii/migrations/</code>"], ["F.3 Diagram arsitektur, alur komunikasi, endpoint, instalasi, keputusan teknis", "Terpenuhi", "Bab 2, 9; <code>docs/api/</code>"],
+    ["F.4 Screenshot, bukti alur pendaftaran sampai pembayaran, invoice, bukti Node", "Terpenuhi", "Bab 4, 5.10"], ["F.5 Test case, bukti Postman, unit dan integration test", "Terpenuhi", "Bab 8"],
+    ["Bonus: export PDF dan Excel, filter laporan, UI rapi", "Ada", "Bab 5.8, 5.9"]])
+
 def row(sec, butir, lokasi, status="Terpenuhi"): return [e(sec), butir, status, lokasi]
 
 
@@ -606,16 +622,42 @@ stack = table(["Komponen", "Syarat soal", "Yang dipakai", "Bukti"], [
     ["Version control", "Git", "Git; repo GitHub; commit konvensional (commitlint, husky)", "<code>git remote -v</code>"],
     ["Orkestrasi", "(tambahan)", "Docker Compose, 4 kontainer", "tabel docker compose ps di bab 5.10"]])
 
-checklist = table(["Butir instruksi", "Status", "Lokasi bukti"], [
-    ["A. Stack: React, Yii, Node.js, PostgreSQL, Postman, Git", "Terpenuhi", "Bab 2.1"],
-    ["B.1 Master data (CRUD, cari, validasi, cegah duplikasi)", "Terpenuhi", "Bab 5.2"],
-    ["B.2 Pendaftaran dan antrean", "Terpenuhi", "Bab 4.1, 5.3"], ["B.3 Pemeriksaan dan rekam medis", "Terpenuhi", "Bab 4.2, 5.4"], ["B.4 Tindakan medis", "Terpenuhi", "Bab 4.3, 5.5"],
-    ["B.5 Farmasi dan resep", "Terpenuhi", "Bab 4.4, 4.6, 5.6"], ["B.6 Pemeriksaan penunjang dan API Node", "Terpenuhi", "Bab 4.5, 5.7, 5.10"],
-    ["B.7 Billing, pembayaran bertahap, invoice dan bukti bayar", "Terpenuhi", "Bab 4.7 sampai 4.9, 5.8"], ["B.8 Dashboard dan laporan dari API Node", "Terpenuhi", "Bab 5.9"], ["B.9 Autentikasi dan otorisasi 6 role", "Terpenuhi", "Bab 3.5, 5.1"],
-    ["C. Backend services Node.js (REST, middleware, error, dokumentasi, penjelasan komunikasi)", "Terpenuhi", "Bab 2.2 sampai 2.4, 5.10"], ["D.1 sampai D.6 skenario teknis", "Terpenuhi (bukti uji dan implementasi)", "Bab 7"],
-    ["F.2 Skema, ERD, migrasi", "Terpenuhi", "Bab 6; <code>database/</code>, <code>backend-yii/migrations/</code>"], ["F.3 Diagram arsitektur, alur komunikasi, endpoint, instalasi, keputusan teknis", "Terpenuhi", "Bab 2, 9; <code>docs/api/</code>"],
-    ["F.4 Screenshot, bukti alur pendaftaran sampai pembayaran, invoice, bukti Node", "Terpenuhi", "Bab 4, 5.10"], ["F.5 Test case, bukti Postman, unit dan integration test", "Terpenuhi", "Bab 8"],
-    ["Bonus: export PDF dan Excel, filter laporan, UI rapi", "Ada", "Bab 5.8, 5.9"]])
+def L(target, text): return f'<a href="#{target}">{text}</a>'
+
+
+peta_rows = [
+    ["A. Instruksi Pengerjaan", "Stack wajib dan bukti penggunaannya", L("bab-2", "Bab 2.1") + ", " + L("bab-1", "Bab 1")],
+    ["B. Ruang Lingkup Pengembangan, 1. Pengelolaan Master Data (Yii)", "Master data, CRUD, pencarian, validasi, duplikasi", L("m-5-2", "Bab 5.2")],
+    ["B.2 Pendaftaran dan Antrean Pasien (Yii dan React.js)", "Pendaftaran, nomor antrean, status, riwayat", L("m-5-3", "Bab 5.3") + ", " + L("bab-4", "Bab 4.1")],
+    ["B.3 Pemeriksaan dan Rekam Medis Elektronik (Yii dan React.js)", "Anamnesis, tanda vital, fisik, diagnosis", L("m-5-4", "Bab 5.4")],
+    ["B.4 Tindakan Medis (Yii dan React.js)", "Tindakan, tarif, komponen tagihan", L("m-5-5", "Bab 5.5")],
+    ["B.5 Farmasi dan Resep Obat (Yii dan React.js)", "Resep, validasi stok, penyerahan, riwayat obat", L("m-5-6", "Bab 5.6")],
+    ["B.6 Pemeriksaan Penunjang (Yii, React.js, dan Node.js)", "Order lab, hasil, API integrasi", L("m-5-7", "Bab 5.7")],
+    ["B.7 Billing dan Pembayaran (Yii dan React.js)", "Invoice, pembayaran bertahap, cetak", L("m-5-8", "Bab 5.8")],
+    ["B.8 Dashboard dan Laporan (React.js, Yii, dan Node.js)", "Dashboard, filter periode, rincian", L("m-5-9", "Bab 5.9")],
+    ["B.9 Pengelolaan Pengguna dan Hak Akses (Yii dan React.js)", "Login, enam role, otorisasi", L("m-5-1", "Bab 5.1")],
+    ["C. Pengembangan Backend Services (Node.js)", "REST API, middleware, error handling, dokumentasi", L("m-5-10", "Bab 5.10") + ", " + L("lampiran-a", "Lampiran A")],
+    ["D. Skenario Permasalahan Teknis", "D.1 sampai D.6", L("bab-7", "Bab 7")],
+    ["E. Ketentuan Teknis", "E.1 sampai E.10", L("bab-e", "Bab E")],
+    ["F. Output Pengerjaan", "Source code, database, dokumentasi teknis, hasil implementasi, pengujian", L("bab-10", "Bab 10") + ", " + L("bab-6", "Bab 6") + ", " + L("bab-4", "Bab 4") + ", " + L("bab-8", "Bab 8")],
+    ["G. Ketentuan Pengerjaan", "Data dummy, pengumpulan", L("bab-9", "Bab 9") + ", " + L("bab-10", "Bab 10")]]
+peta = chapter("Peta Instruksi A sampai G", "<p>Judul pada tabel mengikuti dokumen instruksi. Klik tautan untuk membuka bagian terkait.</p>" + table(["Bagian instruksi", "Isi", "Lokasi di dokumen ini"], peta_rows, "small"))
+
+e_rows = [
+    ["E.1", "Gunakan Yii1 atau Yii2 untuk backend utama dan business logic SIMRS.", "Yii 2.0.55 pada PHP 8.3. Seluruh business logic dan penulisan data transaksi ada di <code>backend-yii</code>.", L("bab-2", "Bab 2.1") + " (keluaran <code>yii version</code>)"],
+    ["E.2", "Gunakan React.js untuk frontend aplikasi.", "React 19.3, TypeScript, Vite. Seluruh antarmuka ada di <code>frontend-react</code>.", L("bab-2", "Bab 2.1") + ", " + L("bab-4", "Bab 4")],
+    ["E.3", "Gunakan Node.js untuk backend services dan API pendukung.", "Express 5 dan TypeScript: integrasi hasil lab (outbox + retry) dan API dashboard read-only di <code>service-node</code>.", L("m-5-10", "Bab 5.10")],
+    ["E.4", "Gunakan PostgreSQL sebagai database utama.", "PostgreSQL 16.15, 30 tabel, constraint dan index pengaman.", L("bab-6", "Bab 6")],
+    ["E.5", "Terapkan komunikasi antarbagian sistem melalui REST API.", "React ke Yii, React ke Node, Node ke Yii, dan sistem lab eksternal ke Node, semuanya REST JSON.", L("bab-2", "Bab 2.2, 2.3") + ", " + L("lampiran-a", "Lampiran A")],
+    ["E.6", "Terapkan autentikasi, otorisasi, dan validasi data.", "JWT HS256 dan hak akses per menu untuk 6 role; validasi di server Yii, Zod di Node, dan form React Hook Form dengan Zod.", L("m-5-1", "Bab 5.1") + ", " + L("bab-3", "Bab 3.5")],
+    ["E.7", "Gunakan Postman untuk melakukan pengujian API.", "Collection 35 request, 45 assertion, dijalankan dengan Postman CLI 1.93.1 dan Newman, 0 gagal.", L("bab-8", "Bab 8.2")],
+    ["E.8", "Gunakan Git untuk pengelolaan source code.", "Repository publik GitHub <code>github.com/maeshataruna99-lgtm/simrs-rawat-jalan</code>; Conventional Commits dengan commitlint dan husky; CI GitHub Actions.", L("bab-2", "Bab 2.6")],
+    ["E.9", "Diperbolehkan menggunakan library atau package pendukung yang relevan.", "Daftar paket Yii, Node, dan React beserta versi dan fungsinya.", L("lampiran-b", "Lampiran B")],
+    ["E.10", "Wajib menjelaskan pembagian tanggung jawab antara Yii dan Node.js agar tidak terjadi duplikasi business logic maupun inkonsistensi data.", "Yii satu-satunya penulis data transaksi dan pemilik business logic dan migrasi; Node hanya integrasi dan agregasi read-only lewat <code>simrs_readonly</code>. Matriks lengkap di bawah.", L("bab-2", "Bab 2.4")]]
+babE = chapter("E. Ketentuan Teknis", "<p>Sepuluh ketentuan teknis pada instruksi beserta pemenuhannya.</p>" + table(["No", "Ketentuan pada instruksi", "Pemenuhan", "Bukti"], e_rows, "small")
+               + "<h3>E.1 sampai E.4 dan E.9: teknologi yang dipakai</h3>" + stack + "<h3>E.10: pembagian tanggung jawab Yii dan Node.js</h3>" + yvn
+               + "<p>Duplikasi logic dicegah: flag lab dan status order hanya dihitung di Yii; tagihan dan revisi billing hanya di Yii; Node hanya meneruskan dan menjumlahkan kolom snapshot. Kedua layanan memakai format respons yang sama.</p>")
+
 
 css = """@page { size: A4; margin: 15mm 13mm 16mm 13mm; }
 body { font: 9.8pt/1.5 'Segoe UI', Arial, sans-serif; color:#1a1a1a; }
@@ -634,18 +676,18 @@ img { width: 100%; border: 1px solid #ccc; border-radius: 3px; } figure.app img 
 .sm { margin: 2mm 0; } .smlbl { font-weight: 700; font-size: 9pt; margin-bottom: 1mm; } .chip { display:inline-block; background:#e6f6ef; border:1px solid #0f9d6e; border-radius: 10px; padding: 1px 9px; font-size: 8.8pt; } .arr { margin: 0 4px; color:#555; } .smnote { font-size: 8.5pt; color:#555; margin: 0 0 2mm; }
 .entgrid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; } .ent { border:1px solid #94a3b8; border-radius: 4px; font-size: 6.8pt; break-inside: avoid; } .entname { background:#0f9d6e; color:#fff; font-weight:700; padding: 2px 5px; font-size: 7.6pt; }
 .col { display:flex; gap: 3px; padding: 1px 5px; border-top: 1px solid #eef2f7; } .col span { flex: 1; font-weight: 600; } .col i { color:#64748b; font-style: normal; } .col b { width: 14px; font-size: 6pt; } b.PK { color:#b45309; } b.FK { color:#1d4ed8; } b.UK { color:#7e22ce; }
-.svgwrap { margin: 3mm 0; break-inside: avoid; } .rolegrid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 2mm; break-inside: avoid; } .rolegrid figure { margin: 0; } .rolegrid img { max-height: none; } pre { background:#f1f3f5; padding: 2mm; font-size: 7.5pt; overflow:hidden; white-space: pre-wrap; break-inside: avoid; } pre code { background:none; font-size: 7.5pt; }"""
+.svgwrap { margin: 3mm 0; break-inside: avoid; } a { color:#0b6e4d; text-decoration: none; } .toc a { color:#1a1a1a; } .rolegrid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 2mm; break-inside: avoid; } .rolegrid figure { margin: 0; } .rolegrid img { max-height: none; } pre { background:#f1f3f5; padding: 2mm; font-size: 7.5pt; overflow:hidden; white-space: pre-wrap; break-inside: avoid; } pre code { background:none; font-size: 7.5pt; }"""
 
 
-def chapter(title, body, page_break=True):
-    return f'<section class="chapter"><h2>{e(title)}</h2>{body}</section>'
 
 
 doc = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><title>SIMRS Rawat Jalan - Module Guide and Proof</title><style>{css}</style></head><body>
 <div class="cover"><h1>SIMRS Rawat Jalan</h1><div class="sub">Module Guide and Proof Book<br>Real Case Test Senior Programmer, PT Inova Medika Solusindo</div>
 <div class="meta">Tanggal bukti: 24 November 2026<br>Repository: github.com/maeshataruna99-lgtm/simrs-rawat-jalan<br>Seluruh data dan screenshot dihasilkan setelah reset total dan seed ulang database.<br>Satu pasien ({e(nama_px)}, {e(rm_px)}) diikuti dari pendaftaran sampai lunas lewat antarmuka.</div></div>
 
-<section class="part"><h2>Daftar Isi</h2><ol class="toc"><li>Fungsi proyek</li><li>Stack dan arsitektur (Poin A, E, F.3), struktur kode</li><li>Workflow pelayanan: diagram alur, status, hak akses</li><li>Bukti alur satu pasien dari pendaftaran sampai lunas (F.4)</li><li>Panduan dan bukti per modul (B.1 sampai B.9, C, bonus)</li><li>Database: ERD, constraint, migrasi (F.2)</li><li>Skenario teknis D.1 sampai D.6</li><li>Pengujian: test case, Postman, unit dan konkurensi (F.5)</li><li>Instalasi dan konfigurasi</li><li>Kesesuaian dengan instruksi (A sampai G)</li><li>Lampiran A: dokumentasi endpoint API; Lampiran B: library pendukung</li></ol></section>
+<section class="part"><h2>Daftar Isi</h2><ol class="toc"><li><a href="#peta">Peta Instruksi A sampai G</a></li><li><a href="#bab-1">Fungsi proyek</a></li><li><a href="#bab-2">Stack dan arsitektur (Poin A, F.3), struktur kode</a></li><li><a href="#bab-e">E. Ketentuan Teknis (E.1 sampai E.10)</a></li><li><a href="#bab-3">Workflow pelayanan: diagram alur, status, hak akses</a></li><li><a href="#bab-4">Bukti alur satu pasien dari pendaftaran sampai lunas (F.4)</a></li><li><a href="#bab-5">Panduan dan bukti per modul (B.1 sampai B.9, C, bonus)</a></li><li><a href="#bab-6">Database: ERD, constraint, migrasi (F.2)</a></li><li><a href="#bab-7">Skenario teknis D.1 sampai D.6</a></li><li><a href="#bab-8">Pengujian: test case, Postman, unit dan konkurensi (F.5)</a></li><li><a href="#bab-9">Instalasi dan konfigurasi</a></li><li><a href="#bab-10">Kesesuaian dengan instruksi (A sampai G)</a></li><li><a href="#lampiran-a">Lampiran A: dokumentasi endpoint API</a>; <a href="#lampiran-b">Lampiran B: library pendukung</a></li></ol></section>
+
+{peta}
 
 {chapter("1. Fungsi proyek", f'''<p>SIMRS Rawat Jalan adalah sistem informasi rumah sakit untuk mengelola seluruh perjalanan pasien rawat jalan, dari pendaftaran sampai pembayaran, dalam satu aplikasi terintegrasi.</p>
 <h3>Masalah yang diselesaikan</h3>{ul(["Data pasien, jadwal dokter, tindakan, obat, dan tarif tersebar di banyak catatan terpisah. Sistem menyatukannya di satu database terstruktur.", "Antrean dan nomor antrean mudah ganda saat banyak petugas bekerja bersamaan. Sistem membuatnya atomik.",
@@ -662,6 +704,8 @@ doc = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><title>SIMR
 <h3>2.5 Keputusan teknis</h3>{decisions}
 <h3>2.6 Struktur kode dan kerapihan</h3>{struktur}''')}
 
+{babE}
+
 {chapter("3. Workflow pelayanan", f'''<h3>3.1 Diagram alur end-to-end</h3><p>Diagram menunjukkan urutan tahap, pelaku (warna), cabang paralel dari dokter (tindakan, resep, laboratorium), titik temu di kasir, dan alur revisi.</p><div class="svgwrap">{flow_svg}</div>
 <h3>3.2 Penjelasan alur</h3>{ol(["<b>Pendaftaran.</b> Petugas mencari pasien atau membuat pasien baru, memilih poli, jadwal dokter, dan penjamin. Sistem membuat nomor kunjungan dan nomor antrean otomatis. Status: menunggu.", "<b>Panggil.</b> Petugas memanggil pasien dari Antrean Poli. Status: diperiksa.",
  "<b>Pemeriksaan.</b> Dokter mengisi anamnesis, tanda vital, pemeriksaan fisik, dan diagnosis utama serta sekunder. Hasil tersimpan di rekam medis.", "<b>Cabang dokter.</b> Dokter dapat menambah tindakan (tarif dari master), resep obat (stok divalidasi), dan order laboratorium. Ketiganya menjadi komponen tagihan.",
@@ -672,11 +716,11 @@ doc = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><title>SIMR
 <h3>3.4 Peran dalam alur</h3>{table(["Tahap", "Pelaku", "Layar"], [["Pendaftaran, antrean", "Petugas Pendaftaran", "Pendaftaran Kunjungan, Antrean Poli"], ["Pemeriksaan, tindakan, resep, order lab", "Dokter", "Pemeriksaan Pasien, Riwayat Rekam Medis"], ["Penyerahan obat", "Petugas Farmasi", "Pelayanan Resep"], ["Hasil lab", "Petugas Laboratorium", "Pemeriksaan Laboratorium"], ["Invoice, pembayaran, cetak", "Kasir", "Tagihan dan Pembayaran"], ["Dashboard", "Semua role", "Dashboard"]])}
 <h3>3.5 Matriks hak akses (dibaca dari database setelah seed)</h3><p>R = baca, C = tambah, U = ubah, D = hapus, tanda minus = tanpa akses.</p>{rbac}''')}
 
-<section class="chapter"><h2>4. Bukti alur satu pasien dari pendaftaran sampai lunas</h2>
+<section class="chapter" id="bab-4"><h2>4. Bukti alur satu pasien dari pendaftaran sampai lunas</h2>
 <p>Skrip <code>scripts/proof/flow.py</code> menjalankan antarmuka secara nyata untuk pasien <b>{e(nama_px)} ({e(rm_px)})</b> setelah reset dan seed ulang: kunjungan <code>{e(no_kunj)}</code>, antrean <b>{e(antrean_txt)}</b>, invoice <code>{e(no_inv)}</code> bernilai <b>{rp(total_inv)}</b> (pendaftaran 25.000 + tindakan 105.000 + laboratorium 70.000 + obat 15.000), dibayar {len(bayar)} kali sampai lunas.</p></section>
 {bab4}
 
-<section class="chapter"><h2>5. Panduan dan bukti per modul</h2><p>Setiap modul memuat tujuan, hak akses, langkah penggunaan sesuai layar aplikasi, endpoint, tabel, aturan validasi, lokasi kode, dan bukti.</p></section>
+<section class="chapter" id="bab-5"><h2>5. Panduan dan bukti per modul</h2><p>Setiap modul memuat tujuan, hak akses, langkah penggunaan sesuai layar aplikasi, endpoint, tabel, aturan validasi, lokasi kode, dan bukti.</p></section>
 {"".join(mods)}
 
 {chapter("6. Database", f'''<h3>6.1 Ringkasan</h3><p>30 tabel bisnis: prefix <code>m_</code> untuk master dan <code>t_</code> untuk transaksi. Semua tabel memakai kolom audit (<code>created_at</code>, <code>updated_at</code>, <code>created_by</code>, <code>updated_by</code>); master memakai soft delete. Skema dikelola oleh 26 migrasi Yii di <code>backend-yii/migrations/</code>; ekspor lengkap di <code>database/schema.sql</code>.</p>
