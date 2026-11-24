@@ -1,20 +1,20 @@
 # Proof Book dan Module Guide
 
-Dokumen utama: [`SIMRS-Module-Guide-and-Proof.pdf`](SIMRS-Module-Guide-and-Proof.pdf) (107 halaman). Sumber HTML-nya: [`module-guide.html`](module-guide.html).
+Dokumen utama: [`SIMRS-Module-Guide-and-Proof.pdf`](SIMRS-Module-Guide-and-Proof.pdf) (92 halaman). Sumber HTML-nya: [`module-guide.html`](module-guide.html).
 
 ## Isi PDF
 
-1. Fungsi proyek dan peran pengguna.
-2. Stack (Poin A), diagram arsitektur, alur komunikasi React, Yii, Node, PostgreSQL, pembagian tanggung jawab Yii dan Node, keputusan teknis.
-3. Workflow: diagram alur end-to-end, penjelasan tiap tahap, status tiap entitas, matriks hak akses dari database.
-4. Bukti alur satu pasien (38 screenshot) dari pendaftaran sampai lunas, memakai antarmuka sungguhan.
-5. Panduan per modul (10 modul): tujuan, hak akses, langkah, endpoint, tabel, aturan, kode, bukti.
-6. Database: ERD, constraint, migrasi.
-7. Skenario teknis D.1 sampai D.6: masalah, solusi, lokasi kode, dan bukti, termasuk demo outbox saat Yii dimatikan.
-8. Pengujian: Postman CLI, Newman, PHPUnit, Vitest, konkurensi, daftar test case.
-9. Instalasi dan konfigurasi.
-10. Checklist kesesuaian dengan instruksi, butir demi butir (A, B.1 sampai B.9, C, D.1 sampai D.6, E.1 sampai E.10, F, G, catatan penilaian, bonus).
-11. Lampiran A: dokumentasi endpoint API Yii dan Node. Lampiran B: library pendukung.
+Urutan dan judul mengikuti dokumen instruksi, agar mudah dicari dan dilacak. Daftar isi dan rujukan antarbagian berupa tautan yang bisa diklik.
+
+- **Pendahuluan:** fungsi proyek, peran pengguna, workflow pelayanan (diagram alur, status entitas).
+- **A. Instruksi Pengerjaan:** stack dan bukti versi.
+- **B. Ruang Lingkup Pengembangan:** B.1 sampai B.9 (judul 1 sampai 9 sesuai instruksi). Tiap bagian memuat butir instruksi verbatim beserta status dan bukti, panduan penggunaan, endpoint, tabel, dan screenshot.
+- **C. Pengembangan Backend Services – Node.js:** lima butir C, cara Node.js berkomunikasi dengan Yii dan database, pembagian tanggung jawab.
+- **D. Skenario Permasalahan Teknis:** D.1 sampai D.6 dengan pertanyaan instruksi, solusi, lokasi kode, dan bukti.
+- **E. Ketentuan Teknis:** E.1 sampai E.10.
+- **F. Output Pengerjaan:** 1 Source Code, 2 Database (ERD, migrasi), 3 Dokumentasi Teknis (arsitektur, alur komunikasi, instalasi, keputusan teknis), 4 Hasil Implementasi (alur 38 langkah pendaftaran sampai lunas, invoice, bukti Node), 5 Pengujian (Postman, unit test, test case).
+- **G. Ketentuan Pengerjaan:** data dummy, pengumpulan, catatan penilaian, fitur bonus.
+- **Lampiran A:** dokumentasi endpoint API. **Lampiran B:** library pendukung. **Lampiran C:** checklist kesesuaian butir demi butir.
 
 ## Cara membuat ulang
 
