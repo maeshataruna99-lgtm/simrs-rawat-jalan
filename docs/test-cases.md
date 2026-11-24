@@ -6,9 +6,9 @@ Dokumen ini memuat skenario pengujian fungsional dan teknis (B.1–B.9, C.1–C.
 
 | Lapisan | Perintah | Status Terakhir |
 |---|---|---|
-| Backend Yii2 (PHPUnit) | `docker compose exec -T yii composer test` | 112 tests lulus (termasuk `DummySeederTest`) |
-| Service Node.js (Vitest) | `docker compose exec -T node npm test` | Seluruh suite lulus (auth, validate, lab, outbox, dashboard) |
-| Frontend React (Vitest) | `cd frontend-react && npx vitest run` | 17 files, 47 tests lulus |
+| Backend Yii2 (PHPUnit) | `docker compose exec -T yii composer test` | 131 tests, 416 assertions lulus (termasuk `DummySeederTest`) |
+| Service Node.js (Vitest) | `docker compose exec -T node npm test` | 6 files, 38 tests lulus (auth, validate, lab, outbox, dashboard) |
+| Frontend React (Vitest) | `cd frontend-react && npx vitest run` | 22 files, 76 tests lulus |
 | Konkurensi (Node scripts) | `node tests/concurrency/{pendaftaran,stok-obat,pembayaran}.mjs` | D.1, D.2, D.3, D.4 lulus |
 | End-to-End API (Newman) | `npx newman run postman/simrs.collection.json -e postman/local.environment.json` | 34 requests, 41 assertions, 0 failed |
 

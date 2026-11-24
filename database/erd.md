@@ -151,6 +151,7 @@ erDiagram
         date tgl_kunjungan
         int no_antrean
         varchar status
+        varchar penjamin "umum | bpjs | asuransi"
     }
     t_kunjungan_status_log {
         int id PK
@@ -319,4 +320,4 @@ erDiagram
 | D.3 Pembayaran ganda & overpay | `t_pembayaran`, `t_invoice` | Unique `uq_t_pembayaran_idempotency_key`, `CHECK (total_bayar >= 0 AND total_bayar <= total)` |
 | D.4 Revisi tagihan | `t_invoice_item`, `t_audit_log` | Partial unique `uq_t_invoice_item_aktif (invoice_id, sumber, referensi_id) WHERE is_void = false`, `CHECK (NOT is_void OR length(trim(alasan_void)) > 0)` |
 | D.5 Hasil lab tidak hilang/ganda | `t_order_lab_detail`, `t_integration_outbox` | Unique `uq_t_order_lab_detail_idempotency_key`, unique `uq_t_integration_outbox_idempotency_key`, index antrean `(status, retry_berikutnya)` |
-| D.6 Optimasi dashboard | `t_kunjungan`, `t_invoice`, `t_pembayaran`, `t_tindakan`, `t_resep`, `t_invoice_item` | `idx_t_kunjungan_tgl_poli`, `idx_t_invoice_status`, `idx_t_pembayaran_dibayar_at`, `idx_t_tindakan_kunjungan_status`, `idx_t_resep_kunjungan_status`, `idx_t_invoice_item_invoice_sumber_aktif` |
+| D.6 Optimasi dashboard | `t_kunjungan`, `t_invoice`, `t_pembayaran`, `t_tindakan`, `t_resep`, `t_invoice_item` | `idx_t_kunjungan_tgl_poli`, `idx_t_kunjungan_dokter_penjamin` (filter dashboard per dokter dan penjamin), `idx_t_invoice_status`, `idx_t_pembayaran_dibayar_at`, `idx_t_tindakan_kunjungan_status`, `idx_t_resep_kunjungan_status`, `idx_t_invoice_item_invoice_sumber_aktif` |

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 9u3yOs2FqvGNdwanb0UaTvbI4uUK1WwxHmKrqYDt2jPwQKHuidw65TgObofjKUD
+\restrict yiOBfEUcUVIxtwVGiVNSNtV0skI2YSO0I4ZGkcE5WXfM8aqFoPcj0bVWSggi13M
 
 -- Dumped from database version 16.15
 -- Dumped by pg_dump version 16.15
@@ -797,7 +797,9 @@ CREATE TABLE public.t_kunjungan (
     updated_at timestamp(0) without time zone,
     created_by integer,
     updated_by integer,
+    penjamin character varying(20) DEFAULT 'umum'::character varying NOT NULL,
     CONSTRAINT chk_t_kunjungan_no_antrean CHECK ((no_antrean > 0)),
+    CONSTRAINT chk_t_kunjungan_penjamin CHECK (((penjamin)::text = ANY ((ARRAY['umum'::character varying, 'bpjs'::character varying, 'asuransi'::character varying])::text[]))),
     CONSTRAINT chk_t_kunjungan_status CHECK (((status)::text = ANY ((ARRAY['menunggu'::character varying, 'diperiksa'::character varying, 'selesai'::character varying, 'batal'::character varying])::text[])))
 );
 
@@ -1790,6 +1792,13 @@ CREATE INDEX idx_t_invoice_status ON public.t_invoice USING btree (status);
 
 
 --
+-- Name: idx_t_kunjungan_dokter_penjamin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_t_kunjungan_dokter_penjamin ON public.t_kunjungan USING btree (dokter_id, penjamin);
+
+
+--
 -- Name: idx_t_kunjungan_status_log_kunjungan_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2405,5 +2414,5 @@ ALTER TABLE ONLY public.t_tindakan
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 9u3yOs2FqvGNdwanb0UaTvbI4uUK1WwxHmKrqYDt2jPwQKHuidw65TgObofjKUD
+\unrestrict yiOBfEUcUVIxtwVGiVNSNtV0skI2YSO0I4ZGkcE5WXfM8aqFoPcj0bVWSggi13M
 

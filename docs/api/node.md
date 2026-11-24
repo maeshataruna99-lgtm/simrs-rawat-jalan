@@ -79,7 +79,7 @@ Kalau request dengan key dan isi yang sama dikirim ulang, data tidak tercatat du
 
 ## 3. Dashboard (`/api/dashboard`)
 
-Semua endpoint di bawah wajib JWT dan izin `dashboard:read`.
+Semua endpoint di bawah wajib JWT dan izin `dashboard:read`. Data keuangan (pendapatan, tagihan, pembayaran) juga butuh izin `dashboard-keuangan:read`. Bawaannya hanya role `admin` dan `kasir` yang punya izin ini (migrasi `m261122_040000_add_dashboard_keuangan_menu`).
 
 Parameter periode yang bisa dipakai di setiap endpoint (opsional):
 
@@ -90,16 +90,16 @@ Parameter periode yang bisa dipakai di setiap endpoint (opsional):
 | `dokter_id` | ID dokter |
 | `penjamin` | `umum`, `bpjs`, atau `asuransi` |
 
-| Method | Path | Keterangan |
-|---|---|---|
-| `GET` | `/api/dashboard/filters` | Pilihan filter dokter dan penjamin. |
-| `GET` | `/api/dashboard/summary` | Ringkasan: jumlah kunjungan, jumlah tindakan, pendapatan, total tagihan, dan status invoice. |
-| `GET` | `/api/dashboard/kunjungan-per-poli` | Jumlah kunjungan per poli. |
-| `GET` | `/api/dashboard/tindakan` | Rekap tindakan medis. |
-| `GET` | `/api/dashboard/pendapatan` | Ringkasan pendapatan per periode. |
-| `GET` | `/api/dashboard/obat` | Rekap penggunaan obat. |
-| `GET` | `/api/dashboard/pembayaran` | Rekap status dan metode pembayaran. |
-| `GET` | `/api/dashboard/detail/{jenis}` | Rincian data berhalaman. `jenis` bisa `kunjungan`, `tindakan`, `pendapatan`, `obat`, atau `pembayaran`. Parameter tambahan: `page`, `per_page` (maks 100), `poli_id`, `status`. |
+| Method | Path | Izin tambahan | Keterangan |
+|---|---|---|---|
+| `GET` | `/api/dashboard/filters` | - | Pilihan filter dokter dan penjamin. |
+| `GET` | `/api/dashboard/summary` | - | Ringkasan: jumlah kunjungan, jumlah tindakan, pendapatan, total tagihan, dan status invoice. Tanpa `dashboard-keuangan`, nilai `total_pendapatan`, `total_tagihan`, dan `invoice_per_status` berisi `null`. |
+| `GET` | `/api/dashboard/kunjungan-per-poli` | - | Jumlah kunjungan per poli. |
+| `GET` | `/api/dashboard/tindakan` | - | Rekap tindakan medis. |
+| `GET` | `/api/dashboard/pendapatan` | `dashboard-keuangan` | Ringkasan pendapatan per periode. Tanpa izin: `403`. |
+| `GET` | `/api/dashboard/obat` | - | Rekap penggunaan obat. |
+| `GET` | `/api/dashboard/pembayaran` | `dashboard-keuangan` | Rekap status dan metode pembayaran. Tanpa izin: `403`. |
+| `GET` | `/api/dashboard/detail/{jenis}` | `dashboard-keuangan` untuk `pendapatan` dan `pembayaran` | Rincian data berhalaman. `jenis` bisa `kunjungan`, `tindakan`, `pendapatan`, `obat`, atau `pembayaran`. Parameter tambahan: `page`, `per_page` (maks 100), `poli_id`, `status`. |
 
 Contoh request:
 
