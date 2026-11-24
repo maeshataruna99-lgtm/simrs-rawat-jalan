@@ -214,13 +214,21 @@ function ChatbotPanel({ userId }: { userId: number | null }) {
     setInput('');
     if (next === 'ringkasan') {
       setMessages([
-        { id: nextId.current++, from: 'bot', payload: { kind: 'i18n', key: 'chatbot.prompt.ringkasan' } },
+        {
+          id: nextId.current++,
+          from: 'bot',
+          payload: { kind: 'i18n', key: 'chatbot.prompt.ringkasan' },
+        },
       ]);
       void runTopicLookup('ringkasan', 'hari ini');
       return;
     }
     setMessages([
-      { id: nextId.current++, from: 'bot', payload: { kind: 'i18n', key: `chatbot.prompt.${next}` } },
+      {
+        id: nextId.current++,
+        from: 'bot',
+        payload: { kind: 'i18n', key: `chatbot.prompt.${next}` },
+      },
     ]);
   };
 
@@ -357,9 +365,8 @@ function ChatbotPanel({ userId }: { userId: number | null }) {
                     <li key={k.id}>
                       <span>
                         {k.no_kunjungan} | {k.tgl_kunjungan} | {k.pasien_nama ?? '-'} |{' '}
-                        {k.poli_nama ?? '-'} |{' '}
-                        {t('chatbot.result.antreanNo', { no: k.no_antrean })} |{' '}
-                        {t(`transaction.antrean.status.${k.status}`)}
+                        {k.poli_nama ?? '-'} | {t('chatbot.result.antreanNo', { no: k.no_antrean })}{' '}
+                        | {t(`transaction.antrean.status.${k.status}`)}
                       </span>
                       {can('pemeriksaan') && (
                         <Link

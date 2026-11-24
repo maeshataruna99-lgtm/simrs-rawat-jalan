@@ -7,14 +7,7 @@
  */
 
 export type Topic =
-  | 'pasien'
-  | 'tagihan'
-  | 'jadwal'
-  | 'obat'
-  | 'farmasi'
-  | 'lab'
-  | 'ringkasan'
-  | 'faq';
+  'pasien' | 'tagihan' | 'jadwal' | 'obat' | 'farmasi' | 'lab' | 'ringkasan' | 'faq';
 
 export interface KnowledgeArticle {
   id: string;
@@ -291,13 +284,41 @@ interface RouteContextRule {
 }
 
 const ROUTE_CONTEXT_RULES: RouteContextRule[] = [
-  { prefix: '/transaction/billing', topics: ['tagihan', 'ringkasan', 'pasien'], articleIds: ['billing', 'pendaftaran', 'dashboard'] },
-  { prefix: '/transaction/farmasi', topics: ['farmasi', 'obat', 'pasien'], articleIds: ['farmasi', 'obat', 'pemeriksaan'] },
-  { prefix: '/transaction/laboratorium', topics: ['lab', 'pasien'], articleIds: ['laboratorium', 'pemeriksaan', 'riwayatMedis'] },
-  { prefix: '/transaction/pemeriksaan', topics: ['pasien', 'obat', 'lab'], articleIds: ['pemeriksaan', 'riwayatMedis', 'farmasi', 'laboratorium'] },
-  { prefix: '/transaction/riwayat-medis', topics: ['pasien'], articleIds: ['riwayatMedis', 'pemeriksaan', 'pasien'] },
-  { prefix: '/transaction/pendaftaran', topics: ['pasien', 'jadwal'], articleIds: ['pendaftaran', 'pasien', 'jadwal', 'antrean'] },
-  { prefix: '/transaction/antrean', topics: ['pasien', 'jadwal'], articleIds: ['antrean', 'displayAntrean', 'pendaftaran'] },
+  {
+    prefix: '/transaction/billing',
+    topics: ['tagihan', 'ringkasan', 'pasien'],
+    articleIds: ['billing', 'pendaftaran', 'dashboard'],
+  },
+  {
+    prefix: '/transaction/farmasi',
+    topics: ['farmasi', 'obat', 'pasien'],
+    articleIds: ['farmasi', 'obat', 'pemeriksaan'],
+  },
+  {
+    prefix: '/transaction/laboratorium',
+    topics: ['lab', 'pasien'],
+    articleIds: ['laboratorium', 'pemeriksaan', 'riwayatMedis'],
+  },
+  {
+    prefix: '/transaction/pemeriksaan',
+    topics: ['pasien', 'obat', 'lab'],
+    articleIds: ['pemeriksaan', 'riwayatMedis', 'farmasi', 'laboratorium'],
+  },
+  {
+    prefix: '/transaction/riwayat-medis',
+    topics: ['pasien'],
+    articleIds: ['riwayatMedis', 'pemeriksaan', 'pasien'],
+  },
+  {
+    prefix: '/transaction/pendaftaran',
+    topics: ['pasien', 'jadwal'],
+    articleIds: ['pendaftaran', 'pasien', 'jadwal', 'antrean'],
+  },
+  {
+    prefix: '/transaction/antrean',
+    topics: ['pasien', 'jadwal'],
+    articleIds: ['antrean', 'displayAntrean', 'pendaftaran'],
+  },
   { prefix: '/master/obat', topics: ['obat', 'farmasi'], articleIds: ['obat', 'farmasi'] },
   { prefix: '/master/jadwal-dokter', topics: ['jadwal'], articleIds: ['jadwal', 'pendaftaran'] },
   { prefix: '/master/pasien', topics: ['pasien'], articleIds: ['pasien', 'pendaftaran'] },

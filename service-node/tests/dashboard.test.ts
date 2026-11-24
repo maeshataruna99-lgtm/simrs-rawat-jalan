@@ -527,7 +527,11 @@ describe('API Dashboard (poin 9.1)', () => {
         .get(`/api/dashboard/pembayaran${qs}`)
         .set('Authorization', `Bearer ${tok}`);
       expect(pembayaran.status).toBe(200);
-      expect(pembayaran.body.data.per_status.find((s: { status: string }) => s.status === 'belum_dibayar')).toBeUndefined();
+      expect(
+        pembayaran.body.data.per_status.find(
+          (s: { status: string }) => s.status === 'belum_dibayar',
+        ),
+      ).toBeUndefined();
 
       const detailPembayaran = await request(app)
         .get(`/api/dashboard/detail/pembayaran${qs}`)

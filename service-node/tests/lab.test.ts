@@ -96,7 +96,9 @@ describe('GET /api/lab/orders', () => {
     });
     expect(fetchMock.mock.calls[0][0]).toBe('http://yii.test/system/auth/login');
     const [url, init] = fetchMock.mock.calls[1];
-    expect(url).toBe('http://yii.test/transaction/order-lab?status=diminta%2Cdiproses&per_page=100');
+    expect(url).toBe(
+      'http://yii.test/transaction/order-lab?status=diminta%2Cdiproses&per_page=100',
+    );
     expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer tok-1');
   });
 
