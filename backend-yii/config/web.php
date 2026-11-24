@@ -19,7 +19,17 @@ return [
         'system' => app\modules\system\Module::class,
     ],
     'components' => [
-        'db' => require __DIR__ . '/db.php',
+        // Skema tabel di-cache agar tiap request tidak menjalankan ~10 query pg_catalog (D.6).
+        // Dimatikan saat test karena skema test dibuat ulang lewat migrasi.
+        'db' => array_merge(require __DIR__ . '/db.php', [
+            'enableSchemaCache' => YII_ENV !== 'test',
+            'schemaCacheDuration' => 3600,
+        ]),
+        // Di luar folder proyek: pada bind mount Windows, baca file cache di runtime/ hampir selambat query skema.
+        'cache' => [
+            'class' => yii\caching\FileCache::class,
+            'cachePath' => sys_get_temp_dir() . '/simrs-yii-cache',
+        ],
         'request' => [
             'enableCookieValidation' => false,
             'parsers' => [

@@ -2,6 +2,7 @@
 
 namespace app\modules\transaction\resep;
 
+use app\common\ListQuery;
 use app\modules\transaction\pendaftaran\Kunjungan;
 use DateTimeImmutable;
 use Yii;
@@ -19,30 +20,42 @@ class FarmasiService
     /**
      * Antrean resep untuk farmasi, bawaan status baru dan diproses, terlama dulu.
      *
-     * @param array<string, mixed> $params status (opsional), tanggal (Y-m-d, opsional, tanggal resep dibuat).
-     * @return array<int, array<string, mixed>>
+     * @param array<string, mixed> $params status, tanggal (Y-m-d, tanggal resep dibuat), tanggal_dari/tanggal_sampai (tanggal kunjungan), q, page, per_page; semua opsional.
+     * @return array{items: array<int, array<string, mixed>>, meta: array{page: int, per_page: int, total: int}}
      *
      * Dipakai di: FarmasiController::actionAntrean().
      */
     public function antrean(array $params): array
     {
         $status = trim((string) ($params['status'] ?? ''));
-        $query = Resep::find()->with(['details.obat', 'dokter', 'kunjungan.pasien', 'kunjungan.poli'])
-            ->where(['status' => $status !== '' ? $status : [Resep::STATUS_BARU, Resep::STATUS_DIPROSES]])
-            ->orderBy(['id' => SORT_ASC]);
+        $query = Resep::find()
+            ->joinWith(['kunjungan k', 'kunjungan.pasien p'])
+            ->with(['details.obat', 'dokter', 'kunjungan.poli'])
+            ->where(['t_resep.status' => $status !== '' ? $status : [Resep::STATUS_BARU, Resep::STATUS_DIPROSES]])
+            ->orderBy(['t_resep.id' => SORT_ASC]);
         $tanggal = trim((string) ($params['tanggal'] ?? ''));
         if ($tanggal !== '') {
             $mulai = DateTimeImmutable::createFromFormat('!Y-m-d', $tanggal);
             if ($mulai !== false && $mulai->format('Y-m-d') === $tanggal) {
                 $besok = $mulai->modify('+1 day')->format('Y-m-d 00:00:00');
-                $query->andWhere(['>=', 'created_at', "{$tanggal} 00:00:00"])
-                    ->andWhere(['<', 'created_at', $besok]);
+                $query->andWhere(['>=', 't_resep.created_at', "{$tanggal} 00:00:00"])
+                    ->andWhere(['<', 't_resep.created_at', $besok]);
             } else {
                 $query->andWhere('1 = 0');
             }
         }
+        ListQuery::rentangTanggal($query, 'k.tgl_kunjungan', $params);
+        $q = trim((string) ($params['q'] ?? ''));
+        if ($q !== '') {
+            $query->andWhere([
+                'or',
+                ['ilike', 't_resep.no_resep', $q],
+                ['ilike', 'p.no_rm', $q],
+                ['ilike', 'p.nama', $q],
+            ]);
+        }
 
-        return array_map(fn (Resep $r) => $r->toArray(), $query->all());
+        return ListQuery::paginate($query, $params, 't_resep.id');
     }
 
     /**

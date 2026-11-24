@@ -3,7 +3,8 @@
  *
  * Dipakai di: OrderLabPanel, LaboratoriumPage.
  */
-import { yiiApi, type ApiResponse } from '@/lib/api-client';
+import type { PaginatedResult } from '@/hooks/use-crud';
+import { toPage, yiiApi, type ApiResponse } from '@/lib/api-client';
 
 export type OrderLabStatus = 'diminta' | 'diproses' | 'selesai';
 export type LabFlag = 'normal' | 'tinggi' | 'rendah';
@@ -66,11 +67,18 @@ export async function buatOrderLab(payload: {
  *
  * Dipakai di: LaboratoriumPage.
  */
-export async function worklistLab(status: string): Promise<OrderLabItem[]> {
+export async function worklistLab(params: {
+  status?: string;
+  tanggal_dari?: string;
+  tanggal_sampai?: string;
+  q?: string;
+  page?: number;
+  per_page?: number;
+}): Promise<PaginatedResult<OrderLabItem>> {
   const { data } = await yiiApi.get<ApiResponse<OrderLabItem[]>>('/transaction/order-lab', {
-    params: { status },
+    params: { ...params, q: params.q || undefined },
   });
-  return data.data;
+  return toPage(data);
 }
 
 /**

@@ -6,17 +6,20 @@
  * Dipakai di: routes/index.tsx.
  */
 import { Monitor } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { AppDataTable, type AppColumn } from '@/components/AppDataTable';
+import { AppDateRange } from '@/components/AppDateRange';
 import { AppFilterBar } from '@/components/AppFilterBar';
+import { AppPaginator } from '@/components/AppPaginator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useCrud } from '@/hooks/use-crud';
 import { errorMessage } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { hariIni } from '@/lib/format';
 import * as poliApi from '@/modules/master/poli/poli.api';
 import type { PoliItem } from '@/modules/master/poli/poli.types';
 import * as pendaftaranApi from '@/modules/transaction/pendaftaran/pendaftaran.api';
@@ -43,15 +46,28 @@ export default function AntreanPage() {
   const canUpdate = can(MENU, 'update');
 
   const [poliList, setPoliList] = useState<PoliItem[]>([]);
-  const [q, setQ] = useState('');
-  const [poliId, setPoliId] = useState<number | ''>('');
+  const [actionError, setActionError] = useState<string | null>(null);
   // Bawaan hari ini agar daftar tidak memuat seluruh antrean lintas tanggal.
-  const [tanggal, setTanggal] = useState<string>(() => new Date().toLocaleDateString('sv-SE'));
-  const [status, setStatus] = useState<KunjunganStatus | ''>('');
-
-  const [rows, setRows] = useState<KunjunganItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    items: rows,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error: loadError,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(pendaftaranApi.listAntrean, {
+    q: '',
+    poli_id: '' as number | '',
+    status: '' as KunjunganStatus | '',
+    tanggal_dari: hariIni(),
+    tanggal_sampai: hariIni(),
+  });
+  const error = actionError ?? loadError;
 
   useEffect(() => {
     void poliApi
@@ -60,45 +76,15 @@ export default function AntreanPage() {
       .catch(() => {});
   }, []);
 
-  const reload = useCallback(async () => {
-    await Promise.resolve();
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await pendaftaranApi.listAntrean({
-        q,
-        poli_id: poliId,
-        tanggal,
-        status,
-      });
-      setRows(data);
-    } catch (err) {
-      setError(errorMessage(err, t('common.loadFailed')));
-    } finally {
-      setLoading(false);
-    }
-  }, [poliId, q, status, t, tanggal]);
-
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      if (!active) return;
-      await reload();
-    })();
-    return () => {
-      active = false;
-    };
-  }, [reload]);
-
   const handleStatusChange = async (id: number, targetStatus: KunjunganStatus) => {
-    setError(null);
+    setActionError(null);
     try {
       await pendaftaranApi.ubahStatusAntrean(id, targetStatus);
       toast.success(t('transaction.antrean.statusUpdated'));
       await reload();
     } catch (err) {
       const msg = errorMessage(err, t('common.saveFailed'));
-      setError(msg);
+      setActionError(msg);
       toast.error(msg);
     }
   };
@@ -173,22 +159,20 @@ export default function AntreanPage() {
       </div>
 
       <AppFilterBar
-        searchValue={q}
-        onSearchChange={setQ}
+        searchValue={filter.q}
+        onSearchChange={(q) => updateFilter({ q })}
         searchPlaceholder={t('transaction.antrean.searchPlaceholder')}
       >
-        <Input
-          type="date"
-          value={tanggal}
-          onChange={(e) => setTanggal(e.target.value)}
-          aria-label={t('transaction.pendaftaran.tglKunjungan')}
-          className="w-40"
+        <AppDateRange
+          dari={filter.tanggal_dari}
+          sampai={filter.tanggal_sampai}
+          onChange={updateFilter}
         />
         <select
           aria-label={t('transaction.pendaftaran.poli')}
           className={selectClassName}
-          value={poliId}
-          onChange={(e) => setPoliId(e.target.value ? Number(e.target.value) : '')}
+          value={filter.poli_id}
+          onChange={(e) => updateFilter({ poli_id: e.target.value ? Number(e.target.value) : '' })}
         >
           <option value="">{t('transaction.pendaftaran.allPoli')}</option>
           {poliList.map((p) => (
@@ -200,8 +184,8 @@ export default function AntreanPage() {
         <select
           aria-label={t('system.common.status')}
           className={selectClassName}
-          value={status}
-          onChange={(e) => setStatus(e.target.value as KunjunganStatus | '')}
+          value={filter.status}
+          onChange={(e) => updateFilter({ status: e.target.value as KunjunganStatus | '' })}
         >
           <option value="">{t('transaction.antrean.allStatus')}</option>
           <option value="menunggu">{t('transaction.antrean.status.menunggu')}</option>
@@ -258,6 +242,13 @@ export default function AntreanPage() {
               )
             : undefined
         }
+      />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
       />
     </div>
   );

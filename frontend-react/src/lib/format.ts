@@ -12,3 +12,12 @@
 export function formatRupiah(amount: number): string {
   return `Rp ${Math.round(amount).toLocaleString('id-ID')}`;
 }
+
+/**
+ * Tanggal hari ini dalam format Y-m-d waktu lokal.
+ *
+ * Dipakai di: AntreanPage, WorklistPage, LaboratoriumPage, FarmasiPage.
+ */
+export function hariIni(): string {
+  return new Date().toLocaleDateString('sv-SE');
+}

@@ -38,7 +38,8 @@ export interface LabResultInput {
 export async function listOrders(status: string) {
   const res = await yiiRequest<YiiOrder[]>(
     'GET',
-    `/transaction/order-lab?status=${encodeURIComponent(status)}`,
+    // shortcut: maksimal 100 order terlama per panggilan (batas per_page Yii), tambah paging bila antrean lab melebihi itu.
+    `/transaction/order-lab?status=${encodeURIComponent(status)}&per_page=100`,
   );
   if (res.status !== 200) {
     throw new AppError(502, 'Gagal mengambil order dari backend Yii.');

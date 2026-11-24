@@ -79,7 +79,10 @@ beforeEach(() => {
   localStorage.setItem('simrs_token', 'tok-dokter');
   useAuthStore.setState({ status: 'authenticated', user: dokterUser });
 
-  vi.mocked(pemeriksaanApi.worklist).mockResolvedValue([kunjungan]);
+  vi.mocked(pemeriksaanApi.worklist).mockResolvedValue({
+    items: [kunjungan],
+    meta: { page: 1, per_page: 20, total: 1 },
+  });
   vi.mocked(pemeriksaanApi.detailPemeriksaan).mockResolvedValue({
     kunjungan,
     pemeriksaan: null,

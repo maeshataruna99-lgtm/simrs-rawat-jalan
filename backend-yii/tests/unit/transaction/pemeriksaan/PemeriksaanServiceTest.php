@@ -22,6 +22,12 @@ use yii\web\NotFoundHttpException;
  */
 class PemeriksaanServiceTest extends TestCase
 {
+    /** Parameter worklist untuk satu tanggal. */
+    private static function rentang(string $tanggal): array
+    {
+        return ['tanggal_dari' => $tanggal, 'tanggal_sampai' => $tanggal];
+    }
+
     /**
      * Membuat dua dokter dengan jadwal Senin, lalu tiga kunjungan: dua milik dokter pertama, satu milik dokter kedua.
      *
@@ -65,15 +71,16 @@ class PemeriksaanServiceTest extends TestCase
 
         $service = new PemeriksaanService();
 
-        $milikDokter1 = $service->worklist($data['dokter1'], self::seninDepan());
+        $milikDokter1 = $service->worklist($data['dokter1'], self::rentang(self::seninDepan()))['items'];
         $this->assertSame([$data['kunjungan'][0]], array_column($milikDokter1, 'id'));
         $this->assertSame('diperiksa', $milikDokter1[0]['status']);
 
-        $milikDokter2 = $service->worklist($data['dokter2'], self::seninDepan());
+        $milikDokter2 = $service->worklist($data['dokter2'], self::rentang(self::seninDepan()))['items'];
         $this->assertSame([$data['kunjungan'][2]], array_column($milikDokter2, 'id'));
 
-        $this->assertCount(2, $service->worklist(null, self::seninDepan()));
-        $this->assertCount(0, $service->worklist($data['dokter1'], self::seninDepan(1)));
+        $this->assertCount(2, $service->worklist(null, self::rentang(self::seninDepan()))['items']);
+        $this->assertCount(0, $service->worklist($data['dokter1'], self::rentang(self::seninDepan(1)))['items']);
+        $this->assertSame([], $service->worklist(null, ['tanggal_dari' => 'bukan-tanggal'])['items']);
     }
 
     public function testSimpanPemeriksaanValidasiTtvDanStatusMenjadiDiperiksa(): void

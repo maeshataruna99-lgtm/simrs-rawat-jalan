@@ -2,6 +2,7 @@
 
 namespace app\modules\transaction\pembayaran;
 
+use app\common\ListQuery;
 use app\common\SequenceService;
 use app\modules\transaction\lab\OrderLab;
 use app\modules\transaction\lab\OrderLabDetail;
@@ -136,13 +137,7 @@ class InvoiceService
             $query->andWhere(['i.kunjungan_id' => (int) $params['kunjungan_id']]);
         }
 
-        if (!empty($params['tanggal_dari'])) {
-            $query->andWhere(['>=', 'k.tgl_kunjungan', (string) $params['tanggal_dari']]);
-        }
-
-        if (!empty($params['tanggal_sampai'])) {
-            $query->andWhere(['<=', 'k.tgl_kunjungan', (string) $params['tanggal_sampai']]);
-        }
+        ListQuery::rentangTanggal($query, 'k.tgl_kunjungan', $params);
 
         if (!empty($params['q'])) {
             $q = trim((string) $params['q']);
@@ -169,10 +164,10 @@ class InvoiceService
     }
 
     /**
-     * Daftar kunjungan non-batal yang belum memiliki invoice agar kasir bisa menerbitkan tagihan.
+     * Satu halaman kunjungan non-batal yang belum memiliki invoice agar kasir bisa menerbitkan tagihan.
      *
-     * @param array<string, mixed> $params
-     * @return array<int, array<string, mixed>>
+     * @param array<string, mixed> $params tanggal, tanggal_dari, tanggal_sampai, q, page, per_page.
+     * @return array{items: array<int, array<string, mixed>>, meta: array{page: int, per_page: int, total: int}}
      *
      * Dipakai di: InvoiceController::actionBelumTagih.
      */
@@ -182,12 +177,14 @@ class InvoiceService
             ->alias('k')
             ->leftJoin('t_invoice i', 'i.kunjungan_id = k.id')
             ->joinWith(['pasien p', 'poli pl', 'dokter d'])
+            ->with(['statusLogs'])
             ->where(['i.id' => null])
             ->andWhere(['<>', 'k.status', Kunjungan::STATUS_BATAL]);
 
         if (!empty($params['tanggal'])) {
             $query->andWhere(['k.tgl_kunjungan' => (string) $params['tanggal']]);
         }
+        ListQuery::rentangTanggal($query, 'k.tgl_kunjungan', $params);
 
         if (!empty($params['q'])) {
             $q = trim((string) $params['q']);
@@ -199,9 +196,7 @@ class InvoiceService
             ]);
         }
 
-        $rows = $query->orderBy(['k.tgl_kunjungan' => SORT_DESC, 'k.id' => SORT_DESC])->limit(50)->all();
-
-        return array_map(fn (Kunjungan $k) => $k->toArray(), $rows);
+        return ListQuery::paginate($query->orderBy(['k.tgl_kunjungan' => SORT_DESC, 'k.id' => SORT_DESC]), $params, 'k.id');
     }
 
     /**

@@ -41,6 +41,9 @@ docker compose up -d --build
 # 4. Jalankan migrasi dan isi data awal + data dummy end-to-end 30 hari
 docker compose exec -T yii php yii migrate --interactive=0
 docker compose exec -T yii php yii seed
+
+# 5. Bersihkan schema cache Yii setelah migrasi (lihat docs/performance.md bagian 6)
+docker compose exec -T yii php yii cache/flush-schema db --interactive=0
 ```
 
 > Untuk environment Windows PowerShell pada langkah 2 gunakan `Copy-Item .env.example .env`.
@@ -108,7 +111,7 @@ npx newman run postman/simrs.collection.json -e postman/local.environment.json -
 - **Arsitektur & Alur Komunikasi**: [`docs/architecture.md`](docs/architecture.md)
 - **Pembagian Tanggung Jawab Yii vs Node**: [`docs/yii-vs-node.md`](docs/yii-vs-node.md)
 - **Analisis & Bukti Skenario Teknis (D.1–D.6)**: [`docs/technical-scenarios.md`](docs/technical-scenarios.md)
-- **Optimasi Query Dashboard (`EXPLAIN ANALYZE`)**: [`docs/performance.md`](docs/performance.md)
+- **Optimasi Query Dashboard (`EXPLAIN ANALYZE`) dan latensi API (pagination, OPcache, schema cache)**: [`docs/performance.md`](docs/performance.md)
 - **Dokumentasi API**: [`docs/api/yii.md`](docs/api/yii.md), [`docs/api/node.md`](docs/api/node.md), [`service-node/openapi.yaml`](service-node/openapi.yaml) (juga disajikan di `http://localhost:3000/openapi.yaml`)
 - **Postman & Hasil Newman**: [`postman/simrs.collection.json`](postman/simrs.collection.json), [`postman/local.environment.json`](postman/local.environment.json), [`postman/newman-report.txt`](postman/newman-report.txt)
 - **Daftar Test Case & Galeri Screenshot**: [`docs/test-cases.md`](docs/test-cases.md), [`docs/screenshots/README.md`](docs/screenshots/README.md)

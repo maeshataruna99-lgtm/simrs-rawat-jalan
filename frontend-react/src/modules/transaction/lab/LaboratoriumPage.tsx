@@ -4,18 +4,22 @@
  *
  * Dipakai di: routes/index.tsx.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { AppDateRange } from '@/components/AppDateRange';
+import { AppFilterBar } from '@/components/AppFilterBar';
+import { AppPaginator } from '@/components/AppPaginator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useCrud } from '@/hooks/use-crud';
 import { errorMessage, fieldErrors } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
-import { matchesQuery } from '@/lib/search';
+import { hariIni } from '@/lib/format';
 import * as labApi from './lab.api';
-import type { OrderLabDetailItem, OrderLabItem } from './lab.api';
+import type { OrderLabDetailItem } from './lab.api';
 import { LabHasilBadge } from './LabHasilBadge';
 
 const MENU = 'laboratorium';
@@ -89,35 +93,24 @@ function HasilRow({
 export default function LaboratoriumPage() {
   const { t } = useTranslation();
   const canUpdate = useAuthStore((s) => s.can)(MENU, 'update');
-  const [status, setStatus] = useState<string>(STATUS_OPTIONS[0]);
-  const [orders, setOrders] = useState<OrderLabItem[] | null>(null);
-  const [q, setQ] = useState('');
-  const shown = (orders ?? []).filter((o) =>
-    matchesQuery(
-      q,
-      o.pasien?.nama,
-      o.pasien?.no_rm,
-      o.no_order,
-      o.dokter?.nama,
-      ...o.details.map((d) => d.pemeriksaan?.nama),
-    ),
-  );
-
-  const reload = useCallback(async () => {
-    await Promise.resolve();
-    try {
-      setOrders(await labApi.worklistLab(status));
-    } catch (err) {
-      toast.error(errorMessage(err, t('common.loadFailed')));
-      setOrders([]);
-    }
-  }, [status, t]);
-
-  useEffect(() => {
-    void (async () => {
-      await reload();
-    })();
-  }, [reload]);
+  const {
+    items: orders,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(labApi.worklistLab, {
+    q: '',
+    status: STATUS_OPTIONS[0] as string,
+    tanggal_dari: hariIni(),
+    tanggal_sampai: hariIni(),
+  });
 
   return (
     <div className="space-y-6">
@@ -126,37 +119,45 @@ export default function LaboratoriumPage() {
         <p className="text-sm text-muted-foreground">{t('transaction.lab.worklistSubtitle')}</p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Input
-          aria-label={t('common.searchPlaceholder')}
-          className="max-w-sm"
-          placeholder={t('transaction.lab.searchWorklist')}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
+      <AppFilterBar
+        searchValue={filter.q}
+        onSearchChange={(q) => updateFilter({ q })}
+        searchPlaceholder={t('transaction.lab.searchWorklist')}
+      >
+        <AppDateRange
+          dari={filter.tanggal_dari}
+          sampai={filter.tanggal_sampai}
+          onChange={updateFilter}
         />
         <select
           aria-label={t('system.common.status')}
           className={selectClassName}
-          value={status}
-          onChange={(e) => {
-            setOrders(null);
-            setStatus(e.target.value);
-          }}
+          value={filter.status}
+          onChange={(e) => updateFilter({ status: e.target.value })}
         >
           {STATUS_OPTIONS.map((s) => (
             <option key={s} value={s}>
-              {s.includes(',') ? t('transaction.lab.activeStatus') : t(`transaction.lab.status.${s}`)}
+              {s.includes(',')
+                ? t('transaction.lab.activeStatus')
+                : t(`transaction.lab.status.${s}`)}
             </option>
           ))}
         </select>
-      </div>
+      </AppFilterBar>
 
-      {orders === null ? (
+      {error && (
+        <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
+      {/* Muat ulang setelah simpan hasil tetap menampilkan kartu agar detail yang terbuka tidak tertutup. */}
+      {loading && orders.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
-      ) : shown.length === 0 ? (
+      ) : orders.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t('common.emptyData')}</p>
       ) : (
-        shown.map((order) => (
+        orders.map((order) => (
           <Card key={order.id} data-testid="lab-order">
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
               <div>
@@ -194,6 +195,13 @@ export default function LaboratoriumPage() {
           </Card>
         ))
       )}
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
     </div>
   );
 }

@@ -32,8 +32,19 @@ export default function UserPage() {
   const can = useAuthStore((s) => s.can);
   const canUpdate = can(MENU, 'update');
 
-  const { items, total, page, perPage, filter, loading, error, setPage, updateFilter, reload } =
-    useCrud(userApi.listUsers, { q: '' });
+  const {
+    items,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(userApi.listUsers, { q: '' });
 
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [formOpen, setFormOpen] = useState(false);
@@ -170,7 +181,13 @@ export default function UserPage() {
         }
       />
 
-      <AppPaginator page={page} perPage={perPage} total={total} onPageChange={setPage} />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       <UserForm
         open={formOpen}

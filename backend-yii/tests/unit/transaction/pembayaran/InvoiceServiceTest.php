@@ -86,7 +86,8 @@ class InvoiceServiceTest extends TestCase
         $resepBatal->updateAttributes(['status' => Resep::STATUS_BATAL]);
 
         $svc = new InvoiceService();
-        $this->assertCount(1, $svc->kunjunganBelumTagih(['q' => 'Siti Tagih']));
+        $this->assertCount(1, $svc->kunjunganBelumTagih(['q' => 'Siti Tagih'])['items']);
+        $this->assertCount(0, $svc->kunjunganBelumTagih(['q' => 'Siti Tagih', 'tanggal_sampai' => '2000-01-01'])['items']);
 
         $invoice = $svc->buat($f['kunjungan']);
         $data = $invoice->toArray();
@@ -108,7 +109,7 @@ class InvoiceServiceTest extends TestCase
         ], $sumber);
         $this->assertSame($tAktif->id, $data['items'][1]['referensi_id']);
 
-        $this->assertCount(0, $svc->kunjunganBelumTagih(['q' => 'Siti Tagih']));
+        $this->assertCount(0, $svc->kunjunganBelumTagih(['q' => 'Siti Tagih'])['items']);
         $list = $svc->daftar(['status' => Invoice::STATUS_BELUM_DIBAYAR, 'q' => $data['no_invoice']]);
         $this->assertSame(1, $list['meta']['total']);
     }

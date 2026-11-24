@@ -2,6 +2,7 @@
 
 namespace app\modules\transaction\lab;
 
+use app\common\ListQuery;
 use app\common\SequenceService;
 use app\common\ValidationException;
 use app\modules\master\lab\PemeriksaanLab;
@@ -85,25 +86,49 @@ class OrderLabService
     }
 
     /**
-     * Order laboratorium terlama dulu, difilter status dan/atau kunjungan.
+     * Satu halaman worklist order laboratorium terlama dulu, difilter status, rentang tanggal kunjungan, dan kata kunci.
      *
-     * @param array<string, mixed> $params status, kunjungan_id (opsional).
-     * @return array<int, array<string, mixed>>
+     * @param array<string, mixed> $params status, tanggal_dari, tanggal_sampai, q, page, per_page (semua opsional).
+     * @return array{items: array<int, array<string, mixed>>, meta: array{page: int, per_page: int, total: int}}
      *
-     * Dipakai di: OrderLabController::actionIndex(), OrderLabController::actionPerKunjungan().
+     * Dipakai di: OrderLabController::actionIndex().
      */
     public function daftar(array $params): array
     {
-        $query = OrderLab::find()->with(self::WITH)->orderBy(['id' => SORT_ASC]);
+        $query = OrderLab::find()
+            ->joinWith(['kunjungan k', 'kunjungan.pasien p'])
+            ->with(self::WITH)
+            ->orderBy(['t_order_lab.id' => SORT_ASC]);
         $status = $params['status'] ?? '';
         if ($status !== '' && $status !== null) {
-            $query->andWhere(['status' => is_array($status) ? $status : explode(',', (string) $status)]);
+            $query->andWhere(['t_order_lab.status' => is_array($status) ? $status : explode(',', (string) $status)]);
         }
-        if (!empty($params['kunjungan_id'])) {
-            $query->andWhere(['kunjungan_id' => (int) $params['kunjungan_id']]);
+        ListQuery::rentangTanggal($query, 'k.tgl_kunjungan', $params);
+        $q = trim((string) ($params['q'] ?? ''));
+        if ($q !== '') {
+            $query->andWhere([
+                'or',
+                ['ilike', 't_order_lab.no_order', $q],
+                ['ilike', 'p.no_rm', $q],
+                ['ilike', 'p.nama', $q],
+            ]);
         }
 
-        return array_map(fn (OrderLab $o) => $o->toArray(), $query->all());
+        return ListQuery::paginate($query, $params, 't_order_lab.id');
+    }
+
+    /**
+     * Semua order laboratorium satu kunjungan, terlama dulu.
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * Dipakai di: OrderLabController::actionPerKunjungan().
+     */
+    public function perKunjungan(int $kunjunganId): array
+    {
+        $rows = OrderLab::find()->with(self::WITH)->where(['kunjungan_id' => $kunjunganId])->orderBy(['id' => SORT_ASC])->all();
+
+        return array_map(fn (OrderLab $o) => $o->toArray(), $rows);
     }
 
     /**

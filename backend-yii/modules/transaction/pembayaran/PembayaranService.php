@@ -2,11 +2,13 @@
 
 namespace app\modules\transaction\pembayaran;
 
+use app\common\ListQuery;
 use app\common\SequenceService;
 use app\common\ValidationException;
 use Yii;
 use yii\db\Expression;
 use yii\db\IntegrityException;
+use yii\db\Query;
 use yii\web\ConflictHttpException;
 use yii\web\NotFoundHttpException;
 
@@ -153,8 +155,12 @@ class PembayaranService
         $page = max(1, (int) ($params['page'] ?? 1));
         $perPage = min(100, max(1, (int) ($params['per_page'] ?? 20)));
 
+        // Akumulasi bayar per baris dihitung di query yang sama (memakai idx_t_pembayaran_invoice_id), bukan satu SUM per baris.
+        $akumulasi = (new Query())->select('SUM(x.jumlah)')->from(['x' => Pembayaran::tableName()])
+            ->where('x.invoice_id = b.invoice_id AND x.id <= b.id');
         $query = Pembayaran::find()
             ->alias('b')
+            ->select(['b.*', 'totalBayarSaatItu' => $akumulasi])
             ->joinWith(['invoice i', 'invoice.kunjungan k', 'invoice.kunjungan.pasien p', 'invoice.kunjungan.poli pl', 'invoice.kunjungan.dokter d'])
             ->with(['kasir']);
 
@@ -166,13 +172,7 @@ class PembayaranService
             $query->andWhere(['b.metode' => (string) $params['metode']]);
         }
 
-        if (!empty($params['tanggal_dari'])) {
-            $query->andWhere(['>=', 'b.dibayar_at', (string) $params['tanggal_dari'] . ' 00:00:00']);
-        }
-
-        if (!empty($params['tanggal_sampai'])) {
-            $query->andWhere(['<=', 'b.dibayar_at', (string) $params['tanggal_sampai'] . ' 23:59:59']);
-        }
+        ListQuery::rentangTanggal($query, 'b.dibayar_at', $params, true);
 
         if (!empty($params['q'])) {
             $q = trim((string) $params['q']);

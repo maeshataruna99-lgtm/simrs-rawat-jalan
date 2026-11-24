@@ -52,7 +52,10 @@ beforeEach(() => {
   vi.resetAllMocks();
   localStorage.setItem('simrs_token', 'tok-farmasi');
   useAuthStore.setState({ status: 'authenticated', user: farmasiUser });
-  vi.mocked(resepApi.antreanFarmasi).mockResolvedValue([resep(1, 'baru'), resep(2, 'diproses')]);
+  vi.mocked(resepApi.antreanFarmasi).mockResolvedValue({
+    items: [resep(1, 'baru'), resep(2, 'diproses')],
+    meta: { page: 1, per_page: 20, total: 1 },
+  });
   vi.mocked(resepApi.ubahStatusResep).mockResolvedValue(resep(1, 'diproses'));
 });
 
@@ -75,6 +78,8 @@ describe('FarmasiPage (poin 6.7)', () => {
     await screen.findByText('Pasien 1');
 
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Status' }), 'diserahkan');
-    expect(resepApi.antreanFarmasi).toHaveBeenLastCalledWith({ status: 'diserahkan' });
+    expect(resepApi.antreanFarmasi).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: 'diserahkan', page: 1, per_page: 20 }),
+    );
   });
 });

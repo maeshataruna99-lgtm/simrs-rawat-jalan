@@ -104,7 +104,10 @@ beforeEach(() => {
   vi.mocked(pendaftaranApi.cariPasienPendaftaran).mockResolvedValue([samplePasien]);
   vi.mocked(pendaftaranApi.riwayatKunjunganPasien).mockResolvedValue([]);
   vi.mocked(pendaftaranApi.daftarKunjungan).mockResolvedValue(sampleKunjungan);
-  vi.mocked(pendaftaranApi.listAntrean).mockResolvedValue([sampleKunjungan]);
+  vi.mocked(pendaftaranApi.listAntrean).mockResolvedValue({
+    items: [sampleKunjungan],
+    meta: { page: 1, per_page: 20, total: 1 },
+  });
   vi.mocked(pendaftaranApi.ubahStatusAntrean).mockResolvedValue({
     ...sampleKunjungan,
     status: 'diperiksa',

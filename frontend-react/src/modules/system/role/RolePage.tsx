@@ -24,8 +24,19 @@ export default function RolePage() {
   const { t } = useTranslation();
   const can = useAuthStore((s) => s.can);
 
-  const { items, total, page, perPage, filter, loading, error, setPage, updateFilter, reload } =
-    useCrud(roleApi.listRoles, { q: '' });
+  const {
+    items,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(roleApi.listRoles, { q: '' });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<RoleItem | null>(null);
@@ -107,7 +118,13 @@ export default function RolePage() {
         onDelete={(row) => setDeleting(row)}
       />
 
-      <AppPaginator page={page} perPage={perPage} total={total} onPageChange={setPage} />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       <RoleForm
         open={formOpen}

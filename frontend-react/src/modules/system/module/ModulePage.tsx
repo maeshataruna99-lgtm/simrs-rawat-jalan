@@ -26,8 +26,19 @@ export default function ModulePage() {
   const { t } = useTranslation();
   const can = useAuthStore((s) => s.can);
 
-  const { items, total, page, perPage, filter, loading, error, setPage, updateFilter, reload } =
-    useCrud(moduleApi.listModules, { q: '' });
+  const {
+    items,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(moduleApi.listModules, { q: '' });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ModuleItem | null>(null);
@@ -124,7 +135,13 @@ export default function ModulePage() {
         onDelete={(row) => setDeleting(row)}
       />
 
-      <AppPaginator page={page} perPage={perPage} total={total} onPageChange={setPage} />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       <ModuleForm
         open={formOpen}

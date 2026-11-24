@@ -3,7 +3,7 @@
  *
  * Dipakai di: BillingPage.tsx, BayarDialog.tsx, InvoiceDetailDialog.tsx, tests/transaction-billing.test.tsx.
  */
-import { yiiApi, type ApiResponse } from '@/lib/api-client';
+import { toPage, yiiApi, type ApiResponse } from '@/lib/api-client';
 import type {
   BayarPayload,
   BayarResult,
@@ -24,6 +24,8 @@ import type {
 export async function listInvoice(params: {
   status?: InvoiceStatus | '';
   q?: string;
+  tanggal_dari?: string;
+  tanggal_sampai?: string;
   page?: number;
   per_page?: number;
 }): Promise<{ items: Invoice[]; meta: ListMeta }> {
@@ -31,6 +33,8 @@ export async function listInvoice(params: {
     params: {
       ...(params.status ? { status: params.status } : {}),
       ...(params.q ? { q: params.q } : {}),
+      tanggal_dari: params.tanggal_dari || undefined,
+      tanggal_sampai: params.tanggal_sampai || undefined,
       page: params.page ?? 1,
       per_page: params.per_page ?? 20,
     },
@@ -56,12 +60,25 @@ export async function getInvoice(id: number): Promise<Invoice> {
  *
  * Dipakai di: BillingPage.tsx.
  */
-export async function listBelumTagih(params?: { q?: string }): Promise<KunjunganBelumTagih[]> {
+export async function listBelumTagih(params: {
+  q?: string;
+  tanggal_dari?: string;
+  tanggal_sampai?: string;
+  page?: number;
+  per_page?: number;
+}): Promise<{ items: KunjunganBelumTagih[]; meta: ListMeta }> {
   const { data } = await yiiApi.get<ApiResponse<KunjunganBelumTagih[]>>(
     '/transaction/invoice/belum-tagih',
-    { params: params?.q ? { q: params.q } : undefined },
+    {
+      params: {
+        ...params,
+        q: params.q || undefined,
+        tanggal_dari: params.tanggal_dari || undefined,
+        tanggal_sampai: params.tanggal_sampai || undefined,
+      },
+    },
   );
-  return data.data;
+  return toPage(data);
 }
 
 /**
@@ -94,6 +111,8 @@ export async function getAuditLogInvoice(invoiceId: number): Promise<InvoiceAudi
 export async function listPembayaran(params: {
   metode?: MetodePembayaran | '';
   q?: string;
+  tanggal_dari?: string;
+  tanggal_sampai?: string;
   page?: number;
   per_page?: number;
 }): Promise<{ items: PembayaranRingkas[]; meta: ListMeta }> {
@@ -101,6 +120,8 @@ export async function listPembayaran(params: {
     params: {
       ...(params.metode ? { metode: params.metode } : {}),
       ...(params.q ? { q: params.q } : {}),
+      tanggal_dari: params.tanggal_dari || undefined,
+      tanggal_sampai: params.tanggal_sampai || undefined,
       page: params.page ?? 1,
       per_page: params.per_page ?? 20,
     },

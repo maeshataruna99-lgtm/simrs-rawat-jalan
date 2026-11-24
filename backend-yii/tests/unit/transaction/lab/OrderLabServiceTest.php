@@ -76,7 +76,7 @@ class OrderLabServiceTest extends TestCase
         $this->assertSame('diminta', $order['status']);
         $this->assertSame(70000.0, $order['total']);
         $this->assertSame('70-110', $order['details'][0]['nilai_rujukan']);
-        $this->assertSame([$order['id']], array_column($service->daftar(['status' => 'diminta,diproses']), 'id'));
+        $this->assertSame([$order['id']], array_column($service->daftar(['status' => 'diminta,diproses'])['items'], 'id'));
 
         [$gula, $hb] = $order['details'];
         $first = $service->simpanHasil($gula['id'], ['hasil' => '180'], 'kunci-1');

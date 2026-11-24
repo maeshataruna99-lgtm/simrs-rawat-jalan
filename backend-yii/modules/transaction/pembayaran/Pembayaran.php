@@ -26,6 +26,9 @@ class Pembayaran extends ActiveRecord
     public const METODE_TUNAI = 'tunai';
     public const METODE_NON_TUNAI = 'non_tunai';
 
+    /** Akumulasi bayar sampai transaksi ini bila sudah dihitung oleh query daftar (alias SELECT atau running sum). */
+    public float|string|null $totalBayarSaatItu = null;
+
     public static function tableName(): string
     {
         return 't_pembayaran';
@@ -56,10 +59,11 @@ class Pembayaran extends ActiveRecord
         $fields = parent::fields();
         $fields['jumlah'] = fn () => (float) $this->jumlah;
         // Akumulasi pembayaran invoice sampai transaksi ini, agar kwitansi cicilan lama tidak menampilkan saldo terkini.
-        $fields['total_bayar_saat_itu'] = fn () => (float) self::find()
+        // Daftar mengisi $totalBayarSaatItu sekaligus agar tidak ada satu query SUM per baris.
+        $fields['total_bayar_saat_itu'] = fn () => (float) ($this->totalBayarSaatItu ?? self::find()
             ->where(['invoice_id' => $this->invoice_id])
             ->andWhere(['<=', 'id', $this->id])
-            ->sum('jumlah');
+            ->sum('jumlah'));
         $fields['kasir'] = fn () => $this->kasir ? [
             'id' => $this->kasir->id,
             'username' => $this->kasir->username,

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { AppDataTable, type AppColumn } from '@/components/AppDataTable';
+import { AppDateRange } from '@/components/AppDateRange';
 import { AppPaginator } from '@/components/AppPaginator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { errorMessage } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
-import { formatRupiah } from '@/lib/format';
+import { formatRupiah, hariIni } from '@/lib/format';
 import { BayarDialog } from './BayarDialog';
 import { InvoiceDetailDialog } from './InvoiceDetailDialog';
 import * as pembayaranApi from './pembayaran.api';
@@ -42,6 +43,11 @@ const statusVariant: Record<InvoiceStatus, 'destructive' | 'secondary' | 'defaul
   lunas: 'default',
 };
 
+/** Rentang filter bawaan: hari ini. */
+function rentangHariIni() {
+  return { tanggal_dari: hariIni(), tanggal_sampai: hariIni() };
+}
+
 export default function BillingPage() {
   const { t } = useTranslation();
   const canCreate = useAuthStore((s) => s.can)(MENU, 'create');
@@ -52,13 +58,19 @@ export default function BillingPage() {
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | ''>('');
   const [qInvoice, setQInvoice] = useState('');
   const [pageInvoice, setPageInvoice] = useState(1);
+  const [perPageInvoice, setPerPageInvoice] = useState(20);
+  const [rangeInvoice, setRangeInvoice] = useState(rentangHariIni);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [metaInvoice, setMetaInvoice] = useState<ListMeta>({ page: 1, per_page: 20, total: 0 });
   const [loadingInvoice, setLoadingInvoice] = useState(true);
 
   // State tab kunjungan belum ditagih
   const [qBelum, setQBelum] = useState('');
+  const [pageBelum, setPageBelum] = useState(1);
+  const [perPageBelum, setPerPageBelum] = useState(20);
+  const [rangeBelum, setRangeBelum] = useState(rentangHariIni);
   const [belumTagih, setBelumTagih] = useState<KunjunganBelumTagih[]>([]);
+  const [metaBelum, setMetaBelum] = useState<ListMeta>({ page: 1, per_page: 20, total: 0 });
   const [loadingBelum, setLoadingBelum] = useState(false);
   const [creatingId, setCreatingId] = useState<number | null>(null);
 
@@ -66,6 +78,8 @@ export default function BillingPage() {
   const [metodeFilter, setMetodeFilter] = useState<MetodePembayaran | ''>('');
   const [qBayar, setQBayar] = useState('');
   const [pageBayar, setPageBayar] = useState(1);
+  const [perPageBayar, setPerPageBayar] = useState(20);
+  const [rangeBayar, setRangeBayar] = useState(rentangHariIni);
   const [riwayat, setRiwayat] = useState<PembayaranRingkas[]>([]);
   const [metaBayar, setMetaBayar] = useState<ListMeta>({ page: 1, per_page: 20, total: 0 });
   const [loadingBayar, setLoadingBayar] = useState(false);
@@ -83,7 +97,9 @@ export default function BillingPage() {
       const res = await pembayaranApi.listInvoice({
         status: statusFilter,
         q: qInvoice.trim() || undefined,
+        ...rangeInvoice,
         page: pageInvoice,
+        per_page: perPageInvoice,
       });
       setInvoices(res.items);
       setMetaInvoice(res.meta);
@@ -92,18 +108,25 @@ export default function BillingPage() {
     } finally {
       setLoadingInvoice(false);
     }
-  }, [pageInvoice, qInvoice, statusFilter, t]);
+  }, [pageInvoice, perPageInvoice, qInvoice, rangeInvoice, statusFilter, t]);
 
   const loadBelumTagih = useCallback(async () => {
     setLoadingBelum(true);
     try {
-      setBelumTagih(await pembayaranApi.listBelumTagih({ q: qBelum.trim() || undefined }));
+      const res = await pembayaranApi.listBelumTagih({
+        q: qBelum.trim() || undefined,
+        ...rangeBelum,
+        page: pageBelum,
+        per_page: perPageBelum,
+      });
+      setBelumTagih(res.items);
+      setMetaBelum(res.meta);
     } catch (err) {
       toast.error(errorMessage(err, t('common.loadFailed')));
     } finally {
       setLoadingBelum(false);
     }
-  }, [qBelum, t]);
+  }, [pageBelum, perPageBelum, qBelum, rangeBelum, t]);
 
   const loadRiwayat = useCallback(async () => {
     setLoadingBayar(true);
@@ -111,7 +134,9 @@ export default function BillingPage() {
       const res = await pembayaranApi.listPembayaran({
         metode: metodeFilter,
         q: qBayar.trim() || undefined,
+        ...rangeBayar,
         page: pageBayar,
+        per_page: perPageBayar,
       });
       setRiwayat(res.items);
       setMetaBayar(res.meta);
@@ -120,7 +145,7 @@ export default function BillingPage() {
     } finally {
       setLoadingBayar(false);
     }
-  }, [metodeFilter, pageBayar, qBayar, t]);
+  }, [metodeFilter, pageBayar, perPageBayar, qBayar, rangeBayar, t]);
 
   useEffect(() => {
     void (async () => {
@@ -376,6 +401,14 @@ export default function BillingPage() {
               </option>
               <option value="lunas">{t('transaction.billing.statusLabel.lunas')}</option>
             </select>
+            <AppDateRange
+              dari={rangeInvoice.tanggal_dari}
+              sampai={rangeInvoice.tanggal_sampai}
+              onChange={(range) => {
+                setRangeInvoice(range);
+                setPageInvoice(1);
+              }}
+            />
           </div>
 
           <AppDataTable
@@ -408,6 +441,10 @@ export default function BillingPage() {
             perPage={metaInvoice.per_page}
             total={metaInvoice.total}
             onPageChange={setPageInvoice}
+            onPerPageChange={(n) => {
+              setPerPageInvoice(n);
+              setPageInvoice(1);
+            }}
           />
         </TabsContent>
 
@@ -415,9 +452,20 @@ export default function BillingPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Input
               value={qBelum}
-              onChange={(e) => setQBelum(e.target.value)}
+              onChange={(e) => {
+                setQBelum(e.target.value);
+                setPageBelum(1);
+              }}
               placeholder={t('transaction.billing.searchBelumPlaceholder')}
               className="max-w-xs"
+            />
+            <AppDateRange
+              dari={rangeBelum.tanggal_dari}
+              sampai={rangeBelum.tanggal_sampai}
+              onChange={(range) => {
+                setRangeBelum(range);
+                setPageBelum(1);
+              }}
             />
           </div>
 
@@ -442,6 +490,16 @@ export default function BillingPage() {
                   )
                 : undefined
             }
+          />
+          <AppPaginator
+            page={metaBelum.page}
+            perPage={metaBelum.per_page}
+            total={metaBelum.total}
+            onPageChange={setPageBelum}
+            onPerPageChange={(n) => {
+              setPerPageBelum(n);
+              setPageBelum(1);
+            }}
           />
         </TabsContent>
 
@@ -469,6 +527,14 @@ export default function BillingPage() {
               <option value="tunai">{t('transaction.billing.metodeLabel.tunai')}</option>
               <option value="non_tunai">{t('transaction.billing.metodeLabel.non_tunai')}</option>
             </select>
+            <AppDateRange
+              dari={rangeBayar.tanggal_dari}
+              sampai={rangeBayar.tanggal_sampai}
+              onChange={(range) => {
+                setRangeBayar(range);
+                setPageBayar(1);
+              }}
+            />
           </div>
 
           <AppDataTable
@@ -491,6 +557,10 @@ export default function BillingPage() {
             perPage={metaBayar.per_page}
             total={metaBayar.total}
             onPageChange={setPageBayar}
+            onPerPageChange={(n) => {
+              setPerPageBayar(n);
+              setPageBayar(1);
+            }}
           />
         </TabsContent>
       </Tabs>

@@ -52,7 +52,10 @@ beforeEach(() => {
   vi.resetAllMocks();
   localStorage.setItem('simrs_token', 'tok-lab');
   useAuthStore.setState({ status: 'authenticated', user: labUser });
-  vi.mocked(labApi.worklistLab).mockResolvedValue([order(null, null)]);
+  vi.mocked(labApi.worklistLab).mockResolvedValue({
+    items: [order(null, null)],
+    meta: { page: 1, per_page: 20, total: 1 },
+  });
 });
 
 describe('LaboratoriumPage (poin 7.7)', () => {
@@ -60,11 +63,16 @@ describe('LaboratoriumPage (poin 7.7)', () => {
     renderAt('/transaction/laboratorium');
 
     expect(await screen.findByText('Siti Aminah')).toBeInTheDocument();
-    expect(labApi.worklistLab).toHaveBeenCalledWith('diminta,diproses');
+    expect(labApi.worklistLab).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'diminta,diproses', tanggal_dari: expect.any(String) }),
+    );
     expect(screen.getByText(/Nilai rujukan: 70-110/)).toBeInTheDocument();
 
     vi.mocked(labApi.simpanHasilLab).mockResolvedValue(order('180', 'tinggi').details[0]);
-    vi.mocked(labApi.worklistLab).mockResolvedValue([order('180', 'tinggi')]);
+    vi.mocked(labApi.worklistLab).mockResolvedValue({
+      items: [order('180', 'tinggi')],
+      meta: { page: 1, per_page: 20, total: 1 },
+    });
     await userEvent.type(screen.getByLabelText('Hasil Gula Darah'), '180');
     await userEvent.click(screen.getByRole('button', { name: 'Simpan' }));
 
@@ -79,6 +87,8 @@ describe('LaboratoriumPage (poin 7.7)', () => {
     await screen.findByText('Siti Aminah');
 
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Status' }), 'selesai');
-    expect(labApi.worklistLab).toHaveBeenLastCalledWith('selesai');
+    expect(labApi.worklistLab).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: 'selesai' }),
+    );
   });
 });

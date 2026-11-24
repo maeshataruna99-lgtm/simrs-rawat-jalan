@@ -29,8 +29,19 @@ export default function JadwalDokterPage() {
   const { t } = useTranslation();
   const can = useAuthStore((s) => s.can);
 
-  const { items, total, page, perPage, filter, loading, error, setPage, updateFilter, reload } =
-    useCrud(jadwalApi.listJadwalDokter, { q: '' });
+  const {
+    items,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(jadwalApi.listJadwalDokter, { q: '' });
 
   const [dokterList, setDokterList] = useState<DokterItem[]>([]);
   const [poliList, setPoliList] = useState<PoliItem[]>([]);
@@ -150,7 +161,13 @@ export default function JadwalDokterPage() {
         onDelete={(row) => setDeleting(row)}
       />
 
-      <AppPaginator page={page} perPage={perPage} total={total} onPageChange={setPage} />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       <JadwalDokterForm
         open={formOpen}

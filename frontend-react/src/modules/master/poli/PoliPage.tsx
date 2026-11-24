@@ -26,8 +26,19 @@ export default function PoliPage() {
   const { t } = useTranslation();
   const can = useAuthStore((s) => s.can);
 
-  const { items, total, page, perPage, filter, loading, error, setPage, updateFilter, reload } =
-    useCrud(poliApi.listPoli, { q: '' });
+  const {
+    items,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(poliApi.listPoli, { q: '' });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PoliItem | null>(null);
@@ -125,7 +136,13 @@ export default function PoliPage() {
         onDelete={(row) => setDeleting(row)}
       />
 
-      <AppPaginator page={page} perPage={perPage} total={total} onPageChange={setPage} />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       <PoliForm
         open={formOpen}

@@ -28,12 +28,13 @@ export function useCrud<TItem, TFilter extends Record<string, unknown>>(
     params: TFilter & { page: number; per_page: number },
   ) => Promise<PaginatedResult<TItem>>,
   initialFilter: TFilter,
-  perPage = 20,
+  initialPerPage = 20,
 ) {
   const { t } = useTranslation();
 
   const [filter, setFilter] = useState<TFilter>(initialFilter);
   const [page, setPage] = useState(1);
+  const [perPage, setPerPageState] = useState(initialPerPage);
   const [items, setItems] = useState<TItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -83,6 +84,11 @@ export function useCrud<TItem, TFilter extends Record<string, unknown>>(
     setPage(1);
   }, []);
 
+  const setPerPage = useCallback((value: number) => {
+    setPerPageState(value);
+    setPage(1);
+  }, []);
+
   return {
     items,
     total,
@@ -92,6 +98,7 @@ export function useCrud<TItem, TFilter extends Record<string, unknown>>(
     loading,
     error,
     setPage,
+    setPerPage,
     updateFilter,
     reload,
   };

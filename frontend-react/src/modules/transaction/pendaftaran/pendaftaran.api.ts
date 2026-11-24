@@ -3,7 +3,8 @@
  *
  * Dipakai di: PendaftaranPage, AntreanPage, DisplayAntreanPage, PemeriksaanPage.
  */
-import { yiiApi, type ApiResponse } from '@/lib/api-client';
+import type { PaginatedResult } from '@/hooks/use-crud';
+import { toPage, yiiApi, type ApiResponse } from '@/lib/api-client';
 import type { PasienItem } from '@/modules/master/pasien/pasien.types';
 import type {
   DaftarKunjunganPayload,
@@ -45,20 +46,25 @@ export async function daftarKunjungan(payload: DaftarKunjunganPayload): Promise<
  */
 export async function listAntrean(params: {
   poli_id?: number | '';
-  tanggal?: string;
+  tanggal_dari?: string;
+  tanggal_sampai?: string;
   status?: KunjunganStatus | '';
   q?: string;
-}): Promise<KunjunganItem[]> {
+  page?: number;
+  per_page?: number;
+}): Promise<PaginatedResult<KunjunganItem>> {
   const query = {
+    ...params,
     poli_id: params.poli_id || undefined,
-    tanggal: params.tanggal || undefined,
+    tanggal_dari: params.tanggal_dari || undefined,
+    tanggal_sampai: params.tanggal_sampai || undefined,
     status: params.status || undefined,
     q: params.q || undefined,
   };
   const { data } = await yiiApi.get<ApiResponse<KunjunganItem[]>>('/transaction/antrean', {
     params: query,
   });
-  return data.data;
+  return toPage(data);
 }
 
 /**

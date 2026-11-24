@@ -126,7 +126,9 @@ Query agregasi dashboard (kunjungan per poli, pendapatan per hari, status pembay
 1. **Index komposit & partial index**: migrasi `m261122_010000_create_dashboard_indexes.php` menambahkan 6 index strategis (`idx_t_kunjungan_tgl_poli`, `idx_t_invoice_status`, `idx_t_pembayaran_dibayar_at`, `idx_t_tindakan_kunjungan_status`, `idx_t_resep_kunjungan_status`, `idx_t_invoice_item_invoice_sumber_aktif`).
 2. **Predikat tanggal sargable**: seluruh query dashboard menghindari pembungkusan kolom tanggal dengan fungsi (`dibayar_at >= $1::date AND dibayar_at < ($2::date + INTERVAL '1 day')`).
 3. **Role DB read-only**: `database/init/02-create-readonly-user.sql` membuat role `simrs_readonly` (hanya `SELECT`) yang dipakai oleh `readDb()` di `service-node/src/lib/db.ts`.
+4. **Pagination dan filter tanggal di server**: seluruh daftar transaksi (antrean, worklist, laboratorium, farmasi, billing) memakai `backend-yii/common/ListQuery.php`, dengan bawaan hari ini dan maksimal 100 baris per halaman.
+5. **OPcache, realpath cache, dan schema cache Yii**: `backend-yii/docker/php-performance.ini` serta `backend-yii/config/web.php`. p95 endpoint daftar turun dari 1,4–3,2 detik menjadi 0,23–0,37 detik.
 
 ### Lokasi Kode & Bukti Uji
 - Migrasi & SQL: `backend-yii/migrations/m261122_010000_create_dashboard_indexes.php`, `database/init/02-create-readonly-user.sql`
-- Bukti lengkap `EXPLAIN (ANALYZE, BUFFERS)` sebelum vs sesudah pada 15.000 baris sintetis: [`docs/performance.md`](performance.md) (Q1 2,5× lebih cepat, Q2 6,7× lebih cepat, Q3 10,8× lebih cepat, Q4 scan kunjungan 8,6× lebih cepat).
+- Bukti lengkap `EXPLAIN (ANALYZE, BUFFERS)` sebelum vs sesudah pada 15.000 baris sintetis: [`docs/performance.md`](performance.md) (Q1 2,5× lebih cepat, Q2 6,7× lebih cepat, Q3 10,8× lebih cepat, Q4 scan kunjungan 8,6× lebih cepat), ditambah perbandingan latensi API sebelum dan sesudah di bagian 6.

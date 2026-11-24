@@ -122,9 +122,9 @@ describe('detectIntent dan konteks halaman', () => {
       (menu) => menu === 'billing' || menu === 'dashboard',
     );
     expect(suggested[0].id).toBe('billing');
-    expect(suggested.every((a) => a.menu === null || a.menu === 'billing' || a.menu === 'dashboard')).toBe(
-      true,
-    );
+    expect(
+      suggested.every((a) => a.menu === null || a.menu === 'billing' || a.menu === 'dashboard'),
+    ).toBe(true);
   });
 });
 
@@ -172,22 +172,25 @@ describe('ChatbotWidget', () => {
       ],
       meta: { page: 1, per_page: 5, total: 1 },
     });
-    vi.mocked(pendaftaranApi.listAntrean).mockResolvedValue([
-      {
-        id: 7,
-        no_kunjungan: 'RJ202611220001',
-        pasien_id: 1,
-        poli_id: 1,
-        dokter_id: 1,
-        jadwal_id: 1,
-        tgl_kunjungan: '2026-11-22',
-        no_antrean: 3,
-        status: 'menunggu',
-        pasien: null,
-        poli: { id: 1, kode: 'UMUM', nama: 'Poli Umum', tarif_pendaftaran: 25000 },
-        dokter: null,
-      },
-    ]);
+    vi.mocked(pendaftaranApi.listAntrean).mockResolvedValue({
+      items: [
+        {
+          id: 7,
+          no_kunjungan: 'RJ202611220001',
+          pasien_id: 1,
+          poli_id: 1,
+          dokter_id: 1,
+          jadwal_id: 1,
+          tgl_kunjungan: '2026-11-22',
+          no_antrean: 3,
+          status: 'menunggu',
+          pasien: null,
+          poli: { id: 1, kode: 'UMUM', nama: 'Poli Umum', tarif_pendaftaran: 25000 },
+          dokter: null,
+        },
+      ],
+      meta: { page: 1, per_page: 20, total: 1 },
+    });
     renderWidget();
 
     await userEvent.click(screen.getByRole('button', { name: 'Bantuan' }));
@@ -200,7 +203,7 @@ describe('ChatbotWidget', () => {
     expect(await screen.findByText(/RM000001 - Budi Santoso/)).toBeInTheDocument();
     expect(screen.getByText(/RJ202611220001 \| 2026-11-22/)).toBeInTheDocument();
     expect(pasienApi.listPasien).toHaveBeenCalledWith({ q: 'RM000001', per_page: 5 });
-    expect(pendaftaranApi.listAntrean).toHaveBeenCalledWith({ q: 'RM000001' });
+    expect(pendaftaranApi.listAntrean).toHaveBeenCalledWith({ q: 'RM000001', per_page: 5 });
     expect(pembayaranApi.listInvoice).not.toHaveBeenCalled();
   });
 
@@ -270,7 +273,12 @@ describe('ChatbotWidget', () => {
           created_at: '2026-11-24',
           updated_at: null,
           pasien: { id: 1, no_rm: 'RM000001', nama: 'Siti Aminah', nik: '3201010101920001' },
-          kunjungan: { id: 9, no_kunjungan: 'RJ202611240001', tgl_kunjungan: '2026-11-24', status: 'selesai' },
+          kunjungan: {
+            id: 9,
+            no_kunjungan: 'RJ202611240001',
+            tgl_kunjungan: '2026-11-24',
+            status: 'selesai',
+          },
           poli: { id: 1, kode: 'UMUM', nama: 'Poli Umum' },
           dokter: { id: 1, nama: 'dr. Andi' },
           items: [],
@@ -331,7 +339,10 @@ describe('ChatbotWidget', () => {
 
   it('lookup tanpa hasil memberi pesan tidak ditemukan', async () => {
     useAuthStore.setState({ status: 'authenticated', user: userWith({ antrean: full }) });
-    vi.mocked(pendaftaranApi.listAntrean).mockResolvedValue([]);
+    vi.mocked(pendaftaranApi.listAntrean).mockResolvedValue({
+      items: [],
+      meta: { page: 1, per_page: 20, total: 1 },
+    });
     renderWidget();
 
     await userEvent.click(screen.getByRole('button', { name: 'Bantuan' }));
@@ -356,7 +367,15 @@ describe('ChatbotWidget', () => {
     });
     vi.mocked(obatApi.listObat).mockResolvedValue({
       items: [
-        { id: 1, kode: 'OBT01', nama: 'Paracetamol 500mg', satuan: 'tablet', harga: 1000, stok: 5, is_active: true },
+        {
+          id: 1,
+          kode: 'OBT01',
+          nama: 'Paracetamol 500mg',
+          satuan: 'tablet',
+          harga: 1000,
+          stok: 5,
+          is_active: true,
+        },
       ],
       meta: { page: 1, per_page: 5, total: 1 },
     });
@@ -378,37 +397,43 @@ describe('ChatbotWidget', () => {
       ],
       meta: { page: 1, per_page: 5, total: 1 },
     });
-    vi.mocked(resepApi.antreanFarmasi).mockResolvedValue([
-      {
-        id: 10,
-        no_resep: 'RSP20261124001',
-        kunjungan_id: 5,
-        status: 'baru',
-        catatan: null,
-        diserahkan_at: null,
-        created_at: '2026-11-24',
-        details: [],
-        total: 10000,
-        dokter: null,
-        pasien: { id: 1, no_rm: 'RM000001', nama: 'Budi' },
-        poli: { id: 1, nama: 'Poli Umum' },
-      },
-    ]);
-    vi.mocked(labApi.worklistLab).mockResolvedValue([
-      {
-        id: 11,
-        no_order: 'LAB20261124001',
-        kunjungan_id: 5,
-        status: 'diminta',
-        catatan_klinis: null,
-        created_at: '2026-11-24',
-        total: 35000,
-        details: [],
-        dokter: null,
-        pasien: { id: 1, no_rm: 'RM000001', nama: 'Budi' },
-        poli: { id: 1, nama: 'Poli Umum' },
-      },
-    ]);
+    vi.mocked(resepApi.antreanFarmasi).mockResolvedValue({
+      items: [
+        {
+          id: 10,
+          no_resep: 'RSP20261124001',
+          kunjungan_id: 5,
+          status: 'baru',
+          catatan: null,
+          diserahkan_at: null,
+          created_at: '2026-11-24',
+          details: [],
+          total: 10000,
+          dokter: null,
+          pasien: { id: 1, no_rm: 'RM000001', nama: 'Budi' },
+          poli: { id: 1, nama: 'Poli Umum' },
+        },
+      ],
+      meta: { page: 1, per_page: 20, total: 1 },
+    });
+    vi.mocked(labApi.worklistLab).mockResolvedValue({
+      items: [
+        {
+          id: 11,
+          no_order: 'LAB20261124001',
+          kunjungan_id: 5,
+          status: 'diminta',
+          catatan_klinis: null,
+          created_at: '2026-11-24',
+          total: 35000,
+          details: [],
+          dokter: null,
+          pasien: { id: 1, no_rm: 'RM000001', nama: 'Budi' },
+          poli: { id: 1, nama: 'Poli Umum' },
+        },
+      ],
+      meta: { page: 1, per_page: 20, total: 1 },
+    });
     vi.mocked(dashboardApi.getSummary).mockResolvedValue({
       periode: { from: '2026-11-24', to: '2026-11-24' },
       total_kunjungan: 14,
@@ -417,18 +442,21 @@ describe('ChatbotWidget', () => {
       total_tagihan: 900000,
       invoice_per_status: { belum_dibayar: 2, dibayar_sebagian: 1, lunas: 8 },
     });
-    vi.mocked(pembayaranApi.listBelumTagih).mockResolvedValue([
-      {
-        id: 3,
-        no_kunjungan: 'RJ202611240003',
-        tgl_kunjungan: '2026-11-24',
-        no_antrean: 3,
-        status: 'selesai',
-        pasien: { id: 1, no_rm: 'RM000001', nama: 'Budi' },
-        poli: { id: 1, kode: 'UMUM', nama: 'Poli Umum' },
-        dokter: { id: 1, nama: 'dr. Andi' },
-      },
-    ]);
+    vi.mocked(pembayaranApi.listBelumTagih).mockResolvedValue({
+      items: [
+        {
+          id: 3,
+          no_kunjungan: 'RJ202611240003',
+          tgl_kunjungan: '2026-11-24',
+          no_antrean: 3,
+          status: 'selesai',
+          pasien: { id: 1, no_rm: 'RM000001', nama: 'Budi' },
+          poli: { id: 1, kode: 'UMUM', nama: 'Poli Umum' },
+          dokter: { id: 1, nama: 'dr. Andi' },
+        },
+      ],
+      meta: { page: 1, per_page: 1, total: 1 },
+    });
 
     renderWidget();
     await userEvent.click(screen.getByRole('button', { name: 'Bantuan' }));

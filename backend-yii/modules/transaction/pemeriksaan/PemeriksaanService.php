@@ -3,6 +3,7 @@
 namespace app\modules\transaction\pemeriksaan;
 
 use app\common\AuditLog;
+use app\common\ListQuery;
 use app\common\ValidationException;
 use app\modules\master\icd10\Icd10;
 use app\modules\master\pasien\Pasien;
@@ -24,29 +25,46 @@ use yii\web\NotFoundHttpException;
 class PemeriksaanService
 {
     /**
-     * Daftar kunjungan berstatus menunggu/diperiksa pada satu tanggal, urut nomor antrean.
+     * Satu halaman kunjungan berstatus menunggu/diperiksa pada rentang tanggal (bawaan hari ini), urut tanggal lalu nomor antrean.
      * User yang tertaut ke dokter hanya melihat pasiennya sendiri; user tanpa tautan (misalnya admin) melihat semua.
      *
      * @param int|null $dokterId dokter_id milik user login, null bila user tidak tertaut ke dokter.
-     * @return array<int, array<string, mixed>>
+     * @param array<string, mixed> $params tanggal_dari, tanggal_sampai, q, page, per_page.
+     * @return array{items: array<int, array<string, mixed>>, meta: array{page: int, per_page: int, total: int}}
      *
      * Dipakai di: PemeriksaanController::actionWorklist().
      */
-    public function worklist(?int $dokterId, string $tanggal): array
+    public function worklist(?int $dokterId, array $params): array
     {
+        if (empty($params['tanggal_dari']) && empty($params['tanggal_sampai'])) {
+            $params['tanggal_dari'] = $params['tanggal_sampai'] = date('Y-m-d');
+        }
         $query = Kunjungan::find()
-            ->with(['pasien', 'poli', 'dokter', 'statusLogs'])
-            ->where([
-                'tgl_kunjungan' => $tanggal,
-                'status' => [Kunjungan::STATUS_MENUNGGU, Kunjungan::STATUS_DIPERIKSA],
-            ])
-            ->orderBy(['poli_id' => SORT_ASC, 'dokter_id' => SORT_ASC, 'no_antrean' => SORT_ASC]);
+            ->joinWith(['pasien p'])
+            ->with(['poli', 'dokter', 'statusLogs'])
+            ->where(['t_kunjungan.status' => [Kunjungan::STATUS_MENUNGGU, Kunjungan::STATUS_DIPERIKSA]])
+            ->orderBy([
+                't_kunjungan.tgl_kunjungan' => SORT_ASC,
+                't_kunjungan.poli_id' => SORT_ASC,
+                't_kunjungan.dokter_id' => SORT_ASC,
+                't_kunjungan.no_antrean' => SORT_ASC,
+            ]);
+        ListQuery::rentangTanggal($query, 't_kunjungan.tgl_kunjungan', $params);
 
         if ($dokterId !== null) {
-            $query->andWhere(['dokter_id' => $dokterId]);
+            $query->andWhere(['t_kunjungan.dokter_id' => $dokterId]);
+        }
+        $q = trim((string) ($params['q'] ?? ''));
+        if ($q !== '') {
+            $query->andWhere([
+                'or',
+                ['ilike', 't_kunjungan.no_kunjungan', $q],
+                ['ilike', 'p.no_rm', $q],
+                ['ilike', 'p.nama', $q],
+            ]);
         }
 
-        return array_map(fn (Kunjungan $row) => $row->toArray(), $query->all());
+        return ListQuery::paginate($query, $params, 't_kunjungan.id');
     }
 
     /**

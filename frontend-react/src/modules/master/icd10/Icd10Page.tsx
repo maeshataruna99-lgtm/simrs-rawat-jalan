@@ -24,8 +24,19 @@ export default function Icd10Page() {
   const { t } = useTranslation();
   const can = useAuthStore((s) => s.can);
 
-  const { items, total, page, perPage, filter, loading, error, setPage, updateFilter, reload } =
-    useCrud(icd10Api.listIcd10, { q: '' });
+  const {
+    items,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(icd10Api.listIcd10, { q: '' });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Icd10Item | null>(null);
@@ -111,7 +122,13 @@ export default function Icd10Page() {
         onDelete={(row) => setDeleting(row)}
       />
 
-      <AppPaginator page={page} perPage={perPage} total={total} onPageChange={setPage} />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       <Icd10Form
         open={formOpen}

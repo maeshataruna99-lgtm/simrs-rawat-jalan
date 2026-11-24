@@ -2,6 +2,7 @@
 
 namespace app\modules\transaction\antrean;
 
+use app\common\ListQuery;
 use app\common\ValidationException;
 use app\modules\master\pasien\Pasien;
 use app\modules\master\poli\Poli;
@@ -22,10 +23,10 @@ use yii\web\NotFoundHttpException;
 class AntreanService
 {
     /**
-     * Mengambil daftar antrean kunjungan dengan filter poli, dokter, tanggal, status, dan kata kunci.
+     * Mengambil satu halaman antrean kunjungan dengan filter poli, dokter, tanggal/rentang tanggal, status, dan kata kunci.
      *
      * @param array<string, mixed> $params
-     * @return array<int, array<string, mixed>>
+     * @return array{items: array<int, array<string, mixed>>, meta: array{page: int, per_page: int, total: int}}
      *
      * Dipakai di: AntreanController::actionIndex().
      */
@@ -50,6 +51,7 @@ class AntreanService
         if (!empty($params['tanggal'])) {
             $query->andWhere(['t_kunjungan.tgl_kunjungan' => trim((string) $params['tanggal'])]);
         }
+        ListQuery::rentangTanggal($query, 't_kunjungan.tgl_kunjungan', $params);
         if (!empty($params['status'])) {
             $query->andWhere(['t_kunjungan.status' => trim((string) $params['status'])]);
         }
@@ -63,7 +65,7 @@ class AntreanService
             ]);
         }
 
-        return array_map(fn (Kunjungan $row) => $row->toArray(), $query->all());
+        return ListQuery::paginate($query, $params, 't_kunjungan.id');
     }
 
     /**

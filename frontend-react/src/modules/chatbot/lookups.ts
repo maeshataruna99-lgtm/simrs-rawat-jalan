@@ -33,8 +33,12 @@ export async function lookupPasienData(
   perms: { canPasien: boolean; canAntrean: boolean },
 ): Promise<ChatMessagePayload> {
   const [pasienRes, kunjunganRes] = await Promise.allSettled([
-    perms.canPasien ? listPasien({ q, per_page: MAX_ROWS }).then((r) => r.items) : Promise.resolve(null),
-    perms.canAntrean ? listAntrean({ q }).then((rows) => rows.slice(0, MAX_ROWS)) : Promise.resolve(null),
+    perms.canPasien
+      ? listPasien({ q, per_page: MAX_ROWS }).then((r) => r.items)
+      : Promise.resolve(null),
+    perms.canAntrean
+      ? listAntrean({ q, per_page: MAX_ROWS }).then((r) => r.items)
+      : Promise.resolve(null),
   ]);
 
   const partialErrors: Array<'pasien' | 'kunjungan'> = [];
@@ -149,7 +153,7 @@ export async function lookupObatData(q: string): Promise<ChatMessagePayload> {
 }
 
 export async function lookupFarmasiData(q: string): Promise<ChatMessagePayload> {
-  const rows = await antreanFarmasi({ status: '' });
+  const { items: rows } = await antreanFarmasi({ status: '', per_page: 100 });
   const norm = q.trim().toLowerCase();
   const filtered = SHOW_ACTIVE_KEYWORDS.has(norm)
     ? rows
@@ -181,7 +185,10 @@ export async function lookupFarmasiData(q: string): Promise<ChatMessagePayload> 
 export async function lookupLabData(q: string): Promise<ChatMessagePayload> {
   const norm = q.trim().toLowerCase();
   const showActiveOnly = SHOW_ACTIVE_KEYWORDS.has(norm);
-  const rows = await worklistLab(showActiveOnly ? 'diminta,diproses' : '');
+  const { items: rows } = await worklistLab({
+    status: showActiveOnly ? 'diminta,diproses' : '',
+    per_page: 100,
+  });
   const filtered = showActiveOnly
     ? rows
     : rows.filter((o) => {
@@ -216,7 +223,7 @@ export async function lookupRingkasanData(perms: {
   const today = localTodayIso();
   const [summaryRes, belumRes] = await Promise.allSettled([
     perms.canDashboard ? getSummary({ from: today, to: today }) : Promise.resolve(null),
-    perms.canBilling ? listBelumTagih() : Promise.resolve(null),
+    perms.canBilling ? listBelumTagih({ per_page: 1 }) : Promise.resolve(null),
   ]);
 
   const partialErrors: Array<'summary' | 'belumTagih'> = [];
@@ -235,7 +242,7 @@ export async function lookupRingkasanData(perms: {
     belumRes.status === 'fulfilled'
       ? belumRes.value === null
         ? null
-        : belumRes.value.length
+        : belumRes.value.meta.total
       : (() => {
           partialErrors.push('belumTagih');
           firstError = firstError ?? belumRes.reason;

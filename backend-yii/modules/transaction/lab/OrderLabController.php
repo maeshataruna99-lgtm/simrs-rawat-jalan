@@ -30,11 +30,13 @@ class OrderLabController extends BaseApiController
     }
 
     /**
-     * GET /transaction/order-lab?status=diminta,diproses&kunjungan_id=
+     * GET /transaction/order-lab?status=diminta,diproses&tanggal_dari=&tanggal_sampai=&q=&page=&per_page=
      */
     public function actionIndex(): array
     {
-        return ApiResponse::success((new OrderLabService())->daftar(Yii::$app->request->queryParams));
+        $hasil = (new OrderLabService())->daftar(Yii::$app->request->queryParams);
+
+        return ApiResponse::success($hasil['items'], 'OK', $hasil['meta']);
     }
 
     /**
@@ -46,7 +48,7 @@ class OrderLabController extends BaseApiController
         $dokterId = Yii::$app->user->identity->dokter_id;
         (new PemeriksaanService())->kunjunganMilik($kunjunganId, $dokterId === null ? null : (int) $dokterId);
 
-        return ApiResponse::success((new OrderLabService())->daftar(['kunjungan_id' => $kunjunganId]));
+        return ApiResponse::success((new OrderLabService())->perKunjungan($kunjunganId));
     }
 
     /**

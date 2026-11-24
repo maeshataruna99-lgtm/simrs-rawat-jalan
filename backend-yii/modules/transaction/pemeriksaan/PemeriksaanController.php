@@ -59,10 +59,13 @@ class PemeriksaanController extends BaseApiController
     }
 
     /**
-     * GET /transaction/pemeriksaan/worklist — pasien hari ini yang menunggu atau sedang diperiksa.
+     * GET /transaction/pemeriksaan/worklist?tanggal_dari=&tanggal_sampai=&q=&page=&per_page=
+     * Pasien yang menunggu atau sedang diperiksa; bawaan hari ini.
      */
     public function actionWorklist(): array
     {
-        return ApiResponse::success((new PemeriksaanService())->worklist($this->dokterId(), date('Y-m-d')));
+        $hasil = (new PemeriksaanService())->worklist($this->dokterId(), Yii::$app->request->queryParams);
+
+        return ApiResponse::success($hasil['items'], 'OK', $hasil['meta']);
     }
 }

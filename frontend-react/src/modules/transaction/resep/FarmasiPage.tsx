@@ -4,17 +4,19 @@
  *
  * Dipakai di: routes/index.tsx.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AppDataTable, type AppColumn } from '@/components/AppDataTable';
+import { AppDateRange } from '@/components/AppDateRange';
+import { AppFilterBar } from '@/components/AppFilterBar';
+import { AppPaginator } from '@/components/AppPaginator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useCrud } from '@/hooks/use-crud';
 import { errorMessage } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
-import { formatRupiah } from '@/lib/format';
-import { matchesQuery } from '@/lib/search';
+import { formatRupiah, hariIni } from '@/lib/format';
 import * as resepApi from './resep.api';
 import type { ResepItem, ResepStatus } from './resep.api';
 
@@ -26,29 +28,25 @@ const selectClassName =
 export default function FarmasiPage() {
   const { t } = useTranslation();
   const canUpdate = useAuthStore((s) => s.can)(MENU, 'update');
-  const [status, setStatus] = useState<ResepStatus | ''>('');
-  const [rows, setRows] = useState<ResepItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<number | null>(null);
-  const [q, setQ] = useState('');
-
-  const reload = useCallback(async () => {
-    await Promise.resolve();
-    setLoading(true);
-    try {
-      setRows(await resepApi.antreanFarmasi({ status }));
-    } catch (err) {
-      toast.error(errorMessage(err, t('common.loadFailed')));
-    } finally {
-      setLoading(false);
-    }
-  }, [status, t]);
-
-  useEffect(() => {
-    void (async () => {
-      await reload();
-    })();
-  }, [reload]);
+  const {
+    items: rows,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(resepApi.antreanFarmasi, {
+    q: '',
+    status: '' as ResepStatus | '',
+    tanggal_dari: hariIni(),
+    tanggal_sampai: hariIni(),
+  });
 
   const ubah = async (id: number, aksi: 'proses' | 'serahkan') => {
     setBusyId(id);
@@ -129,19 +127,21 @@ export default function FarmasiPage() {
         <p className="text-sm text-muted-foreground">{t('transaction.farmasi.subtitle')}</p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Input
-          aria-label={t('common.searchPlaceholder')}
-          className="max-w-sm"
-          placeholder={t('transaction.farmasi.searchPlaceholder')}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
+      <AppFilterBar
+        searchValue={filter.q}
+        onSearchChange={(q) => updateFilter({ q })}
+        searchPlaceholder={t('transaction.farmasi.searchPlaceholder')}
+      >
+        <AppDateRange
+          dari={filter.tanggal_dari}
+          sampai={filter.tanggal_sampai}
+          onChange={updateFilter}
         />
         <select
           aria-label={t('system.common.status')}
           className={selectClassName}
-          value={status}
-          onChange={(e) => setStatus(e.target.value as ResepStatus | '')}
+          value={filter.status}
+          onChange={(e) => updateFilter({ status: e.target.value as ResepStatus | '' })}
         >
           <option value="">{t('transaction.farmasi.activeStatus')}</option>
           {(['baru', 'diproses', 'diserahkan', 'batal'] as const).map((s) => (
@@ -150,20 +150,17 @@ export default function FarmasiPage() {
             </option>
           ))}
         </select>
-      </div>
+      </AppFilterBar>
+
+      {error && (
+        <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
       <AppDataTable
         columns={columns}
-        rows={rows.filter((r) =>
-          matchesQuery(
-            q,
-            r.no_resep,
-            r.pasien?.nama,
-            r.pasien?.no_rm,
-            r.dokter?.nama,
-            ...r.details.map((d) => d.obat?.nama),
-          ),
-        )}
+        rows={rows}
         rowKey={(row) => row.id}
         loading={loading}
         extraActions={
@@ -189,6 +186,13 @@ export default function FarmasiPage() {
                 ) : null
             : undefined
         }
+      />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
       />
     </div>
   );

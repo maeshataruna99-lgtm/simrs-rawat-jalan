@@ -39,11 +39,13 @@ class InvoiceController extends BaseApiController
     }
 
     /**
-     * GET /transaction/invoice/belum-tagih?tanggal=&q=
+     * GET /transaction/invoice/belum-tagih?tanggal=&tanggal_dari=&tanggal_sampai=&q=&page=&per_page=
      */
     public function actionBelumTagih(): array
     {
-        return ApiResponse::success((new InvoiceService())->kunjunganBelumTagih(Yii::$app->request->queryParams));
+        $hasil = (new InvoiceService())->kunjunganBelumTagih(Yii::$app->request->queryParams);
+
+        return ApiResponse::success($hasil['items'], 'OK', $hasil['meta']);
     }
 
     /**

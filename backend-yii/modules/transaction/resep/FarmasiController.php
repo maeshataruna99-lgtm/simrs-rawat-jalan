@@ -28,11 +28,13 @@ class FarmasiController extends BaseApiController
     }
 
     /**
-     * GET /transaction/farmasi/antrean?status=&tanggal=
+     * GET /transaction/farmasi/antrean?status=&tanggal=&tanggal_dari=&tanggal_sampai=&q=&page=&per_page=
      */
     public function actionAntrean(): array
     {
-        return ApiResponse::success((new FarmasiService())->antrean(Yii::$app->request->queryParams));
+        $hasil = (new FarmasiService())->antrean(Yii::$app->request->queryParams);
+
+        return ApiResponse::success($hasil['items'], 'OK', $hasil['meta']);
     }
 
     /**

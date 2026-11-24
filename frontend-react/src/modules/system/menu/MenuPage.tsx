@@ -28,8 +28,19 @@ export default function MenuPage() {
   const { t } = useTranslation();
   const can = useAuthStore((s) => s.can);
 
-  const { items, total, page, perPage, filter, loading, error, setPage, updateFilter, reload } =
-    useCrud(menuApi.listMenus, { q: '' });
+  const {
+    items,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(menuApi.listMenus, { q: '' });
 
   const [modules, setModules] = useState<ModuleItem[]>([]);
   const [allMenus, setAllMenus] = useState<SystemMenuItem[]>([]);
@@ -151,7 +162,13 @@ export default function MenuPage() {
         onDelete={(row) => setDeleting(row)}
       />
 
-      <AppPaginator page={page} perPage={perPage} total={total} onPageChange={setPage} />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       <MenuForm
         open={formOpen}

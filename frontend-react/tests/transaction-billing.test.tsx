@@ -112,7 +112,10 @@ beforeEach(() => {
     items: [buatInvoiceFixture('belum_dibayar', 0)],
     meta: { page: 1, per_page: 20, total: 1 },
   });
-  vi.mocked(pembayaranApi.listBelumTagih).mockResolvedValue([]);
+  vi.mocked(pembayaranApi.listBelumTagih).mockResolvedValue({
+    items: [],
+    meta: { page: 1, per_page: 20, total: 0 },
+  });
   vi.mocked(pembayaranApi.listPembayaran).mockResolvedValue({
     items: [pembayaranSatu],
     meta: { page: 1, per_page: 20, total: 1 },

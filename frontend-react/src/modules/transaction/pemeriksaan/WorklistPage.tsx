@@ -1,35 +1,30 @@
 /**
- * Halaman worklist dokter (/transaction/pemeriksaan): pasien hari ini yang menunggu atau sedang diperiksa.
+ * Halaman worklist dokter (/transaction/pemeriksaan): pasien yang menunggu atau sedang diperiksa, bawaan hari ini.
  *
  * Dipakai di: routes/index.tsx.
  */
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { AppDataTable, type AppColumn } from '@/components/AppDataTable';
+import { AppDateRange } from '@/components/AppDateRange';
+import { AppFilterBar } from '@/components/AppFilterBar';
+import { AppPaginator } from '@/components/AppPaginator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { errorMessage } from '@/lib/api-client';
-import { matchesQuery } from '@/lib/search';
+import { useCrud } from '@/hooks/use-crud';
+import { hariIni } from '@/lib/format';
 import type { KunjunganItem } from '@/modules/transaction/pendaftaran/pendaftaran.types';
 import * as pemeriksaanApi from './pemeriksaan.api';
 
 export default function WorklistPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [rows, setRows] = useState<KunjunganItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [q, setQ] = useState('');
-
-  useEffect(() => {
-    pemeriksaanApi
-      .worklist()
-      .then(setRows)
-      .catch((err) => setError(errorMessage(err, t('common.loadFailed'))))
-      .finally(() => setLoading(false));
-  }, [t]);
+  const { items, total, page, perPage, filter, loading, error, setPage, setPerPage, updateFilter } =
+    useCrud(pemeriksaanApi.worklist, {
+      q: '',
+      tanggal_dari: hariIni(),
+      tanggal_sampai: hariIni(),
+    });
 
   const columns: AppColumn<KunjunganItem>[] = [
     {
@@ -59,6 +54,12 @@ export default function WorklistPage() {
     },
     { key: 'dokter', header: t('master.jadwal.dokter'), cell: (row) => row.dokter?.nama ?? '-' },
     {
+      key: 'tgl_kunjungan',
+      header: t('transaction.pendaftaran.tglKunjungan'),
+      className: 'whitespace-nowrap',
+      cell: (row) => row.tgl_kunjungan,
+    },
+    {
       key: 'status',
       header: t('system.common.status'),
       cell: (row) => (
@@ -78,25 +79,27 @@ export default function WorklistPage() {
         </p>
       </div>
 
+      <AppFilterBar
+        searchValue={filter.q}
+        onSearchChange={(q) => updateFilter({ q })}
+        searchPlaceholder={t('transaction.pemeriksaan.searchPlaceholder')}
+      >
+        <AppDateRange
+          dari={filter.tanggal_dari}
+          sampai={filter.tanggal_sampai}
+          onChange={updateFilter}
+        />
+      </AppFilterBar>
+
       {error && (
         <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </p>
       )}
 
-      <Input
-        aria-label={t('common.searchPlaceholder')}
-        className="max-w-sm"
-        placeholder={t('transaction.pemeriksaan.searchPlaceholder')}
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-      />
-
       <AppDataTable
         columns={columns}
-        rows={rows.filter((r) =>
-          matchesQuery(q, r.pasien?.nama, r.pasien?.no_rm, r.poli?.nama, r.dokter?.nama, r.kode_antrean),
-        )}
+        rows={items}
         rowKey={(row) => row.id}
         loading={loading}
         extraActions={(row) => (
@@ -108,6 +111,13 @@ export default function WorklistPage() {
             {t('transaction.pemeriksaan.examineButton')}
           </Button>
         )}
+      />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
       />
     </div>
   );

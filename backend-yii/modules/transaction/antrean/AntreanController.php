@@ -39,13 +39,13 @@ class AntreanController extends BaseApiController
     }
 
     /**
-     * GET /transaction/antrean?poli_id=&tanggal=&status=&q=
+     * GET /transaction/antrean?poli_id=&tanggal=&tanggal_dari=&tanggal_sampai=&status=&q=&page=&per_page=
      */
     public function actionIndex(): array
     {
-        $rows = (new AntreanService())->list(Yii::$app->request->queryParams);
+        $hasil = (new AntreanService())->list(Yii::$app->request->queryParams);
 
-        return ApiResponse::success($rows);
+        return ApiResponse::success($hasil['items'], 'OK', $hasil['meta']);
     }
 
     /**

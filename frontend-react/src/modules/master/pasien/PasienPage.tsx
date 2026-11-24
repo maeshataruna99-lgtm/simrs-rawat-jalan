@@ -24,8 +24,19 @@ export default function PasienPage() {
   const { t } = useTranslation();
   const can = useAuthStore((s) => s.can);
 
-  const { items, total, page, perPage, filter, loading, error, setPage, updateFilter, reload } =
-    useCrud(pasienApi.listPasien, { q: '' });
+  const {
+    items,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(pasienApi.listPasien, { q: '' });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PasienItem | null>(null);
@@ -123,7 +134,13 @@ export default function PasienPage() {
         onDelete={(row) => setDeleting(row)}
       />
 
-      <AppPaginator page={page} perPage={perPage} total={total} onPageChange={setPage} />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       <PasienForm
         open={formOpen}

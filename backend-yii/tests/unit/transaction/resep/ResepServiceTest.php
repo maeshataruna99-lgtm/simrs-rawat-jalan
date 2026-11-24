@@ -105,7 +105,10 @@ class ResepServiceTest extends TestCase
         $resep2 = (new ResepService())->buat(['kunjungan_id' => $d['kunjungan'], 'items' => [$item($d['paracetamol'], 2), $item($d['amoxicillin'], 1)]], $d['dokter']);
         $farmasi = new FarmasiService();
 
-        $this->assertSame([$resep1->id, $resep2->id], array_column($farmasi->antrean([]), 'id'));
+        $this->assertSame([$resep1->id, $resep2->id], array_column($farmasi->antrean([])['items'], 'id'));
+        $halaman2 = $farmasi->antrean(['page' => 2, 'per_page' => 1]);
+        $this->assertSame([$resep2->id], array_column($halaman2['items'], 'id'));
+        $this->assertSame(['page' => 2, 'per_page' => 1, 'total' => 2], $halaman2['meta']);
 
         try {
             $farmasi->serahkan($resep1->id);
@@ -211,8 +214,8 @@ class ResepServiceTest extends TestCase
         $hariIni = date('Y-m-d');
         $besok = date('Y-m-d', strtotime('+1 day'));
 
-        $this->assertSame([$resep->id], array_column($farmasi->antrean(['tanggal' => $hariIni]), 'id'));
-        $this->assertSame([], $farmasi->antrean(['tanggal' => $besok]));
-        $this->assertSame([], $farmasi->antrean(['tanggal' => 'bukan-tanggal']));
+        $this->assertSame([$resep->id], array_column($farmasi->antrean(['tanggal' => $hariIni])['items'], 'id'));
+        $this->assertSame([], $farmasi->antrean(['tanggal' => $besok])['items']);
+        $this->assertSame([], $farmasi->antrean(['tanggal' => 'bukan-tanggal'])['items']);
     }
 }

@@ -77,7 +77,16 @@ class Invoice extends ActiveRecord
         $fields['total_bayar'] = fn () => (float) $this->total_bayar;
         $fields['sisa_tagihan'] = fn () => round((float) $this->total - (float) $this->total_bayar, 2);
         $fields['items'] = fn () => array_map(fn (InvoiceItem $item) => $item->toArray(), $this->items);
-        $fields['pembayaran'] = fn () => array_map(fn (Pembayaran $p) => $p->toArray(), $this->pembayarans);
+        $fields['pembayaran'] = function () {
+            // Relasi terurut id: running sum di PHP menggantikan satu query SUM per pembayaran.
+            $akumulasi = 0.0;
+            foreach ($this->pembayarans as $p) {
+                $akumulasi += (float) $p->jumlah;
+                $p->totalBayarSaatItu = $akumulasi;
+            }
+
+            return array_map(fn (Pembayaran $p) => $p->toArray(), $this->pembayarans);
+        };
         $fields['kunjungan'] = fn () => $this->kunjungan ? [
             'id' => $this->kunjungan->id,
             'no_kunjungan' => $this->kunjungan->no_kunjungan,

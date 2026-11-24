@@ -7,9 +7,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY docker/php-performance.ini /usr/local/etc/php/conf.d/zz-performance.ini
 
 WORKDIR /app
 ENV PHP_CLI_SERVER_WORKERS=16
+ENV PHP_OPCACHE_REVALIDATE_FREQ=60
 EXPOSE 8080
 
 CMD ["php", "-S", "0.0.0.0:8080", "-t", "web", "web/index.php"]

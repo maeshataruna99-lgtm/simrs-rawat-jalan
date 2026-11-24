@@ -1,6 +1,6 @@
-# Optimasi Query Dashboard dan Pemisahan Hak Akses Read-Only (D.6)
+# Optimasi Performa: Query Dashboard, Hak Akses Read-Only, dan Latensi API (D.6)
 
-Dokumen ini mencatat strategi index database, isolasi koneksi baca untuk service Node, dan hasil pengukuran `EXPLAIN (ANALYZE, BUFFERS)` sebelum serta sesudah migrasi index (`m261122_010000_create_dashboard_indexes`).
+Dokumen ini mencatat strategi index database, isolasi koneksi baca untuk service Node, hasil pengukuran `EXPLAIN (ANALYZE, BUFFERS)` sebelum serta sesudah migrasi index (`m261122_010000_create_dashboard_indexes`), serta optimasi latensi API Yii lewat pagination, OPcache, dan schema cache (bagian 6).
 
 ## 1. Daftar Index Dashboard
 
@@ -158,3 +158,106 @@ Limit  (cost=592.82..592.85 rows=10 width=362) (actual time=20.459..20.465 rows=
                     Buffers: shared hit=2
 Execution Time: 20.838 ms
 ```
+
+## 6. Latensi API Yii: Pagination, OPcache, Realpath Cache, dan Schema Cache
+
+Bagian ini mencatat optimasi sisi aplikasi untuk endpoint daftar transaksi Yii, beserta perbandingan latensi sebelum dan sesudah.
+
+### 6.1 Pagination dan Filter Rentang Tanggal di Server
+
+Endpoint daftar transaksi sebelumnya mengembalikan seluruh baris sekaligus. Sekarang semuanya memakai helper `backend-yii/common/ListQuery.php`:
+
+- `ListQuery::paginate()` menerapkan `LIMIT/OFFSET` dan mengembalikan `meta {page, per_page, total}`. `per_page` dibatasi maksimal 100.
+- `ListQuery::rentangTanggal()` menerapkan `tanggal_dari` dan `tanggal_sampai`. Kolom `date` memakai `>= dari AND <= sampai`. Kolom `timestamp` memakai `>= dari AND < sampai + 1 hari` agar tetap sargable (lihat bagian 1). Tanggal tidak valid menghasilkan daftar kosong, bukan error database.
+- Frontend mengirim rentang hari ini secara bawaan, dan pengguna dapat memilih 10, 20, 50, atau 100 baris per halaman.
+
+| Endpoint | Filter tanggal | Kata kunci (`q`) |
+|---|---|---|
+| `GET /transaction/antrean` | `t_kunjungan.tgl_kunjungan` | no. kunjungan, no. RM, nama pasien |
+| `GET /transaction/pemeriksaan/worklist` | `t_kunjungan.tgl_kunjungan` (bawaan hari ini) | no. kunjungan, no. RM, nama pasien |
+| `GET /transaction/order-lab` | tanggal kunjungan | no. order, no. RM, nama pasien |
+| `GET /transaction/farmasi/antrean` | tanggal kunjungan | no. resep, no. RM, nama pasien |
+| `GET /transaction/invoice` | tanggal kunjungan | no. invoice, no. kunjungan, no. RM, nama pasien |
+| `GET /transaction/invoice/belum-tagih` | tanggal kunjungan | no. kunjungan, no. RM, nama pasien |
+| `GET /transaction/pembayaran` | `t_pembayaran.dibayar_at` (timestamp, sargable) | no. pembayaran, no. invoice, no. RM, nama pasien |
+
+### 6.2 Diagnosis Latensi di Lingkungan Docker
+
+Gejala: endpoint daftar butuh 0,4–3,4 detik secara acak, termasuk endpoint dengan hasil kosong. Pengukuran di dalam container `simrs-yii`:
+
+| Pengukuran | Hasil |
+|---|---|
+| Query data `belum-tagih` (8 query) | ~40 ms |
+| Query skema tabel ke `pg_catalog` per request (tanpa schema cache) | 10 query, 150–190 ms |
+| Koneksi PDO ke PostgreSQL (termasuk DNS) | 25–33 ms |
+| `GET /health` (bootstrap Yii, tanpa DB dan auth) | ~80 ms |
+| Baca 300 file PHP dari bind mount `./backend-yii` (9p dari drive Windows) | 6.949 ms (~23 ms per file) |
+| Baca 300 file yang sama dari filesystem container | 18 ms |
+
+Kesimpulan: query database bukan penyebab. Penyebabnya ada tiga:
+
+1. `php -S` berjalan sebagai SAPI CLI dengan `opcache.enable_cli=0`, sehingga file PHP tidak di-cache antar request.
+2. Schema cache Yii tidak aktif, sehingga setiap request menjalankan ~10 query skema.
+3. Akses file pada bind mount Windows (9p) lambat. Ini juga berlaku untuk file cache di `runtime/` dan untuk pengecekan timestamp OPcache.
+
+### 6.3 Perubahan Konfigurasi
+
+| Perubahan | Lokasi | Efek |
+|---|---|---|
+| OPcache untuk CLI (`opcache.enable_cli=1`) | `backend-yii/docker/php-performance.ini`, disalin oleh `backend-yii/Dockerfile` | File PHP di-compile sekali lalu disimpan di shared memory |
+| `opcache.revalidate_freq=60` (env `PHP_OPCACHE_REVALIDATE_FREQ`) | file ini yang sama + `ENV` di Dockerfile | Timestamp file dicek ulang tiap 60 detik, bukan tiap 2 detik |
+| `realpath_cache_size=4096K`, `realpath_cache_ttl=600` | file ini yang sama | Autoloader tidak mengulang `stat` path ke filesystem |
+| Schema cache (`enableSchemaCache`, durasi 3600 detik) | `backend-yii/config/web.php`, `backend-yii/config/console.php` | 10 query skema per request menjadi 0. Dimatikan saat `YII_ENV=test` |
+| `FileCache` di `sys_get_temp_dir()` | file konfigurasi yang sama | File cache berada di filesystem container, bukan di bind mount |
+
+Kontribusi tiap lapisan pada endpoint `belum-tagih` (20 request):
+
+| Tahap | Median | p95 |
+|---|---:|---:|
+| Baseline | 440 ms | 3.147 ms |
+| + OPcache, realpath cache, schema cache di `runtime/` (revalidate 2 detik) | 514 ms | 1.670 ms |
+| + file cache dipindah ke filesystem container | 254 ms | 1.185 ms |
+| + `revalidate_freq` 60 detik (konfigurasi akhir) | 242 ms | 315 ms |
+
+Uji terkontrol untuk `revalidate_freq` (dua server pada container yang sama, 40 request `belum-tagih`, jeda 100 ms):
+
+| `opcache.revalidate_freq` | Median | p95 | Max |
+|---|---:|---:|---:|
+| 2 detik | 246 ms | 1.599 ms | 1.919 ms |
+| 60 detik | 236 ms | 296 ms | 354 ms |
+
+### 6.4 Hasil Sebelum dan Sesudah
+
+Diukur dengan `node scripts/bench-api.mjs 20` (20 request berurutan per endpoint, login sebagai `admin`, rentang tanggal hari ini, data seed). Lingkungan: Docker Desktop di Windows 11, kode di-mount dari drive C:.
+
+| Endpoint | Median sebelum | Median sesudah | p95 sebelum | p95 sesudah |
+|---|---:|---:|---:|---:|
+| Antrean poli | 1.484 ms | 225 ms | 3.170 ms | 363 ms |
+| Worklist pemeriksaan | 500 ms | 236 ms | 3.168 ms | 264 ms |
+| Worklist laboratorium | 551 ms | 272 ms | 3.175 ms | 374 ms |
+| Antrean farmasi | 546 ms | 262 ms | 2.056 ms | 331 ms |
+| Daftar invoice | 286 ms | 214 ms | 1.468 ms | 304 ms |
+| Belum ditagih | 440 ms | 242 ms | 3.147 ms | 315 ms |
+| Riwayat pembayaran | 278 ms | 220 ms | 2.969 ms | 334 ms |
+| Master pasien | 322 ms | 185 ms | 1.380 ms | 232 ms |
+
+Ringkasnya, p95 turun dari 1,4–3,2 detik menjadi 0,23–0,37 detik, dan median turun 1,3–6,6 kali. Efek samping: suite PHPUnit backend turun dari ~68 detik menjadi ~58 detik karena OPcache juga aktif di CLI.
+
+### 6.5 Konsekuensi dan Cara Mengulang
+
+- **Perubahan kode Yii baru berlaku paling lambat 60 detik.** Untuk pengembangan aktif, set `PHP_OPCACHE_REVALIDATE_FREQ` lebih kecil di bagian `environment` service `yii`, atau jalankan `docker compose restart yii`.
+- **Setelah migrasi, bersihkan schema cache:** `docker compose exec -T yii php yii cache/flush-schema db --interactive=0`. Migrasi berbasis DDL builder ikut menyegarkan cache, tetapi migrasi SQL mentah tidak.
+- **Mengulang pengukuran:** `node scripts/bench-api.mjs 20`. Env opsional: `YII_URL`, `BENCH_USER`, `BENCH_PASS`, `BENCH_DATE`.
+- Angka di atas mencerminkan lingkungan Docker di Windows. Di Linux atau dengan kode di filesystem WSL, latensi baseline jauh lebih kecil, tetapi OPcache dan schema cache tetap mengurangi kerja per request.
+
+### 6.6 Menghilangkan Query N+1 pada Daftar Billing
+
+Jumlah query dihitung lewat profiling Yii (`enableProfiling`) untuk satu halaman berisi 20 baris, dengan schema cache aktif:
+
+| Endpoint | Sebelum | Sesudah | Penyebab | Perbaikan |
+|---|---:|---:|---|---|
+| `GET /transaction/invoice/belum-tagih` | 25 (20× `t_kunjungan_status_log`) | 6 | `Kunjungan::fields()` menyertakan `status_logs`, tetapi relasi tidak di-eager-load | `->with(['statusLogs'])` di `InvoiceService::kunjunganBelumTagih()` |
+| `GET /transaction/invoice` | 21 (13× `t_pembayaran`) | 9 | Field `total_bayar_saat_itu` menjalankan satu `SUM` per pembayaran | `Invoice::fields()` menghitung running sum dari relasi `pembayarans` yang sudah dimuat |
+| `GET /transaction/pembayaran` | 28 (22× `t_pembayaran`) | 8 | Sama seperti di atas | Subquery `SUM(jumlah)` per baris di SELECT (`PembayaranService::daftar()`), memakai `idx_t_pembayaran_invoice_id` |
+
+Endpoint daftar lain (antrean, worklist, laboratorium, farmasi) sudah memakai eager loading, dengan 6–8 query per halaman berapa pun jumlah barisnya. Endpoint detail pembayaran (cetak bukti bayar) tetap memakai query `SUM` cadangan karena hanya memuat satu baris. Kebenaran nilai akumulasi diuji di `PembayaranServiceTest::testPembayaranBertahapMengubahStatusSebagianKeLunas`.

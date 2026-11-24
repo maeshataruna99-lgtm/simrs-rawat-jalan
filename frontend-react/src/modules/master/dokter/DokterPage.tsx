@@ -29,8 +29,19 @@ export default function DokterPage() {
   const { t } = useTranslation();
   const can = useAuthStore((s) => s.can);
 
-  const { items, total, page, perPage, filter, loading, error, setPage, updateFilter, reload } =
-    useCrud(dokterApi.listDokter, { q: '', jenis_tenaga: '' as JenisTenaga | '' });
+  const {
+    items,
+    total,
+    page,
+    perPage,
+    filter,
+    loading,
+    error,
+    setPage,
+    setPerPage,
+    updateFilter,
+    reload,
+  } = useCrud(dokterApi.listDokter, { q: '', jenis_tenaga: '' as JenisTenaga | '' });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<DokterItem | null>(null);
@@ -145,7 +156,13 @@ export default function DokterPage() {
         onDelete={(row) => setDeleting(row)}
       />
 
-      <AppPaginator page={page} perPage={perPage} total={total} onPageChange={setPage} />
+      <AppPaginator
+        page={page}
+        perPage={perPage}
+        total={total}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       <DokterForm
         open={formOpen}

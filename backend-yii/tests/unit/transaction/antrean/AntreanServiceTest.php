@@ -58,7 +58,7 @@ class AntreanServiceTest extends TestCase
         ]);
 
         $antreanService = new AntreanService();
-        $list = $antreanService->list(['poli_id' => $poli->id, 'tanggal' => self::seninDepan()]);
+        $list = $antreanService->list(['poli_id' => $poli->id, 'tanggal' => self::seninDepan()])['items'];
         $this->assertCount(1, $list);
         $this->assertSame('menunggu', $list[0]['status']);
 

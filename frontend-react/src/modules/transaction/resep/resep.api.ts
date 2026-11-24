@@ -3,7 +3,8 @@
  *
  * Dipakai di: ResepPanel, FarmasiPage.
  */
-import { yiiApi, type ApiResponse } from '@/lib/api-client';
+import type { PaginatedResult } from '@/hooks/use-crud';
+import { toPage, yiiApi, type ApiResponse } from '@/lib/api-client';
 
 export type ResepStatus = 'baru' | 'diproses' | 'diserahkan' | 'batal';
 
@@ -66,11 +67,18 @@ export async function buatResep(payload: ResepPayload): Promise<ResepItem> {
  *
  * Dipakai di: FarmasiPage.
  */
-export async function antreanFarmasi(params: { status?: ResepStatus | '' }): Promise<ResepItem[]> {
+export async function antreanFarmasi(params: {
+  status?: ResepStatus | '';
+  tanggal_dari?: string;
+  tanggal_sampai?: string;
+  q?: string;
+  page?: number;
+  per_page?: number;
+}): Promise<PaginatedResult<ResepItem>> {
   const { data } = await yiiApi.get<ApiResponse<ResepItem[]>>('/transaction/farmasi/antrean', {
-    params: { status: params.status || undefined },
+    params: { ...params, status: params.status || undefined, q: params.q || undefined },
   });
-  return data.data;
+  return toPage(data);
 }
 
 /**

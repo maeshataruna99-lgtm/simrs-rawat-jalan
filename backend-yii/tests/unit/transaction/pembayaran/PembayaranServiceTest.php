@@ -80,6 +80,18 @@ class PembayaranServiceTest extends TestCase
 
         $riwayat = $svc->daftar(['invoice_id' => $f['invoice']]);
         $this->assertSame(2, $riwayat['meta']['total']);
+        // Akumulasi per baris dari subquery daftar (urut terbaru dulu) dan dari running sum relasi invoice.
+        $this->assertSame([100000.0, 40000.0], array_column($riwayat['items'], 'total_bayar_saat_itu'));
+        $invoice = Invoice::find()->with('pembayarans')->where(['id' => $f['invoice']])->one();
+        $this->assertSame([40000.0, 100000.0], array_column($invoice->toArray()['pembayaran'], 'total_bayar_saat_itu'));
+
+        // Rentang tanggal bayar inklusif sampai akhir hari (predikat timestamp `< sampai + 1 hari`).
+        $hariIni = date('Y-m-d');
+        $besok = date('Y-m-d', strtotime('+1 day'));
+        $filter = ['invoice_id' => $f['invoice']];
+        $this->assertSame(2, $svc->daftar($filter + ['tanggal_dari' => $hariIni, 'tanggal_sampai' => $hariIni])['meta']['total']);
+        $this->assertSame(0, $svc->daftar($filter + ['tanggal_dari' => $besok])['meta']['total']);
+        $this->assertSame(0, $svc->daftar($filter + ['tanggal_sampai' => 'bukan-tanggal'])['meta']['total']);
     }
 
     public function testTolakPembayaranMelebihiSisaTagihan(): void

@@ -16,6 +16,14 @@ export interface ApiResponse<T> {
   errors?: Record<string, string[]>;
 }
 
+/** Mengubah respons daftar berhalaman menjadi { items, meta }. */
+export function toPage<T>(res: ApiResponse<T[]>) {
+  return {
+    items: res.data,
+    meta: res.meta ?? { page: 1, per_page: res.data.length, total: res.data.length },
+  };
+}
+
 let onUnauthorized: () => void = () => {};
 
 /**

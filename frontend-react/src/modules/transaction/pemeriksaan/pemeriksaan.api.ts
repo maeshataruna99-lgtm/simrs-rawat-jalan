@@ -3,7 +3,8 @@
  *
  * Dipakai di: WorklistPage, PemeriksaanPage, RiwayatMedisPage, RiwayatMedisList.
  */
-import { yiiApi, type ApiResponse } from '@/lib/api-client';
+import type { PaginatedResult } from '@/hooks/use-crud';
+import { toPage, yiiApi, type ApiResponse } from '@/lib/api-client';
 import type { PasienItem } from '@/modules/master/pasien/pasien.types';
 import type { KunjunganItem } from '@/modules/transaction/pendaftaran/pendaftaran.types';
 import type {
@@ -19,11 +20,18 @@ import type {
  *
  * Dipakai di: WorklistPage.
  */
-export async function worklist(): Promise<KunjunganItem[]> {
+export async function worklist(params: {
+  tanggal_dari?: string;
+  tanggal_sampai?: string;
+  q?: string;
+  page?: number;
+  per_page?: number;
+}): Promise<PaginatedResult<KunjunganItem>> {
   const { data } = await yiiApi.get<ApiResponse<KunjunganItem[]>>(
     '/transaction/pemeriksaan/worklist',
+    { params: { ...params, q: params.q || undefined } },
   );
-  return data.data;
+  return toPage(data);
 }
 
 /**
