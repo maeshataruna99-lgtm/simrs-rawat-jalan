@@ -32,3 +32,4 @@ Thumbs.db
 # Video demo dan berkas sementara pembuat showcase (besar, tidak untuk repository)
 docs/showcase/
 scripts/showcase/_tmp/
+__pycache__/
